@@ -1,4 +1,4 @@
-# Streamlit App
+# IS484 T06
 
 ## Pre-Requisites
 -- Python 3.7 - 3.10 <br>
