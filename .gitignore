@@ -1,0 +1,11 @@
+# Virtual Environment
+env
+.DS_Store
+
+# Secure Keys
+.env
+__pycache__
+
+*.db
+
+upload_files/*
