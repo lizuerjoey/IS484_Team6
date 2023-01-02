@@ -2,20 +2,29 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-import tabula
 import base64
 import time
 from st_clickable_images import clickable_images
+from st_pages import Page, show_pages, add_page_title
 from request import(
     get_all_companies,
     add_file
 )
 
 st.set_page_config(
-    page_title="HELLO"
+    page_title="Dashboard"
 )
 
 st.write("THIS IS Main PG")
+
+# Specify what pages should be shown in the sidebar, and what their titles and icons
+# should be
+show_pages(
+    [
+        Page("main.py", "Dashboard", "💹"),
+        Page("pages/page_1.py", "Reports", ":book:"),
+    ]
+)
 get_options = get_all_companies()["data"]
 st.write(get_options)
 
