@@ -43,13 +43,13 @@ def convert_df_to_lst_of_table_objects(df, Table):
 class Companies(Base):
     __tablename__ = "companies"
 
-    cid = Column(Integer, primary_key=True)
+    cid = Column(String, primary_key=True)
     name = Column(String)
 
 class Companies_Files(Base):
     __tablename__ = "companies_files"
     fid = Column(Integer, primary_key=True, autoincrement=True)
-    cid = Column(Integer, ForeignKey("companies.cid"))
+    cid = Column(String, ForeignKey("companies.cid"))
     file = Column(String)
     file_type = Column(String)
     created_date = Column(DateTime, server_default=func.now())

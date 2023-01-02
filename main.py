@@ -11,9 +11,7 @@ from request import(
     add_file
 )
 
-st.set_page_config(
-    page_title="Dashboard"
-)
+
 
 st.write("THIS IS Main PG")
 
@@ -22,7 +20,7 @@ st.write("THIS IS Main PG")
 show_pages(
     [
         Page("main.py", "Dashboard", "💹"),
-        Page("pages/page_1.py", "Reports", ":book:"),
+        Page("pages/page_1.py", "Upload Reports", ":book:"),
     ]
 )
 get_options = get_all_companies()["data"]
