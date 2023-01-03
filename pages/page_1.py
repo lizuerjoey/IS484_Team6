@@ -5,7 +5,8 @@ import hashlib
 import random
 from request import(
     get_all_companies,
-    add_file
+    add_file,
+    add_company
 )
 st.header("Company Name")
 
@@ -70,7 +71,7 @@ if st.session_state['text_option'] == True:
                 label_visibility="collapsed"
             )
         with col2:
-            if st.button('X'):
+            if st.button(':heavy_multiplication_x:'):
                 if st.session_state['disable_dropdown']:
                     st.session_state['disable_dropdown'] = False
                     st.session_state['text_option'] = False
@@ -99,5 +100,45 @@ st.write(selected_comID)
 
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
+def save_file (ID, uploaded_file):
+    # Change file name before saving into DB and directory
+
+    # Upload into directory
+        with open(os.path.join("upload_files",uploaded_file.name),"wb") as f: 
+            f.write(uploaded_file.getbuffer())   
+
+    # Encode file details before saving in the database
+    
+    # Call API
+        add_com = add_file(ID, uploaded_file.name, file_type)
+
+        
+        if (add_com["message"] == "Added"):
+            st.success("Saved File", icon="✅")
+        else:
+            st.error('Error adding file. Please try again later', icon="🚨")
+
+if uploaded_file is not None:
+    # Check file type
+    position = uploaded_file.type.find("/")
+    file_type = uploaded_file.type[position+1: ]
+
+   # Preview Data
 
 
+    # Save into DB
+    if st.session_state['text_option'] == True:
+        if st.button('Submit'):
+            if com_name:
+                add_com = add_company(com_ID, com_name)
+                if (add_com["message"] == "Added"):
+                    st.success("Comapny Added", icon="✅")
+                    save_file(com_ID, uploaded_file)
+                else:
+                    st.error('Error adding company. Please try again later', icon="🚨")
+            else:
+                # If company name not entered
+                st.error("Please enter a company name")
+    else:
+        if st.button('Submit'):
+            save_file(selected_comID, uploaded_file)
