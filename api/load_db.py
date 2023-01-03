@@ -11,6 +11,7 @@ from database import (
     session_engine_from_connection_string,
     Companies,
     Companies_Files,
+    Extracted_Data,
     convert_df_to_lst_of_table_objects
 )
 
@@ -24,6 +25,7 @@ conn = engine.connect()
 table_objects = [
     Companies.__table__,
     Companies_Files.__table__,
+    Extracted_Data.__table__,
 ]
 
 # Drop All Tables
