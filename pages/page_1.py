@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import hashlib
 import random
+import shutil
+from datetime import datetime
+import base64
 from request import(
     get_all_companies,
     add_file,
@@ -50,7 +53,8 @@ else:
 
     # Get Selected Company ID    
     selected_comID = get_options[option][0]
-    
+    selected_comName = get_options[option][1]
+
 # Get Company Name Initial
 def initials(full_name):
     if (len(full_name) == 0):
@@ -84,39 +88,51 @@ if st.session_state['text_option'] == True:
         )
         
     # Get Company Name
-    st.write(com_name)
+    print(com_name)
     if com_name:
         # Generate Company ID
         my_hash = hashlib.md5(com_name.encode('utf-8')).hexdigest()
         length = len(my_hash)
         com_ID = initials(com_name) + "-"
         for i in range(4):
-            rad_num = random.randint(0,length)
+            rad_num = random.randint(0,length-1)
             com_ID += my_hash[rad_num] 
             
-        st.write(com_ID)
+        print(com_ID)
 
-st.write(selected_comID)
+else:
+    print(selected_comID)
+
+now = datetime.now()
+date_time = str(now.strftime("%d%m%Y%H%M%S"))
 
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
-def save_file (ID, uploaded_file):
-    # Change file name before saving into DB and directory
+def save_file (ID, uploaded_file, com_name):
+    
 
     # Upload into directory
-        with open(os.path.join("upload_files",uploaded_file.name),"wb") as f: 
-            f.write(uploaded_file.getbuffer())   
+    with open(os.path.join("upload_files",uploaded_file.name),"wb") as f: 
+        f.write(uploaded_file.getbuffer())   
+
+    # Change file name to directory before saving into DB
+    old_path = os.path.join("upload_files",uploaded_file.name)
+    new_file_name = com_name.replace(" ", "") +"_" + date_time +"_" + uploaded_file.name
+    new_path = os.path.join("upload_files",new_file_name)
+    shutil.copy(old_path, new_path)
 
     # Encode file details before saving in the database
+    print(type(new_file_name))
+    new_file_name = base64.b64encode(new_file_name.encode("ascii")).decode("ascii")
+    print(new_file_name)
     
     # Call API
-        add_com = add_file(ID, uploaded_file.name, file_type)
-
-        
-        if (add_com["message"] == "Added"):
-            st.success("Saved File", icon="✅")
-        else:
-            st.error('Error adding file. Please try again later', icon="🚨")
+    add_com = add_file(ID, new_file_name, file_type)
+    
+    if (add_com["message"] == "Added"):
+        st.success("Saved File", icon="✅")
+    else:
+        st.error('Error adding file. Please try again later', icon="🚨")
 
 if uploaded_file is not None:
     # Check file type
@@ -133,7 +149,7 @@ if uploaded_file is not None:
                 add_com = add_company(com_ID, com_name)
                 if (add_com["message"] == "Added"):
                     st.success("Comapny Added", icon="✅")
-                    save_file(com_ID, uploaded_file)
+                    save_file(com_ID, uploaded_file, com_name)
                 else:
                     st.error('Error adding company. Please try again later', icon="🚨")
             else:
@@ -141,4 +157,4 @@ if uploaded_file is not None:
                 st.error("Please enter a company name")
     else:
         if st.button('Submit'):
-            save_file(selected_comID, uploaded_file)
+            save_file(selected_comID, uploaded_file, selected_comName)
