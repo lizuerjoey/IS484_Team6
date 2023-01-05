@@ -88,7 +88,7 @@ if st.session_state['text_option'] == True:
         )
         
     # Get Company Name
-    print(com_name)
+    # print(com_name)
     if com_name:
         # Generate Company ID
         my_hash = hashlib.md5(com_name.encode('utf-8')).hexdigest()
@@ -98,10 +98,10 @@ if st.session_state['text_option'] == True:
             rad_num = random.randint(0,length-1)
             com_ID += my_hash[rad_num] 
             
-        print(com_ID)
+        # print(com_ID)
 
-else:
-    print(selected_comID)
+# else:
+#     print(selected_comID)
 
 now = datetime.now()
 date_time = str(now.strftime("%d%m%Y%H%M%S"))
@@ -122,9 +122,7 @@ def save_file (ID, uploaded_file, com_name):
     shutil.copy(old_path, new_path)
 
     # Encode file details before saving in the database
-    print(type(new_file_name))
     new_file_name = base64.b64encode(new_file_name.encode("ascii")).decode("ascii")
-    print(new_file_name)
 
     # Call API
     add_com = add_file(ID, new_file_name, file_type)
@@ -135,29 +133,37 @@ def save_file (ID, uploaded_file, com_name):
         st.error('Error adding file. Please try again later', icon="🚨")
 
 if uploaded_file is not None:
+    # File Size limit
+    limit = 2*(10**9)
     # Check file type
     position = uploaded_file.type.find("/")
     file_type = uploaded_file.type[position+1: ]
+    supported_file_type=["pdf", "csv", "xlxs", "png", "jpg", "jpeg"]
+    if (file_type not in supported_file_type):
+        st.error("Unsupported File Type", icon="🚨")
+    # Check file size
+    elif (uploaded_file.size>limit):
+        st.error("File Size more than 200MB", icon="🚨")
+    else:   
+        # Preview Data
+        print(uploaded_file)
 
-   # Preview Data
-
-
-    # Save into DB
-    if st.session_state['text_option'] == True:
-        if st.button('Submit'):
-            if com_name:
-                add_com = add_company(com_ID, com_name)
-                if (add_com["message"] == "Added"):
-                    st.success("Comapny Added", icon="✅")
-                    save_file(com_ID, uploaded_file, com_name)
+        # Save into DB
+        if st.session_state['text_option'] == True:
+            if st.button('Submit'):
+                if com_name:
+                    add_com = add_company(com_ID, com_name)
+                    if (add_com["message"] == "Added"):
+                        st.success("Comapny Added", icon="✅")
+                        save_file(com_ID, uploaded_file, com_name)
+                    else:
+                        st.error('Error adding company. Please try again later', icon="🚨")
                 else:
-                    st.error('Error adding company. Please try again later', icon="🚨")
-            else:
-                # If company name not entered
-                st.error("Please enter a company name")
-    else:
-        if st.button('Submit'):
-            save_file(selected_comID, uploaded_file, selected_comName)
+                    # If company name not entered
+                    st.error("Please enter a company name", icon="🚨")
+        else:
+            if st.button('Submit'):
+                save_file(selected_comID, uploaded_file, selected_comName)
 
 ############## CSS
 st.markdown("""
