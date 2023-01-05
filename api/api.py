@@ -27,6 +27,19 @@ def get_companies():
             
     return response
 
+@app.post("/add_company")
+def add_company():
+    data = request.get_json()
+    cid = data["cid"]
+    com_name = data["com_name"]
+    sql = (
+    "INSERT INTO companies (cid, name) VALUES (%s,  %s);"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (cid, com_name))
+    return {"message": "Added"}, 201
+
 @app.post("/insert_file")
 def insert_file():
     data = request.get_json()
