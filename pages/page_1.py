@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import hashlib
 import random
-import shutil
 from datetime import datetime
 import base64
 from request import(
@@ -119,7 +118,7 @@ def save_file (ID, uploaded_file, com_name):
     old_path = os.path.join("upload_files",uploaded_file.name)
     new_file_name = com_name.replace(" ", "") +"_" + date_time +"_" + uploaded_file.name
     new_path = os.path.join("upload_files",new_file_name)
-    shutil.copy(old_path, new_path)
+    os.rename(old_path, new_path)
 
     # Encode file details before saving in the database
     new_file_name = base64.b64encode(new_file_name.encode("ascii")).decode("ascii")
