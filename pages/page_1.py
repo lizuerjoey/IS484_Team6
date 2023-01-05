@@ -125,7 +125,7 @@ def save_file (ID, uploaded_file, com_name):
     print(type(new_file_name))
     new_file_name = base64.b64encode(new_file_name.encode("ascii")).decode("ascii")
     print(new_file_name)
-    
+
     # Call API
     add_com = add_file(ID, new_file_name, file_type)
     
@@ -158,3 +158,15 @@ if uploaded_file is not None:
     else:
         if st.button('Submit'):
             save_file(selected_comID, uploaded_file, selected_comName)
+
+############## CSS
+st.markdown("""
+    <style>
+
+    div > div:nth-child(5) > div > button,  div > div:nth-child(4) > div > button
+    {
+        float: right;
+    }
+    
+    </style>
+""", unsafe_allow_html=True)

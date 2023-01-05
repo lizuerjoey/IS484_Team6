@@ -53,3 +53,6 @@ class Companies_Files(Base):
     file = Column(String)
     file_type = Column(String)
     created_date = Column(DateTime, server_default=func.now())
+
+
+    
