@@ -153,7 +153,7 @@ if uploaded_file is not None:
                 if com_name:
                     add_com = add_company(com_ID, com_name)
                     if (add_com["message"] == "Added"):
-                        st.success("Comapny Added", icon="✅")
+                        st.success("Company Added", icon="✅")
                         save_file(com_ID, uploaded_file, com_name)
                     else:
                         st.error('Error adding company. Please try again later', icon="🚨")
