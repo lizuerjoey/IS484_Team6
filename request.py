@@ -45,3 +45,9 @@ def add_file(cid, file, type):
     
     data = post(session, f"http://127.0.0.1:5000/insert_file", body)
     return data
+
+# GET ALL COMPNIES FILES
+def get_allFiles():
+    session = requests.Session()
+    data = fetch(session, f"http://127.0.0.1:5000/get_allFiles")
+    return data

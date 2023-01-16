@@ -59,7 +59,7 @@ def get_allFiles():
     with connection:
         with connection.cursor() as cursor:
             sql = (
-                """SELECT * FROM companies_files cf INNER JOIN companies c ON c.cid=cf.cid ;"""
+                """SELECT cf.fid, c.name, cf.file, cf.file_type FROM companies c INNER JOIN companies_files cf ON cf.cid=c.cid ;"""
             )
             cursor.execute(sql)
             results = cursor.fetchall()

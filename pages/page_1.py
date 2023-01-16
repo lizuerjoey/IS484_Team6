@@ -10,7 +10,7 @@ from request import(
     add_file,
     add_company
 )
-st.header("Company Name")
+st.header("Upload Reports")
 
 ################## Company Name
 get_options = get_all_companies()["data"]
@@ -29,6 +29,7 @@ if len(get_options) == 0:
     st.session_state['text_option'] = True
 else:
     options = list(range(len(get_options)))
+    st.text("Company Name: ")
     col1, col2 = st.columns([10,2])
     with col1:
         placeholder = st.empty()
@@ -70,6 +71,7 @@ if st.session_state['text_option'] == True:
         with col1:
             com_name = st.text_input(
                 "Company Name:",
+                placeholder = "Enter Company Name",
                 key="col1",
                 label_visibility="collapsed"
             )
@@ -82,6 +84,7 @@ if st.session_state['text_option'] == True:
     else:
         com_name = st.text_input(
             "Company Name:",
+            placeholder = "Enter Company Name",
             key="col12",
             label_visibility="collapsed"
         )
@@ -163,6 +166,7 @@ if uploaded_file is not None:
         else:
             if st.button('Submit'):
                 save_file(selected_comID, uploaded_file, selected_comName)
+                
 
 ############## CSS
 st.markdown("""
@@ -172,6 +176,6 @@ st.markdown("""
     {
         float: right;
     }
-    
+
     </style>
 """, unsafe_allow_html=True)
