@@ -87,7 +87,7 @@ st.markdown("""
     {
         justify-content: center;
     }
-    p 
+   section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div.css-o7qwft.e1tzin5v2 > div:nth-child(1) > div > div:nth-child(2) > div > div > p 
     {
         padding-bottom: 10px;
     }
