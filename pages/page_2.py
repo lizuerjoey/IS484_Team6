@@ -4,9 +4,14 @@ import base64
 import os
 import pandas as pd
 from PIL import Image
+import math
 from request import(
     get_allFiles
 )
+# Initialization
+if 'page' not in st.session_state:
+    st.session_state['page'] = 0
+
 # Display icon according to file type
 def display_icon (file_type):
     if file_type == "pdf":
@@ -16,6 +21,18 @@ def display_icon (file_type):
     if file_type == "csv":
         image = Image.open(os.path.join("assets","csv.png"))
     st.image(image)
+
+def paginations(display_list, page):
+    start = page*10
+    end = ((page+1)*10)
+    if (len(display_list)<end):
+        end = len(display_list)
+    display = display_list[start:end]
+    if display == []:
+        st.session_state['page'] = 0
+        display = display_list[0:9]
+    return display
+
 
 # Display files
 def view(fid, file, file_type, company): 
@@ -29,7 +46,7 @@ def view(fid, file, file_type, company):
             st.header(company)
             st.text(file_name)
         if file_type =="pdf":
-            pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1000" type="application/pdf">'
+            pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
         if file_type == "png" or file_type == "jpeg" or file_type== "jpg":
@@ -66,7 +83,27 @@ with placeholder.container():
 
     print(display_list)
 
-    # Loop through the list of files
+    maxPage = math.ceil(len(display_list)/10)-1
+
+    col1, col2, col3 = st.columns([4,14,2])
+    with col1:
+        if (st.session_state['page'] >0):
+            prev = st.button("Previous")
+            if prev:
+                st.session_state['page'] -=1
+                st.experimental_rerun()
+        else:
+            st.button("Previous", disabled=True)
+    with col3:
+        if  (st.session_state['page']<maxPage):
+            next = st.button("Next")
+            if next:
+                st.session_state['page'] +=1
+                st.experimental_rerun()
+        else:
+            st.button("Next", disabled=True)
+    display_list = paginations(display_list, st.session_state['page'])
+    # Loop through the list of files  
     for display in display_list:
         fid = display[0]
         company = display[1]
@@ -84,6 +121,24 @@ with placeholder.container():
         if btn:  
             state = True
             break
+    col1, col2, col3 = st.columns([4,14,2])
+    with col1:
+        if (st.session_state['page'] >0):
+            prev = st.button("Previous", key="prev")
+            if prev:
+                st.session_state['page'] -=1
+                st.experimental_rerun()
+        else:
+            st.button("Previous", disabled=True, key="prev")
+    with col3:
+        if  (st.session_state['page']<maxPage):
+            next = st.button("Next", key="next")
+            if next:
+                st.session_state['page'] +=1
+                st.experimental_rerun()
+        else:
+            st.button("Next", disabled=True, key="next")
+
 if state:
     #This would empty everything inside the container
     placeholder.empty()
@@ -99,16 +154,21 @@ st.markdown("""
         background-color: #F0F2F6;
     }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(1) > div > div,
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(2)   
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(2),
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(3),
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:last-child
     {
         background-color: white;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div > div.css-bzyszk.e1tzin5v2
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div > div.css-bzyszk.e1tzin5v2,
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(2) > div > div.css-ocqkz7.e1tzin5v4 > div.css-vfhot.e1tzin5v2
     {
         margin: auto;
         display: flex;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-bzyszk.e1tzin5v2 > div:nth-child(1) > div > div > div > div    {
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-bzyszk.e1tzin5v2 > div:nth-child(1) > div > div > div > div,
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(2) > div > div.css-ocqkz7.e1tzin5v4 > div.css-vfhot.e1tzin5v2 > div:nth-child(1) > div > div > div > div
+    {
         justify-content: center;
     }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-o7qwft.e1tzin5v2 > div:nth-child(1) > div > div:nth-child(2) > div > div > p   
@@ -119,6 +179,10 @@ st.markdown("""
     {
         display: flex;
         margin: auto;
+    }
+    h2, h3
+    {
+        padding-bottom: 0px
     }
     </style>
 """, unsafe_allow_html=True)
