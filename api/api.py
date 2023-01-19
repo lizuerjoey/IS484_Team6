@@ -20,7 +20,8 @@ def get_companies():
             cursor.execute(companies)
             results = cursor.fetchall()
             response = {
-                "data": results
+                "data": results,
+                "code": 200
             }
             if (len(results)==0):
                 response["status"] = "No companies available"
@@ -38,7 +39,7 @@ def add_company():
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(sql, (cid, com_name))
-    return {"message": "Added"}, 201
+    return {"message": "Added", "code": 201}, 201
 
 @app.post("/insert_file")
 def insert_file():
@@ -52,7 +53,7 @@ def insert_file():
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(sql, (cid, file, file_type))
-    return {"message": "Added"}, 201
+    return {"message": "Added", "code": 201}, 201
 
 @app.get("/get_allFiles")
 def get_allFiles():
