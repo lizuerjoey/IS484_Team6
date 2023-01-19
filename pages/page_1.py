@@ -65,7 +65,7 @@ def initials(full_name):
                
 if st.session_state['text_option'] == True:
     
-    if len(get_options) >= 0:
+    if len(get_options) > 0:
         
         col1, col2 = st.columns([10,2])
         with col1:
