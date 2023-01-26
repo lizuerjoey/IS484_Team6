@@ -82,27 +82,29 @@ with placeholder.container():
         display_list = data
 
     print(display_list)
+    if len(display_list) > 0:
+        maxPage = math.ceil(len(display_list)/10)-1
 
-    maxPage = math.ceil(len(display_list)/10)-1
-
-    col1, col2, col3 = st.columns([4,14,2])
-    with col1:
-        if (st.session_state['page'] >0):
-            prev = st.button("Previous")
-            if prev:
-                st.session_state['page'] -=1
-                st.experimental_rerun()
-        else:
-            st.button("Previous", disabled=True)
-    with col3:
-        if  (st.session_state['page']<maxPage):
-            next = st.button("Next")
-            if next:
-                st.session_state['page'] +=1
-                st.experimental_rerun()
-        else:
-            st.button("Next", disabled=True)
-    display_list = paginations(display_list, st.session_state['page'])
+        col1, col2, col3 = st.columns([4,14,2])
+        with col1:
+            if (st.session_state['page'] >0):
+                prev = st.button("Previous")
+                if prev:
+                    st.session_state['page'] -=1
+                    st.experimental_rerun()
+            else:
+                st.button("Previous", disabled=True)
+        with col3:
+            if  (st.session_state['page']<maxPage):
+                next = st.button("Next")
+                if next:
+                    st.session_state['page'] +=1
+                    st.experimental_rerun()
+            else:
+                st.button("Next", disabled=True)
+        display_list = paginations(display_list, st.session_state['page'])
+    if len(display_list) == 0:
+        st.write("No files available")
     # Loop through the list of files  
     for display in display_list:
         fid = display[0]
@@ -121,23 +123,24 @@ with placeholder.container():
         if btn:  
             state = True
             break
-    col1, col2, col3 = st.columns([4,14,2])
-    with col1:
-        if (st.session_state['page'] >0):
-            prev = st.button("Previous", key="prev")
-            if prev:
-                st.session_state['page'] -=1
-                st.experimental_rerun()
-        else:
-            st.button("Previous", disabled=True, key="prev")
-    with col3:
-        if  (st.session_state['page']<maxPage):
-            next = st.button("Next", key="next")
-            if next:
-                st.session_state['page'] +=1
-                st.experimental_rerun()
-        else:
-            st.button("Next", disabled=True, key="next")
+    if len(display_list)>0:
+        col1, col2, col3 = st.columns([4,14,2])
+        with col1:
+            if (st.session_state['page'] >0):
+                prev = st.button("Previous", key="prev")
+                if prev:
+                    st.session_state['page'] -=1
+                    st.experimental_rerun()
+            else:
+                st.button("Previous", disabled=True, key="prev")
+        with col3:
+            if  (st.session_state['page']<maxPage):
+                next = st.button("Next", key="next")
+                if next:
+                    st.session_state['page'] +=1
+                    st.experimental_rerun()
+            else:
+                st.button("Next", disabled=True, key="next")
 
 if state:
     #This would empty everything inside the container
@@ -183,6 +186,11 @@ st.markdown("""
     h2, h3
     {
         padding-bottom: 0px
+    }
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(4) > div > div > p 
+    {
+        background-color: white;
+        align-self: center;
     }
     </style>
 """, unsafe_allow_html=True)

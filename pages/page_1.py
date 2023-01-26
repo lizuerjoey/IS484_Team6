@@ -11,6 +11,7 @@ from request import(
     add_file,
     add_company
 )
+
 st.header("Upload Reports")
 
 ################## Company Name
@@ -143,7 +144,8 @@ if uploaded_file is not None:
     # Check file type
     position = uploaded_file.type.find("/")
     file_type = uploaded_file.type[position+1: ]
-    supported_file_type=["pdf", "csv", "xlxs", "png", "jpg", "jpeg"]
+    # Accepted File Type
+    supported_file_type=["pdf", "png", "jpg", "jpeg"]
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
