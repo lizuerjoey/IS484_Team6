@@ -5,6 +5,7 @@ import hashlib
 import random
 from datetime import datetime
 import base64
+from pages.page_4 import (get_file_path)
 from request import(
     get_all_companies,
     add_file,
@@ -110,8 +111,10 @@ date_time = str(now.strftime("%d%m%Y%H%M%S"))
 
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
+
+get_file_path (uploaded_file)
+
 def save_file (ID, uploaded_file, com_name):
-    
 
     # Upload into directory
     with open(os.path.join("upload_files",uploaded_file.name),"wb") as f: 
