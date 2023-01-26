@@ -151,7 +151,6 @@ if uploaded_file is not None:
     else:   
         # Preview Data
         print(uploaded_file)
-        get_upload_file(uploaded_file)
 
         # Save into DB
         if st.session_state['text_option'] == True:
