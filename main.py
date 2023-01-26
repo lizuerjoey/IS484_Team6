@@ -21,7 +21,7 @@ show_pages(
     [
         Page("main.py", "Dashboard", "💹"),
         Page("pages/page_1.py", "Upload Reports", ":book:"),
-        Page("pages/page_2.py", "Files", ":page_facing_up:")
+        Page("pages/page_2.py", "Files", ":page_facing_up:"),
     ]
 )
 get_options = get_all_companies()["data"]
