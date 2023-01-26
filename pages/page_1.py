@@ -113,7 +113,7 @@ date_time = str(now.strftime("%d%m%Y%H%M%S"))
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
 
-get_file_path (uploaded_file)
+
 
 def save_file (ID, uploaded_file, com_name):
 
@@ -154,7 +154,8 @@ if uploaded_file is not None:
     else:   
         # Preview Data
         print(uploaded_file)
-
+        get_file_path (uploaded_file)
+        
         # Save into DB
         if st.session_state['text_option'] == True:
             if st.button('Submit'):
