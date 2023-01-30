@@ -166,7 +166,43 @@ else:
         df_bs.rename({'year': 'Year', 'totalEquities': 'Total Equities', 'totalLiabilities': 'Total Liabilities', 'totalAssets':'Total Assets'}, axis=1, inplace=True)
 
         print(df_bs)
+        # Show Graph
+        ### INCOME STATEMENT 
+        st.subheader("Income Statement")
+        st.line_chart(df_is, x="Year")
 
+        #### METRICES
+        ###### BASE AND CURRENT YEAR
+        res = [eval(i) for i in income_statement["Year"]]
+        base_year_position = res.index(min(res))
+        current_year_position = res.index(max(res))
+        col1, col2 = st.columns(2)
+        col3, col4 =st.columns(2)
+        
+        ###### REVENUE
+        with col1:
+            revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
+            st.metric(label="Revenue", value=income_statement["Revenue"][current_year_position], delta=str(revenue_ratio)+"%")
+
+        ###### COST
+        with col2:
+            cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
+            st.metric(label="Cost", value=income_statement["Cost"][current_year_position], delta=str(cost_ratio)+"%", delta_color="inverse")
+
+        ###### GROSS PROFIT/LOSS
+        with col3:
+            gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
+            st.metric(label="Gross Profit/Loss", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(gross_ratio)+"%")
+
+        ###### NET PROFIT/LOSS
+        with col4:
+            net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
+            st.metric(label="Net Profit/Loss", value=income_statement["NetProfitLoss"][current_year_position], delta=str(net_ratio)+"%")
+
+
+        ### BALANCE SHEET
+        st.subheader("Balance Sheet")
+        st.line_chart(df_bs, x="Year")
 
 ############## CSS
 st.markdown("""
@@ -175,17 +211,22 @@ st.markdown("""
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+7) > div 
     {
         width: fit-content;
-        padding: 10px;
-        padding-left: 30px;
+        padding: 10px 10px 10px 30px;
         border: 1px solid black;
         border-radius: 5px;
+        font-weight: 900;
+    }
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div:nth-child(1) > div > div > div > label > div > div > p        
+    {
+        font-weight: 700;
     }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div > div > canvas
     {
         width: fit-content;
-        padding: 10px;
+        padding: 20px 20px 10px 30px; 
         border: 1px solid black;
         border-radius: 5px;
+        
     }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:last-child > div,
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div,
