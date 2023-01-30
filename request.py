@@ -1,4 +1,5 @@
 import requests 
+import json
 
 # GET REQUEST
 def fetch(session, url):
@@ -51,3 +52,41 @@ def get_allFiles():
     session = requests.Session()
     data = fetch(session, f"http://127.0.0.1:5000/get_allFiles")
     return data
+
+# INSERT EXTRACTED DATA
+def insert_data(fid, cid, data):
+    session = requests.Session()
+    body = {
+        "fid": fid,
+        "cid": cid,
+        "data": json.dumps(data)
+    }
+    
+    data = post(session, f"http://127.0.0.1:5000/insert_data", body)
+    return data
+
+# RETRIEVE EXTRACTED DATA
+def retrieve_data(cid):
+    session = requests.Session()
+    body = {
+        "cid": cid,
+    }
+    data = post(session, f"http://127.0.0.1:5000/retrieve_data", body)
+    return data
+
+#####DUMMY DATA -- NEEDS TO CHANGE
+# GET SYMBOLS
+def get_symbols():
+    session = requests.Session()
+    data = fetch(session, f"http://127.0.0.1:5000/get_symbols")
+    return data
+
+# GET CURRENCIES
+def get_currencies(base):
+    body = {
+        "base": base
+    }
+    session = requests.Session()
+    data = post(session, f"http://127.0.0.1:5000/get_currencies", body)
+    return data
+
