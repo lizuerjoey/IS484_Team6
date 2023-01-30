@@ -70,6 +70,22 @@ def get_allFiles():
             if (len(results)==0):
                 response["status"] = "No files available"
     return response
+
+# INSERT EXTRACTED DATA
+@app.post("/insert_data")
+def insert_data():
+    data = request.get_json()
+    fid = data["fid"]
+    cid = data["cid"]
+    extracted_data = data["data"]
     
+    sql = (
+    "INSERT INTO extracted_data (fid, cid, data) VALUES (%s, %s, %s);"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (fid, cid, extracted_data))
+    return {"message": "Added", "code": 201}, 201  
+      
 if __name__ == '__main__':
     app.run(debug=True)
