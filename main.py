@@ -16,7 +16,6 @@ from request import(
     retrieve_data,
     insert_data
 )
-
 # Specify what pages should be shown in the sidebar, and what their titles and icons
 # should be
 show_pages(
@@ -28,44 +27,49 @@ show_pages(
     ]
 )
 get_options = get_all_companies()["data"]
+
+# COMPANY
 if (len(get_options) == 0):
     st.text("No company available")
 else:
-    options = list(range(len(get_options)))
-    option = st.selectbox(
-        'Company',
-        options, format_func=lambda x: get_options[x][1])
+    company_col, currency_col = st.columns(2)
+    with company_col:
+        options = list(range(len(get_options)))
+        option = st.selectbox(
+            'Company',
+            options, format_func=lambda x: get_options[x][1])
+            
+        # Get Selected Company ID    
+        selected_comID = get_options[option][0]
+        selected_comName = get_options[option][1]
+
+
+        # Retrieve data
+        get_data = retrieve_data(selected_comID)
+        print(type(get_data))
+
+    # CURRENCY
+    with currency_col:
+        symbols = get_symbols()
+
+        code = ["Remain Unchange"]
+        for key, value in symbols["symbols"].items():
+            code.append(key + "(" + value + ")")
+
+        print(code)
+        option = st.selectbox(
+            'Currency to convert',
+            code)
         
-    # Get Selected Company ID    
-    selected_comID = get_options[option][0]
-    selected_comName = get_options[option][1]
+        if option!= "Remain Unchange":
+            symbol_to_covert = option[:option.find("(")]
 
+            currencies = get_currencies(symbol_to_covert)
+            exchange_rate = currencies["rates"][symbol_to_covert]
+        else:
+            exchange_rate = 1
 
-    # Retrieve data
-    get_data = retrieve_data(selected_comID)
-    print(type(get_data))
-
-    # Currency
-    symbols = get_symbols()
-
-    code = ["Remain Unchange"]
-    for key, value in symbols["symbols"].items():
-        code.append(key + "(" + value + ")")
-
-    print(code)
-    option = st.selectbox(
-        'Currency to convert',
-        code)
-       
-    if option!= "Remain Unchange":
-        symbol_to_covert = option[:option.find("(")]
-        st.write('You selected:', symbol_to_covert)
-
-        currencies = get_currencies(symbol_to_covert)
-        exchange_rate = currencies["rates"][symbol_to_covert]
-    else:
-        exchange_rate = 1
-    # Start/End Year
+    # START/END YEAR
     year = []
     print(type(get_data["data"][0][3]))
     for data in get_data["data"]:
@@ -84,17 +88,21 @@ else:
                 year.append(result["other_metrics"]["year"])
         year.sort()
 
-    start_year = st.selectbox(
-        'Start Year',
-        year)
+    start_col, end_col = st.columns(2)
+    with start_col:
+        start_year = st.selectbox(
+            'Start Year',
+            year)
 
     if year.index(start_year) == len(year)-1:
         endYear = []
     else:
         endYear = year[year.index(start_year)+1:]
-    end_year = st.selectbox(
-        'End Year',
-        endYear)
+
+    with end_col:
+        end_year = st.selectbox(
+            'End Year',
+            endYear)
     if endYear == []:
         st.error("Must be 2 or more years", icon="🚨")
         print(date.today().year)
@@ -116,6 +124,11 @@ else:
             "totalEquities":[],
             "totalLiabilities":[],
             "totalAssets":[]
+        }
+        assets = {
+            "year": [],
+            "totalCurrentAssets": [],
+            "totalNonCurrentAssets":[]
         }
         for data in get_data["data"]:
             result = json.loads(data[3])
@@ -147,25 +160,29 @@ else:
                     balance_sheet["totalEquities"][position] = (balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])/2
                     balance_sheet["totalLiabilities"][position] = (balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])/2
                     balance_sheet["totalAssets"][position] = (balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])/2
+                    assets["totalCurrentAssets"][position] = (assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])/2
+                    assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
                 else:
                     balance_sheet["year"].append(str(balance_sheet_result["year"]))
                     balance_sheet["totalEquities"].append(balance_sheet_result["totalEquities"]*exchange_rate)
                     balance_sheet["totalLiabilities"].append(balance_sheet_result["totalLiabilities"]*exchange_rate)
                     balance_sheet["totalAssets"].append(balance_sheet_result["totalAssets"]*exchange_rate)
-
+                    assets["year"].append(str(balance_sheet_result["year"]))
+                    assets["totalCurrentAssets"].append(balance_sheet_result["totalCurrentAssets"]*exchange_rate)
+                    assets["totalNonCurrentAssets"].append(balance_sheet_result["totalNonCurrentAssets"]*exchange_rate)
 
     
 
         # Create Dataframe
-        print("DF")
         df_is = pd.DataFrame(data=income_statement)
         df_is.rename({'GrossProfitLoss': 'Gross Profit/Loss', 'NetProfitLoss': 'Net Profit/Loss'}, axis=1, inplace=True)
-        print(df_is)
             
         df_bs = pd.DataFrame(data=balance_sheet)
         df_bs.rename({'year': 'Year', 'totalEquities': 'Total Equities', 'totalLiabilities': 'Total Liabilities', 'totalAssets':'Total Assets'}, axis=1, inplace=True)
 
-        print(df_bs)
+        df_assets = pd.DataFrame(data=assets)
+        df_assets.rename({'year': 'Year', 'totalCurrentAssets': 'Current Assets', 'totalNonCurrentAssets': 'Non-Current Assets'}, axis=1, inplace=True)
+
         # Show Graph
         ### INCOME STATEMENT 
         st.subheader("Income Statement")
@@ -204,11 +221,18 @@ else:
         st.subheader("Balance Sheet")
         st.line_chart(df_bs, x="Year")
 
+        assets_col, liabilities_col = st.columns(2)
+
+        with assets_col:
+            ###### ASSETS
+            st.text("Total Assets")
+            st.bar_chart(df_assets, x="Year")
+
 ############## CSS
 st.markdown("""
     <style>
-
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+7) > div 
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+5) > div  ,
+    div > section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div:nth-child(1)  
     {
         width: fit-content;
         padding: 10px 10px 10px 30px;
@@ -220,7 +244,8 @@ st.markdown("""
     {
         font-weight: 700;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div > div > canvas
+
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+4) > div > div > div > canvas
     {
         width: fit-content;
         padding: 20px 20px 10px 30px; 
@@ -228,14 +253,27 @@ st.markdown("""
         border-radius: 5px;
         
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:last-child > div,
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div,
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+7):nth-child(-n+11) > div,
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(10) > div
     {
         padding: 0px;
         border: 0px;
     }
 
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+1):nth-child(-n+3) > div:nth-child(n+1) > div:nth-child(1) > div > div > div > div > div
+    {
+        background-color: white;
+        border: 0px;
+        border-bottom: 2px solid black; 
+        font-size: 25px
+    }
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(1) > div
+    {
+        font-family: "Source Sans Pro", sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+    }
+    
     </style>
 """, unsafe_allow_html=True)
 # TESTING
