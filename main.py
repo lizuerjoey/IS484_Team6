@@ -1,9 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
-import base64
-import time
 from st_clickable_images import clickable_images
 from st_pages import Page, show_pages, add_page_title
 import json
@@ -14,7 +11,6 @@ from request import(
     get_currencies,
     get_symbols,
     retrieve_data,
-    insert_data
 )
 # Specify what pages should be shown in the sidebar, and what their titles and icons
 # should be
@@ -26,11 +22,14 @@ show_pages(
         Page("pages/page_2.py", "Files", ":page_facing_up:")
     ]
 )
+
+
 get_options = get_all_companies()["data"]
 
 # COMPANY
 if (len(get_options) == 0):
-    st.text("No company available")
+    st.header("No company available..")
+    st.write("Please add a company and upload reports.")
 else:
     company_col, currency_col = st.columns(2)
     with company_col:
@@ -61,31 +60,41 @@ else:
             'Currency to convert',
             code)
         
+        # if option!= "Remain Unchange":
+        #     symbol_to_covert = option[:option.find("(")]
+
+        #     currencies = get_currencies(symbol_to_covert)
+        #     exchange_rate = currencies["rates"][symbol_to_covert]
+        # else:
+        #     exchange_rate = 1
+
+    
+    year = []
+    for data in get_data["data"]:
+        result = json.loads(data[3])
+        base_currency = result["currency"]
+        # Convert to the right currency
         if option!= "Remain Unchange":
             symbol_to_covert = option[:option.find("(")]
 
-            currencies = get_currencies(symbol_to_covert)
+            currencies = get_currencies(base_currency)
             exchange_rate = currencies["rates"][symbol_to_covert]
         else:
             exchange_rate = 1
 
-    # START/END YEAR
-    year = []
-    print(type(get_data["data"][0][3]))
-    for data in get_data["data"]:
-        result = json.loads(data[3])
-        base_currency = result["currency"]
-        print(base_currency)
-
+        # START/END YEAR
         for income_stat in result["income_statement"]:
             if income_stat["year"] not in year:
                 year.append(income_stat["year"])
-        if result["balance_sheet"]["year"] not in year:
-                year.append(result["balance_sheet"]["year"])
-        if result["cash_flow"]["year"] not in year:
-                year.append(result["cash_flow"]["year"])
-        if result["other_metrics"]["year"] not in year:
-                year.append(result["other_metrics"]["year"])
+        for balance_sht in result["income_statement"]:
+            if balance_sht["year"] not in year:
+                    year.append(balance_sht["year"])
+        for cashflow in result["cash_flow"]:
+            if cashflow["year"] not in year:
+                    year.append(cashflow["year"])
+        for other_metrices in result["other_metrics"]:
+            if other_metrices["year"] not in year:
+                    year.append(other_metrices["year"])
         year.sort()
 
     start_col, end_col = st.columns(2)
@@ -93,23 +102,20 @@ else:
         start_year = st.selectbox(
             'Start Year',
             year)
-
-    if year.index(start_year) == len(year)-1:
-        endYear = []
-    else:
-        endYear = year[year.index(start_year)+1:]
+    endYear = []
+    if year.index(start_year) != len(year)-1:
+        for y in year[year.index(start_year)+1:]:
+            if len(start_year) == len(y) :
+                endYear.append(y)
 
     with end_col:
         end_year = st.selectbox(
             'End Year',
             endYear)
     if endYear == []:
-        st.error("Must be 2 or more years", icon="🚨")
-        print(date.today().year)
-        print(type(date.today().year))
-    elif end_year == date.today().year:
-        st.error("End date cannot be this year", icon="🚨")
-        # Quarter
+        st.error("End Year must not be empty", icon="🚨")
+    elif int(end_year[:4]) >= date.today().year:
+        st.error("End date cannot be equal or more than this year", icon="🚨")
     else:    
         # Aggregrated value
         income_statement = {
@@ -130,10 +136,37 @@ else:
             "totalCurrentAssets": [],
             "totalNonCurrentAssets":[]
         }
+        liabilities = {
+            "year": [],
+            "totalCurrentLiabilties":[],
+            "totalNonCurrentLiabitilies":[]
+        }
+        cashflow = {
+            "year":[],
+            "operatingNetCashFlow":[],
+            "investingNetCashFlow":[],
+            "financingNetCashFlow":[]
+        }
+        other_metrics = {
+            "year":[],
+            "returnOnAsset": [],
+            "netInterestMargin": [],
+            "netInterestIncomeRatio": [],
+            "costIncomeRatio": [],
+            "ebidta":[],
+        }
+
+        is_numForm = ""
+        bs_numForm = ""
+        cf_numForm = ""
+        om_numForm = ""
+
         for data in get_data["data"]:
             result = json.loads(data[3])
+            # INCOME STATEMENT
             for income_stat in result["income_statement"]:
-                if income_stat["year"]>=start_year and income_stat["year"]<=end_year:
+                is_numForm = income_stat["numberFormat"]
+                if income_stat["year"]>=start_year and income_stat["year"]<=end_year and len(income_stat["year"]) == len(start_year):
                     grossPL = income_stat["grossProfit"] - income_stat["grossLoss"]
                     netPL = income_stat["netProfit"] - income_stat["netLoss"]
                     if str(income_stat["year"]) in income_statement["Year"]:
@@ -149,90 +182,176 @@ else:
                         income_statement["Cost"].append(income_stat["revenue"]*exchange_rate)
                         income_statement["GrossProfitLoss"].append(grossPL*exchange_rate)
                         income_statement["NetProfitLoss"].append(netPL*exchange_rate)
-
             
-            balance_sheet_result = result["balance_sheet"]
-                
-            if balance_sheet_result["year"]>=start_year and balance_sheet_result["year"]<=end_year:
+            # Create Dataframe
+            df_is = pd.DataFrame(data=income_statement)
+            df_is.rename({'GrossProfitLoss': 'Gross Profit/Loss', 'NetProfitLoss': 'Net Profit/Loss'}, axis=1, inplace=True)
+            
+            # BALANCE SHEET
+            for balance_sheet_result in result["balance_sheet"]:
+                bs_numForm = balance_sheet_result["numberFormat"]
+                if balance_sheet_result["year"]>=start_year and balance_sheet_result["year"]<=end_year  and len(balance_sheet_result["year"]) == len(start_year):
 
-                if str(balance_sheet_result["year"]) in balance_sheet["year"]:
-                    position = balance_sheet["year"].index(str(balance_sheet_result["year"]))
-                    balance_sheet["totalEquities"][position] = (balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])/2
-                    balance_sheet["totalLiabilities"][position] = (balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])/2
-                    balance_sheet["totalAssets"][position] = (balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])/2
-                    assets["totalCurrentAssets"][position] = (assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])/2
-                    assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
-                else:
-                    balance_sheet["year"].append(str(balance_sheet_result["year"]))
-                    balance_sheet["totalEquities"].append(balance_sheet_result["totalEquities"]*exchange_rate)
-                    balance_sheet["totalLiabilities"].append(balance_sheet_result["totalLiabilities"]*exchange_rate)
-                    balance_sheet["totalAssets"].append(balance_sheet_result["totalAssets"]*exchange_rate)
-                    assets["year"].append(str(balance_sheet_result["year"]))
-                    assets["totalCurrentAssets"].append(balance_sheet_result["totalCurrentAssets"]*exchange_rate)
-                    assets["totalNonCurrentAssets"].append(balance_sheet_result["totalNonCurrentAssets"]*exchange_rate)
-
+                    if balance_sheet_result["year"] in balance_sheet["year"]:
+                        position = balance_sheet["year"].index(str(balance_sheet_result["year"]))
+                        balance_sheet["totalEquities"][position] = (balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])/2
+                        balance_sheet["totalLiabilities"][position] = (balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])/2
+                        balance_sheet["totalAssets"][position] = (balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])/2
+                        assets["totalCurrentAssets"][position] = (assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])/2
+                        assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
+                        liabilities["totalCurrentLiabilties"][position] = (liabilities["totalCurrentLiabilties"][position]+balance_sheet_result["totalCurrentLiabilties"])/2
+                        liabilities["totalNonCurrentLiabitilies"][position] = (liabilities["totalNonCurrentLiabitilies"][position]+balance_sheet_result["totalNonCurrentLiabitilies"])/2
+                    else:
+                        balance_sheet["year"].append(str(balance_sheet_result["year"]))
+                        balance_sheet["totalEquities"].append(balance_sheet_result["totalEquities"]*exchange_rate)
+                        balance_sheet["totalLiabilities"].append(balance_sheet_result["totalLiabilities"]*exchange_rate)
+                        balance_sheet["totalAssets"].append(balance_sheet_result["totalAssets"]*exchange_rate)
+                        assets["year"].append(str(balance_sheet_result["year"]))
+                        assets["totalCurrentAssets"].append(balance_sheet_result["totalCurrentAssets"]*exchange_rate)
+                        assets["totalNonCurrentAssets"].append(balance_sheet_result["totalNonCurrentAssets"]*exchange_rate)
+                        liabilities["year"].append(str(balance_sheet_result["year"]))
+                        liabilities["totalCurrentLiabilties"].append(balance_sheet_result["totalCurrentLiabilties"]*exchange_rate)
+                        liabilities["totalNonCurrentLiabitilies"].append(balance_sheet_result["totalNonCurrentLiabitilies"]*exchange_rate)
+    
     
 
-        # Create Dataframe
-        df_is = pd.DataFrame(data=income_statement)
-        df_is.rename({'GrossProfitLoss': 'Gross Profit/Loss', 'NetProfitLoss': 'Net Profit/Loss'}, axis=1, inplace=True)
-            
-        df_bs = pd.DataFrame(data=balance_sheet)
-        df_bs.rename({'year': 'Year', 'totalEquities': 'Total Equities', 'totalLiabilities': 'Total Liabilities', 'totalAssets':'Total Assets'}, axis=1, inplace=True)
+            # Create Dataframe    
+            df_bs = pd.DataFrame(data=balance_sheet)
+            df_bs.rename({'year': 'Year', 'totalEquities': 'Total Equities', 'totalLiabilities': 'Total Liabilities', 'totalAssets':'Total Assets'}, axis=1, inplace=True)
 
-        df_assets = pd.DataFrame(data=assets)
-        df_assets.rename({'year': 'Year', 'totalCurrentAssets': 'Current Assets', 'totalNonCurrentAssets': 'Non-Current Assets'}, axis=1, inplace=True)
+            df_assets = pd.DataFrame(data=assets)
+            df_assets.rename({'year': 'Year', 'totalCurrentAssets': 'Current Assets', 'totalNonCurrentAssets': 'Non-Current Assets'}, axis=1, inplace=True)
+            
+            df_liabilities = pd.DataFrame(data=liabilities)
+            df_liabilities.rename({'year': 'Year', 'totalCurrentLiabilties': 'Current Liabilities', 'totalNonCurrentLiabitilies': 'Non-Current Liabilities'}, axis=1, inplace=True)
+
+
+            # CASHFLOW
+            for cashflow_result in result["cash_flow"]:
+                cf_numForm = cashflow_result["numberFormat"]
+                if cashflow_result["year"]>=start_year and cashflow_result["year"]<=end_year  and len(cashflow_result["year"]) == len(start_year):
+                    if cashflow_result["year"] in cashflow["year"]:
+                        position = cashflow["year"].index(str(cashflow_result["year"]))
+                        cashflow["operatingNetCashFlow"][position] = (cashflow["operatingNetCashFlow"][position] + cashflow_result["operatingNetCashFlow"])/2
+                        cashflow["investingNetCashFlow"][position] = (cashflow["investingNetCashFlow"][position] + cashflow_result["investingNetCashFlow"])/2
+                        cashflow["financingNetCashFlow"][position] = (cashflow["financingNetCashFlow"][position] + cashflow_result["financingNetCashFlow"])/2
+                    else:
+                        cashflow["year"].append(str(cashflow_result["year"]))
+                        cashflow["operatingNetCashFlow"].append(cashflow_result["operatingNetCashFlow"]*exchange_rate)
+                        cashflow["investingNetCashFlow"].append(cashflow_result["investingNetCashFlow"]*exchange_rate)
+                        cashflow["financingNetCashFlow"].append(cashflow_result["financingNetCashFlow"]*exchange_rate)
+            
+            # Create Dataframe
+            df_cf = pd.DataFrame(data=cashflow)
+            df_cf.rename({'year': 'Year', 'operatingNetCashFlow': 'Operating Net Cash Flow', 'investingNetCashFlow': 'Investing Net Cash Flow', 'financingNetCashFlow':'Financing Net Cash Flow'}, axis=1, inplace=True)
+
+        # OTHER METRICES
+        for other_metrics_result in result["other_metrics"]:
+            om_numForm = other_metrics_result["numberFormat"]
+            if other_metrics_result["year"]>=start_year and other_metrics_result["year"]<=end_year  and len(other_metrics_result["year"]) == len(start_year):
+                if other_metrics_result["year"] in  other_metrics["year"]:
+                    position = other_metrics["year"].index(str(other_metrics_result["year"]))
+                    other_metrics["returnOnAsset"][position] = (other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])/2
+                    other_metrics["netInterestMargin"][position] = (other_metrics["netInterestMargin"][position] + other_metrics_result["netInterestMargin"])/2
+                    other_metrics["netInterestIncomeRatio"][position] = (other_metrics["netInterestIncomeRatio"][position] + other_metrics_result["netInterestIncomeRatio"])/2
+                    other_metrics["costIncomeRatio"][position] = (other_metrics["costIncomeRatio"][position] + other_metrics_result["costIncomeRatio"])/2
+                    other_metrics["ebidta"][position] = (other_metrics["ebidta"][position] + other_metrics_result["ebidta"])/2
+                else:
+                    other_metrics["year"].append(str(other_metrics_result["year"]))
+                    other_metrics["returnOnAsset"].append(other_metrics_result["returnOnAsset"]*exchange_rate)
+                    other_metrics["netInterestMargin"].append(other_metrics_result["netInterestMargin"]*exchange_rate)
+                    other_metrics["netInterestIncomeRatio"].append(other_metrics_result["netInterestIncomeRatio"]*exchange_rate)
+                    other_metrics["costIncomeRatio"].append(other_metrics_result["costIncomeRatio"]*exchange_rate)
+                    other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
+         # Create Dataframe
+        df_om = pd.DataFrame(data=other_metrics)
+        df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cos tIncome Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
 
         # Show Graph
-        ### INCOME STATEMENT 
-        st.subheader("Income Statement")
-        st.line_chart(df_is, x="Year")
+        if not df_is.empty and len(income_statement["Year"])>=2:  
+            ### INCOME STATEMENT 
+            st.subheader("Income Statement (in " + is_numForm + ")")
+            st.line_chart(df_is, x="Year")
 
-        #### METRICES
-        ###### BASE AND CURRENT YEAR
-        res = [eval(i) for i in income_statement["Year"]]
-        base_year_position = res.index(min(res))
-        current_year_position = res.index(max(res))
-        col1, col2 = st.columns(2)
-        col3, col4 =st.columns(2)
+            #### METRICES
+            ###### BASE AND CURRENT YEAR
+            res = [eval(i) for i in income_statement["Year"]]
+            base_year_position = income_statement["Year"].index(str(min(res)))
+            current_year_position = income_statement["Year"].index(str(max(res)))
+            col1, col2 = st.columns(2)
+            col3, col4 =st.columns(2)
+            
+            ###### REVENUE
+            with col1:
+                revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
+                st.metric(label="Revenue", value=income_statement["Revenue"][current_year_position], delta=str(revenue_ratio)+"%")
+
+            ###### COST
+            with col2:
+                cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
+                st.metric(label="Cost", value=income_statement["Cost"][current_year_position], delta=str(cost_ratio)+"%", delta_color="inverse")
+
+            ###### GROSS PROFIT/LOSS
+            with col3:
+                gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
+                st.metric(label="Gross Profit/Loss", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(gross_ratio)+"%")
+
+            ###### NET PROFIT/LOSS
+            with col4:
+                net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
+                st.metric(label="Net Profit/Loss", value=income_statement["NetProfitLoss"][current_year_position], delta=str(net_ratio)+"%")
         
-        ###### REVENUE
-        with col1:
-            revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
-            st.metric(label="Revenue", value=income_statement["Revenue"][current_year_position], delta=str(revenue_ratio)+"%")
-
-        ###### COST
-        with col2:
-            cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
-            st.metric(label="Cost", value=income_statement["Cost"][current_year_position], delta=str(cost_ratio)+"%", delta_color="inverse")
-
-        ###### GROSS PROFIT/LOSS
-        with col3:
-            gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
-            st.metric(label="Gross Profit/Loss", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(gross_ratio)+"%")
-
-        ###### NET PROFIT/LOSS
-        with col4:
-            net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
-            st.metric(label="Net Profit/Loss", value=income_statement["NetProfitLoss"][current_year_position], delta=str(net_ratio)+"%")
-
-
         ### BALANCE SHEET
-        st.subheader("Balance Sheet")
-        st.line_chart(df_bs, x="Year")
+        if not df_bs.empty and len(balance_sheet["year"])>=2: 
+            st.subheader("Balance Sheet (in " + bs_numForm + ")")
+            st.line_chart(df_bs, x="Year")
 
-        assets_col, liabilities_col = st.columns(2)
+            assets_col, liabilities_col = st.columns(2)
 
-        with assets_col:
-            ###### ASSETS
-            st.text("Total Assets")
-            st.bar_chart(df_assets, x="Year")
+            with assets_col:
+                ###### ASSETS
+                st.text("Total Assets")
+                st.bar_chart(df_assets, x="Year")
+            with liabilities_col:
+                ###### LIABILITIES
+                st.text("Total Liabilities")
+                st.bar_chart(df_liabilities, x="Year")
+            
+        ### CASH FLOW
+        if not df_cf.empty and len(cashflow["year"])>=2: 
+            st.subheader("Cash Flow (in " + cf_numForm + ")")
+            st.bar_chart(df_cf, x="Year")
+        
+        ### OTHER METRICS
+        if not df_om.empty and len(other_metrics["year"])>=2: 
+            st.subheader("Other Metrics (in " + om_numForm + ")")
+            ###### BASE AND CURRENT YEAR
+            res = [eval(i) for i in other_metrics["year"]]
+            base_year_position = other_metrics["year"].index(str(min(res)))
+            current_year_position = other_metrics["year"].index(str(max(res)))
+            roa_col, nim_col = st.columns(2)
+            nii_col, cir_col = st.columns(2)
+
+            with roa_col:
+                returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
+                st.metric(label="Return on Asset", value=other_metrics["returnOnAsset"][current_year_position], delta=str(returnOnAsset_ratio)+"%")
+            with nim_col:
+                netInterestMargin_ratio = ((other_metrics["netInterestMargin"][current_year_position] - other_metrics["netInterestMargin"][base_year_position])/other_metrics["netInterestMargin"][base_year_position])*100
+                st.metric(label="Net Interest Margin", value=other_metrics["netInterestMargin"][current_year_position], delta=str(netInterestMargin_ratio)+"%")
+            with nii_col:
+                netInterestIncome_ratio = ((other_metrics["netInterestIncomeRatio"][current_year_position] - other_metrics["netInterestIncomeRatio"][base_year_position])/other_metrics["netInterestIncomeRatio"][base_year_position])*100
+                st.metric(label="Net Interest Income", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(netInterestIncome_ratio)+"%")
+            with cir_col:
+                costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
+                st.metric(label="Cost Income", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(costIncome_ratio)+"%")
+
+            ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
+            st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
 
 ############## CSS
 st.markdown("""
     <style>
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+5) > div  ,
-    div > section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div:nth-child(1)  
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+5) > div:nth-child(1)
     {
         width: fit-content;
         padding: 10px 10px 10px 30px;
@@ -254,7 +373,7 @@ st.markdown("""
         
     }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+7):nth-child(-n+11) > div,
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(10) > div
+    div > section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:last-child > div,
     {
         padding: 0px;
         border: 0px;
@@ -276,50 +395,3 @@ st.markdown("""
     
     </style>
 """, unsafe_allow_html=True)
-# TESTING
-# data = {
-#     "currency": "yen",
-#     "income_statement": [
-#         {
-#             "year": 2023,
-#             "quarter": None,
-#             "revenue": 2000,
-#             "cost": 30000,
-#             "grossProfit": 5000,
-#             "grossLoss": 900,
-#             "netProfit": 300,
-#             "netLoss": 200,
-#             "incomeTax": 8900,
-#             "interest": 800,
-#             "depreciation": 400
-#         }
-#     ],
-#     "balance_sheet": {
-#         "year": 2023,
-#         "totalEquitiesAndLiabilities": 100,
-#         "totalEquities": 1000,
-#         "totalLiabilities": 300,
-#         "totalAssets": 4000,
-#         "totalCurrentAssets": 3000,
-#         "totalNonCurrentAssets": 3000,
-#         "debt": 4000,
-#         "cash": 300
-#     },
-#     "cash_flow": {
-#         "year": 2023,
-#         "operatingNetCashFlow": 300,
-#         "investingNetCashFlow": 3000,
-#         "financingNetCashFlow": 3000
-#     },
-#     "other_metrics": {
-#         "year": 2023,
-#         "returnOnEquity": 3000,
-#         "returnOnAsset": 3000,
-#         "netInterestMargin": 430,
-#         "netInterestIncomeRatio": 3000,
-#         "costIncomeRatio": 5000,
-#         "ebidta": 3000
-#     }
-# }
-
-# print(insert_data(5, "AC-1904", data))
