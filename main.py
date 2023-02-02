@@ -51,38 +51,31 @@ else:
     # CURRENCY
     with currency_col:
         symbols = get_symbols()
-
         code = ["Remain Unchange"]
-        for key, value in symbols["symbols"].items():
+        for key, value in symbols.items():
             code.append(key + "(" + value + ")")
 
-        print(code)
         option = st.selectbox(
             'Currency to convert',
             code)
         
-        # if option!= "Remain Unchange":
-        #     symbol_to_covert = option[:option.find("(")]
+        if option!= "Remain Unchange":
+            symbol_to_covert = option[:option.find("(")]
+            data = json.loads(get_data["data"][0][3])
+            base_code = data["currency"]
+            print(base_code)
+            currencies = get_currencies(base_code)
+            print(currencies)
+            exchange_rate = currencies["conversion_rates"][symbol_to_covert]
+        else:
+            exchange_rate = 1
 
-        #     currencies = get_currencies(symbol_to_covert)
-        #     exchange_rate = currencies["rates"][symbol_to_covert]
-        # else:
-        #     exchange_rate = 1
+    
 
     
     year = []
     for data in get_data["data"]:
         result = json.loads(data[3])
-        base_currency = result["currency"]
-        # Convert to the right currency
-        if option!= "Remain Unchange":
-            symbol_to_covert = option[:option.find("(")]
-
-            currencies = get_currencies(base_currency)
-            exchange_rate = currencies["rates"][symbol_to_covert]
-        else:
-            exchange_rate = 1
-
         # START/END YEAR
         for income_stat in result["income_statement"]:
             if income_stat["year"] not in year:
