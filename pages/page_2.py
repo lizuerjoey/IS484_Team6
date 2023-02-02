@@ -46,7 +46,7 @@ def view(fid, file, file_type, company):
             st.header(company)
             st.text(file_name)
         if file_type =="pdf":
-            pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf">'
+            pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="1000" height="1200" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
         if file_type == "png" or file_type == "jpeg" or file_type== "jpg":
