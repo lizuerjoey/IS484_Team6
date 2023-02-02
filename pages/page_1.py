@@ -119,7 +119,10 @@ date_time = str(now.strftime("%d%m%Y%H%M%S"))
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
 
-
+def save_file_to_temp (uploaded_file): 
+    # Upload into directory
+    with open(os.path.join("temp_files",uploaded_file.name),"wb") as f: 
+        f.write(uploaded_file.getbuffer())   
 
 def save_file (ID, uploaded_file, com_name):
 
@@ -152,15 +155,20 @@ if uploaded_file is not None:
     file_type = uploaded_file.type[position+1: ]
     # Accepted File Type
     supported_file_type=["pdf", "png", "jpg", "jpeg"]
+
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
     elif (uploaded_file.size>limit):
         st.error("File Size more than 200MB", icon="🚨")
-    else:   
-        # Preview Data
-        print(uploaded_file)
-        get_file_path (uploaded_file)
+    else:
+        # Check if the temp folder is empty
+        temp_path = "./temp_files"
+        dir = os.listdir(temp_path)
+        if len(dir) > 0:
+            for f in os.listdir(temp_path):
+                 os.remove(os.path.join(temp_path, f))
+        save_file_to_temp(uploaded_file)
         
         # Save into DB
         if st.session_state['text_option'] == True:

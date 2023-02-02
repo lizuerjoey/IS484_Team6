@@ -1,11 +1,14 @@
 import streamlit as st
-import camelot
+import camelot.io as camelot
+import PyPDF2
 
+# print("PyPDF2==" + PyPDF2.__version__)
 
-# import matplotlib
+# # import matplotlib
 
 def get_file_path (file_path):
-    print (file_path)
-
-# tables = camelot.read_pdf("../upload_files/q4fy2022-financial-data.pdf", pages="1-end")
-# st.write("Hello")
+    print("++++++++++")
+    print(file_path.name)
+    tables = camelot.read_pdf(file_path.name, pages="1")
+    # tables[0].df
+    # # st.write("Hello")
