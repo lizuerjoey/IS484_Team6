@@ -85,7 +85,7 @@ with placeholder.container():
     if len(display_list) > 0:
         maxPage = math.ceil(len(display_list)/10)-1
 
-        col1, col2, col3 = st.columns([4,14,2])
+        col1, col2, col3 = st.columns(3)
         with col1:
             if (st.session_state['page'] >0):
                 prev = st.button("Previous")
@@ -111,7 +111,7 @@ with placeholder.container():
         company = display[1]
         file_name = display[2]
         file_type = display[3]
-        col1, col2, col3 = st.columns([4,15,3])
+        col1, col2, col3 = st.columns([2,15,4])
         with col1:
             display_icon(file_type)
         with col2:
@@ -124,7 +124,7 @@ with placeholder.container():
             state = True
             break
     if len(display_list)>0:
-        col1, col2, col3 = st.columns([4,14,2])
+        col1, col2, col3 = st.columns(3)
         with col1:
             if (st.session_state['page'] >0):
                 prev = st.button("Previous", key="prev")
@@ -163,34 +163,35 @@ st.markdown("""
     {
         background-color: white;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div > div.css-bzyszk.e1tzin5v2,
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(2) > div > div.css-ocqkz7.e1tzin5v4 > div.css-vfhot.e1tzin5v2
-    {
-        margin: auto;
-        display: flex;
-    }
+
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-bzyszk.e1tzin5v2 > div:nth-child(1) > div > div > div > div,
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(2) > div > div.css-ocqkz7.e1tzin5v4 > div.css-vfhot.e1tzin5v2 > div:nth-child(1) > div > div > div > div
     {
         justify-content: center;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-o7qwft.e1tzin5v2 > div:nth-child(1) > div > div:nth-child(2) > div > div > p   
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(n+1) > div > div:nth-child(1) > div > div:nth-child(n+4) 
     {
-        padding-bottom: 10px;
+        padding: 10px;
     }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div.css-yksnv9.e1tzin5v2
+    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div:nth-child(3)
     {
-        display: flex;
         margin: auto;
     }
     h2, h3
     {
         padding-bottom: 0px
     }
+   section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div > div:nth-child(3) > div:nth-child(1) > div > div > div > button 
+    {
+        float: right;
+        display: flex;
+        margin-right: 10px;
+    }
     section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(1) > div > div:nth-child(4) > div > div > p 
     {
         background-color: white;
         align-self: center;
+        
     }
     </style>
 """, unsafe_allow_html=True)

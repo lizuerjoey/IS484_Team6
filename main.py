@@ -24,7 +24,7 @@ show_pages(
     ]
 )
 
-
+st.set_page_config(layout="wide")
 get_options = get_all_companies()["data"]
 
 # COMPANY
@@ -137,10 +137,15 @@ else:
             "totalCurrentAssets": [],
             "totalNonCurrentAssets":[]
         }
+        balance_sheet_metric = {
+            "year": [],
+            "debt": [],
+            "cash": []
+        }
         liabilities = {
             "year": [],
             "totalCurrentLiabilties":[],
-            "totalNonCurrentLiabitilies":[]
+            "totalNonCurrentLiabitilies":[],   
         }
         cashflow = {
             "year":[],
@@ -202,6 +207,8 @@ else:
                         assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
                         liabilities["totalCurrentLiabilties"][position] = (liabilities["totalCurrentLiabilties"][position]+balance_sheet_result["totalCurrentLiabilties"])/2
                         liabilities["totalNonCurrentLiabitilies"][position] = (liabilities["totalNonCurrentLiabitilies"][position]+balance_sheet_result["totalNonCurrentLiabitilies"])/2
+                        balance_sheet_metric["debt"][position] = (balance_sheet_metric["debt"][position]+balance_sheet_result["debt"])/2
+                        balance_sheet_metric["cash"][position] = (balance_sheet_metric["cash"][position]+balance_sheet_result["cash"])/2
                     else:
                         balance_sheet["year"].append(str(balance_sheet_result["year"]))
                         balance_sheet["totalEquities"].append(balance_sheet_result["totalEquities"]*exchange_rate)
@@ -213,6 +220,9 @@ else:
                         liabilities["year"].append(str(balance_sheet_result["year"]))
                         liabilities["totalCurrentLiabilties"].append(balance_sheet_result["totalCurrentLiabilties"]*exchange_rate)
                         liabilities["totalNonCurrentLiabitilies"].append(balance_sheet_result["totalNonCurrentLiabitilies"]*exchange_rate)
+                        balance_sheet_metric["year"].append(str(balance_sheet_result["year"]))
+                        balance_sheet_metric["debt"].append(balance_sheet_result["debt"]*exchange_rate)
+                        balance_sheet_metric["cash"].append(balance_sheet_result["cash"]*exchange_rate)
     
     
 
@@ -311,13 +321,32 @@ else:
 
             with assets_col:
                 ###### ASSETS
-                st.text("Total Assets")
+                st.markdown("""
+                    <span style='font-weight: 700;'>Total Assets</span>
+                """, unsafe_allow_html=True)
                 st.bar_chart(df_assets, x="Year")
             with liabilities_col:
                 ###### LIABILITIES
-                st.text("Total Liabilities")
+                st.markdown("""
+                    <span style='font-weight: 700;'>Total Liabilities</span>
+                """, unsafe_allow_html=True)
                 st.bar_chart(df_liabilities, x="Year")
+                
+            # DEBT/CASH
+            debt_col, cash_col = st.columns(2)
+
+            res = [eval(i) for i in balance_sheet_metric["year"]]
+            base_year_position = balance_sheet_metric["year"].index(str(min(res)))
+            current_year_position = balance_sheet_metric["year"].index(str(max(res)))
             
+            with debt_col:
+                debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
+                st.metric(label="Debt", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
+            with cash_col:
+                cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
+                st.metric(label="Cash", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
+
+
         ### CASH FLOW
         if not df_cf.empty and len(cashflow["year"])>=2: 
             st.subheader("Cash Flow (in " + cf_numForm + ")")
@@ -331,7 +360,7 @@ else:
             base_year_position = other_metrics["year"].index(str(min(res)))
             current_year_position = other_metrics["year"].index(str(max(res)))
             roa_col, nim_col = st.columns(2)
-            nii_col, cir_col = st.columns(2)
+            nii_col, cir_col, ebidta_col = st.columns(3)
 
             with roa_col:
                 returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
@@ -345,54 +374,8 @@ else:
             with cir_col:
                 costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
                 st.metric(label="Cost Income", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(costIncome_ratio)+"%")
+            with ebidta_col:
+                ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
+                st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
 
-            ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-            st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
 
-############## CSS
-st.markdown("""
-    <style>
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+5) > div:nth-child(1)
-    {
-        width: fit-content;
-        padding: 10px 10px 10px 30px;
-        border: 1px solid black;
-        border-radius: 5px;
-        font-weight: 900;
-    }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div > div > div:nth-child(1) > div > div > div > label > div > div > p        
-    {
-        font-weight: 700;
-    }
-
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+4) > div > div > div > canvas
-    {
-        width: fit-content;
-        padding: 20px 20px 10px 30px; 
-        border: 1px solid black;
-        border-radius: 5px;
-        
-    }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+7):nth-child(-n+11) > div,
-    div > section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:last-child > div,
-    {
-        padding: 0px;
-        border: 0px;
-    }
-
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(n+1):nth-child(-n+3) > div:nth-child(n+1) > div:nth-child(1) > div > div > div > div > div
-    {
-        background-color: white;
-        border: 0px;
-        border-bottom: 2px solid black; 
-        font-size: 25px
-    }
-    section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div:nth-child(9) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(1) > div
-    {
-        font-family: "Source Sans Pro", sans-serif;
-        font-weight: 700;
-        font-size: 14px;
-    }
-    
-    </style>
-""", unsafe_allow_html=True)

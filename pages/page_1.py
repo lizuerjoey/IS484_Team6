@@ -34,7 +34,7 @@ if len(get_options) == 0:
 if 'total_page' not in st.session_state:
     st.session_state['total_page'] = 0
 
-else:
+elif len(get_options) > 0:
     options = list(range(len(get_options)))
     st.text("Company Name: ")
     col1, col2 = st.columns([10,2])
@@ -58,9 +58,10 @@ else:
             'Company Name',
             options, key="disabled_select", format_func=lambda x: get_options[x][1], disabled=st.session_state['disable_dropdown'], label_visibility="collapsed")
 
-    # Get Selected Company ID    
-    selected_comID = get_options[option][0]
-    selected_comName = get_options[option][1]
+    if st.session_state['text_option'] == False:
+        # Get Selected Company ID    
+        selected_comID = get_options[option][0]
+        selected_comName = get_options[option][1]
 
 # Get Company Name Initial
 def initials(full_name):
