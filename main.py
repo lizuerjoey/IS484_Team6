@@ -107,9 +107,9 @@ else:
             'End Year',
             endYear)
     if endYear == []:
-        st.error("End Year must not be empty", icon="🚨")
-    elif int(end_year[:4]) >= date.today().year:
-        st.error("End date cannot be equal or more than this year", icon="🚨")
+        st.error("End year must not be empty", icon="🚨")
+    elif int(end_year[:4]) > date.today().year:
+        st.error("End year must not be later than " + str(date.today().year), icon="🚨")
     else:    
         # Aggregrated value
         income_statement = {
