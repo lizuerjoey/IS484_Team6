@@ -101,8 +101,5 @@ def retrieve_data():
     return {"message": "Added", "code": 200, "data": results}, 200
 
 
-
-
-
 if __name__ == '__main__':
     app.run(debug=True)

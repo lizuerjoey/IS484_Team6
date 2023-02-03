@@ -79,7 +79,6 @@ def retrieve_data(cid):
     data = post(session, f"http://127.0.0.1:5000/retrieve_data", body)
     return data
 
-#####DUMMY DATA -- NEEDS TO CHANGE
 # GET SYMBOLS
 def get_symbols():
     session = requests.Session()
