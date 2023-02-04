@@ -5,7 +5,6 @@ import hashlib
 import random
 from datetime import datetime
 import base64
-from pages.page_4 import (get_file_path)
 from request import(
     get_all_companies,
     add_file,
