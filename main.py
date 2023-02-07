@@ -249,27 +249,27 @@ else:
             df_cf = pd.DataFrame(data=cashflow)
             df_cf.rename({'year': 'Year', 'operatingNetCashFlow': 'Operating Net Cash Flow', 'investingNetCashFlow': 'Investing Net Cash Flow', 'financingNetCashFlow':'Financing Net Cash Flow'}, axis=1, inplace=True)
 
-        # OTHER METRICES
-        for other_metrics_result in result["other_metrics"]:
-            om_numForm = other_metrics_result["numberFormat"]
-            if other_metrics_result["year"]>=start_year and other_metrics_result["year"]<=end_year  and len(other_metrics_result["year"]) == len(start_year):
-                if other_metrics_result["year"] in  other_metrics["year"]:
-                    position = other_metrics["year"].index(str(other_metrics_result["year"]))
-                    other_metrics["returnOnAsset"][position] = (other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])/2
-                    other_metrics["netInterestMargin"][position] = (other_metrics["netInterestMargin"][position] + other_metrics_result["netInterestMargin"])/2
-                    other_metrics["netInterestIncomeRatio"][position] = (other_metrics["netInterestIncomeRatio"][position] + other_metrics_result["netInterestIncomeRatio"])/2
-                    other_metrics["costIncomeRatio"][position] = (other_metrics["costIncomeRatio"][position] + other_metrics_result["costIncomeRatio"])/2
-                    other_metrics["ebidta"][position] = (other_metrics["ebidta"][position] + other_metrics_result["ebidta"])/2
-                else:
-                    other_metrics["year"].append(str(other_metrics_result["year"]))
-                    other_metrics["returnOnAsset"].append(other_metrics_result["returnOnAsset"]*exchange_rate)
-                    other_metrics["netInterestMargin"].append(other_metrics_result["netInterestMargin"]*exchange_rate)
-                    other_metrics["netInterestIncomeRatio"].append(other_metrics_result["netInterestIncomeRatio"]*exchange_rate)
-                    other_metrics["costIncomeRatio"].append(other_metrics_result["costIncomeRatio"]*exchange_rate)
-                    other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
-         # Create Dataframe
-        df_om = pd.DataFrame(data=other_metrics)
-        df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cos tIncome Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
+            # OTHER METRICES
+            for other_metrics_result in result["other_metrics"]:
+                om_numForm = other_metrics_result["numberFormat"]
+                if other_metrics_result["year"]>=start_year and other_metrics_result["year"]<=end_year  and len(other_metrics_result["year"]) == len(start_year):
+                    if other_metrics_result["year"] in  other_metrics["year"]:
+                        position = other_metrics["year"].index(str(other_metrics_result["year"]))
+                        other_metrics["returnOnAsset"][position] = (other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])/2
+                        other_metrics["netInterestMargin"][position] = (other_metrics["netInterestMargin"][position] + other_metrics_result["netInterestMargin"])/2
+                        other_metrics["netInterestIncomeRatio"][position] = (other_metrics["netInterestIncomeRatio"][position] + other_metrics_result["netInterestIncomeRatio"])/2
+                        other_metrics["costIncomeRatio"][position] = (other_metrics["costIncomeRatio"][position] + other_metrics_result["costIncomeRatio"])/2
+                        other_metrics["ebidta"][position] = (other_metrics["ebidta"][position] + other_metrics_result["ebidta"])/2
+                    else:
+                        other_metrics["year"].append(str(other_metrics_result["year"]))
+                        other_metrics["returnOnAsset"].append(other_metrics_result["returnOnAsset"]*exchange_rate)
+                        other_metrics["netInterestMargin"].append(other_metrics_result["netInterestMargin"]*exchange_rate)
+                        other_metrics["netInterestIncomeRatio"].append(other_metrics_result["netInterestIncomeRatio"]*exchange_rate)
+                        other_metrics["costIncomeRatio"].append(other_metrics_result["costIncomeRatio"]*exchange_rate)
+                        other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
+            # Create Dataframe
+            df_om = pd.DataFrame(data=other_metrics)
+            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cos tIncome Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
 
         # Show Graph
         if not df_is.empty and len(income_statement["Year"])>=2:  
@@ -344,7 +344,6 @@ else:
         if not df_cf.empty and len(cashflow["year"])>=2: 
             st.subheader("Cash Flow (in " + cf_numForm + ")")
             st.bar_chart(df_cf, x="Year")
-        
         ### OTHER METRICS
         if not df_om.empty and len(other_metrics["year"])>=2: 
             st.subheader("Other Metrics (in " + om_numForm + ")")
