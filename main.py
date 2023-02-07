@@ -5,7 +5,7 @@ from st_clickable_images import clickable_images
 from st_pages import Page, show_pages, add_page_title
 import json
 import re
-from datetime import date
+from datetime import date, datetime
 from request import(
     get_all_companies,
     get_currencies,
@@ -63,10 +63,11 @@ else:
             symbol_to_covert = option[:option.find("(")]
             data = json.loads(get_data["data"][0][3])
             base_code = data["currency"]
-            print(base_code)
             currencies = get_currencies(base_code)
-            print(currencies)
             exchange_rate = currencies["conversion_rates"][symbol_to_covert]
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            st.write(str(date.today()) + " " + current_time)
         else:
             exchange_rate = 1
 
