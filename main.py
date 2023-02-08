@@ -11,6 +11,7 @@ from request import(
     get_currencies,
     get_symbols,
     retrieve_data,
+    get_months
 )
 # Specify what pages should be shown in the sidebar, and what their titles and icons
 # should be
@@ -32,7 +33,7 @@ if (len(get_options) == 0):
     st.header("No company available..")
     st.write("Please add a company and upload reports.")
 else:
-    company_col, currency_col = st.columns(2)
+    company_col, base_currency_col, currency_col = st.columns(3)
     with company_col:
         options = list(range(len(get_options)))
         option = st.selectbox(
@@ -47,10 +48,17 @@ else:
         # Retrieve data
         get_data = retrieve_data(selected_comID)
         print(type(get_data))
+    with base_currency_col:
+        symbols = get_symbols()
+        data = json.loads(get_data["data"][0][3])
+        base_code = data["currency"]
+        st.markdown("""
+                    <span style='font-size: 14px;'>Base Currency</span>
+                """, unsafe_allow_html=True)
+        st.write(base_code + " ("  + symbols[base_code] + ")")
 
     # CURRENCY
     with currency_col:
-        symbols = get_symbols()
         code = ["Remain Unchange"]
         for key, value in symbols.items():
             code.append(key + "(" + value + ")")
@@ -61,8 +69,6 @@ else:
         
         if option!= "Remain Unchange":
             symbol_to_covert = option[:option.find("(")]
-            data = json.loads(get_data["data"][0][3])
-            base_code = data["currency"]
             currencies = get_currencies(base_code)
             exchange_rate = currencies["conversion_rates"][symbol_to_covert]
             now = datetime.now()
@@ -70,8 +76,6 @@ else:
             st.write(str(date.today()) + " " + current_time)
         else:
             exchange_rate = 1
-
-    
 
     
     year = []
@@ -92,7 +96,15 @@ else:
                     year.append(other_metrices["year"])
         year.sort()
 
-    start_col, end_col = st.columns(2)
+    fiscal_month, start_col, end_col = st.columns(3)
+    with fiscal_month:
+        st.markdown("""
+                    <span style='font-size: 14px;'>Fiscal Start Month</span>
+                """, unsafe_allow_html=True)
+        fiscal_start_mnth = result["fiscal_start_month"]
+     
+        st.write(get_months(fiscal_start_mnth))
+
     with start_col:
         start_year = st.selectbox(
             'Start Year',
@@ -370,5 +382,3 @@ else:
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
                 st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
-
-
