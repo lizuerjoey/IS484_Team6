@@ -1,5 +1,10 @@
 import requests 
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+exchange_rate_api_key = os.getenv("EXCHANGE_RATE_API_KEY")
 
 # GET REQUEST
 def fetch(session, url):
@@ -74,19 +79,34 @@ def retrieve_data(cid):
     data = post(session, f"http://127.0.0.1:5000/retrieve_data", body)
     return data
 
-#####DUMMY DATA -- NEEDS TO CHANGE
 # GET SYMBOLS
 def get_symbols():
     session = requests.Session()
-    data = fetch(session, f"http://127.0.0.1:5000/get_symbols")
-    return data
+    data = fetch(session, f"https://v6.exchangerate-api.com/v6/{exchange_rate_api_key}/codes")
+    return_data = {}
+    for codes in data["supported_codes"]:
+        return_data[codes[0]] = codes[1]
+    return return_data
 
 # GET CURRENCIES
 def get_currencies(base):
-    body = {
-        "base": base
-    }
     session = requests.Session()
-    data = post(session, f"http://127.0.0.1:5000/get_currencies", body)
+    data = fetch(session, f"https://v6.exchangerate-api.com/v6/{exchange_rate_api_key}/latest/{base}")
     return data
 
+def get_months(mnth):
+    month = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December"
+        }
+    return month[mnth]

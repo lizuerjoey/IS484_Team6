@@ -1,11 +1,65 @@
 import streamlit as st
-import camelot
+import camelot.io as camelot
+import PyPDF2
+import os
+from st_aggrid import AgGrid
+import glob
+import pandas as pd
+
+# if 1 pg -> display tables
+    # check if more than 1 table
+
+# if more than 1pg -> call from sakinah
+    # check if more than 1 table
+
+def get_total_pgs_PDF (file):
+    file = open(file, 'rb')
+    pdf = PyPDF2.PdfFileReader(file)
+    pages = pdf.numPages
+    return pages
+
+def check_tables_single_PDF (file):
+    tables = camelot.read_pdf(file, pages="1", flavor="stream", edge_tol=100, row_tol=10)
+    return (tables)
+
+def check_tables_multi_PDF (file, pages):
+    tables = camelot.read_pdf(file, pages=pages, flavor="stream", edge_tol=100, row_tol=10)
+    return (tables)
+
+st.subheader('Number Format & Currency')
+
+temp_path = "./temp_files"
+dir = os.listdir(temp_path)
+
+# if temp_files is not empty then extract
+if len(dir) > 1:
+    #!!!!!!!!!!!!!!!!!!!
+    # check file path
+    # pdf -> camelot
+    # jpg/ jpeg/ png -> aws
+    #!!!!!!!!!!!!!!!!!!!
+
+    # retrieve the file from temp_files
+    # get the first (because there will always be only one) pdf file in the list of all files of temp_files directory
+    file_path = glob.glob("./temp_files/*.pdf")[0]
+
+    totalpages = get_total_pgs_PDF(file_path)
+
+    if (totalpages == 1):
+        tables = check_tables_single_PDF(file_path)
 
 
-# import matplotlib
+        for i in range(len(tables)):
 
-def get_file_path (file_path):
-    print (file_path)
+            tablenum = i + 1
+            st.subheader('Extracted Table ' + str(tablenum))
+            option = st.selectbox('Select a Financial Statement', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), label_visibility='collapsed', key=str(i))
+            # st.write('You selected:', option)
+            tables[i].to_csv(file_path + ".csv")
+            df = pd.read_csv(file_path + ".csv")
+            AgGrid(df, editable=True)
+    
+    # else:
+        # get page number from sakinah
+        # tables = check_tables_single_PDF(file_path)
 
-# tables = camelot.read_pdf("../upload_files/q4fy2022-financial-data.pdf", pages="1-end")
-# st.write("Hello")

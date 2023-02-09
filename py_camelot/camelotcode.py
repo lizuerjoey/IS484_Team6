@@ -5,8 +5,10 @@
 #pip install camelot-py
 #pip install opencv-python (if no cv2)
 #pip install ghostscript
-import camelot
-import matplotlib
+import camelot.io as camelot
+import PyPDF2
+
+# import matplotlib
 
 # import ctypes
 # from ctypes.util import find_library
@@ -14,8 +16,9 @@ import matplotlib
 
 #flavour - stream/lattice
 
-table = camelot.read_pdf("../samples/public/nikon/q4fy2022-financial-data.pdf", pages = '1-end', flavor="stream", edge_tol=100, rol_tol=10)
+#table = camelot.read_pdf("../samples/public/nikon/q4fy2022-financial-data.pdf", pages = '1-end', flavor="stream", edge_tol=100, rol_tol=10)
 #table = camelot.read_pdf("../samples/public/nikon/q1fy2023-financial-data.pdf", pages = '1-end', flavor="stream", edge_tol=100)
+table = camelot.read_pdf("./upload_files/q1fy2023-financial-data.pdf", pages="1-end")
 
 print("----Number of tables----")
 print(len(table))

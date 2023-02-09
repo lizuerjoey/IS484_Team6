@@ -100,36 +100,6 @@ def retrieve_data():
             results = cursor.fetchall()
     return {"message": "Added", "code": 200, "data": results}, 200
 
-# Dummy Data
-@app.get("/get_symbols")
-def get_symbols():
-    symbols = {
-        "symbols": {
-        "AUD": "Australian",
-        "CAD": "Canada",
-        "CHF": "Swiss Franc",
-        "CNY": "Chinese Yuan",
-        "JPY": "Japanese Yen",
-        "USD": "United States"
-        }
-    }
-    return symbols
-
-@app.post("/get_currencies")
-def get_currencies():
-    data = request.get_json()
-    base = data["base"]
-    currencies = {
-        "rates": {
-            "AUD": 1.566015,
-            "CAD": 1.560132,
-            "CHF": 1.154727,
-            "CNY": 7.827874,
-            "JPY": 132.360679,
-            "USD": 1.23396,
-        }
-    }
-    return currencies
 
 if __name__ == '__main__':
     app.run(debug=True)

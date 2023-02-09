@@ -5,12 +5,12 @@ import hashlib
 import random
 from datetime import datetime
 import base64
-from pages.page_4 import (get_file_path)
 from request import(
     get_all_companies,
     add_file,
     add_company
 )
+import PyPDF2 
 
 st.header("Upload Reports")
 
@@ -29,7 +29,11 @@ if 'disable_btn' not in st.session_state:
 
 if len(get_options) == 0:
     st.session_state['text_option'] = True
-else:
+
+if 'total_page' not in st.session_state:
+    st.session_state['total_page'] = 0
+
+elif len(get_options) > 0:
     options = list(range(len(get_options)))
     st.text("Company Name: ")
     col1, col2 = st.columns([10,2])
@@ -53,9 +57,10 @@ else:
             'Company Name',
             options, key="disabled_select", format_func=lambda x: get_options[x][1], disabled=st.session_state['disable_dropdown'], label_visibility="collapsed")
 
-    # Get Selected Company ID    
-    selected_comID = get_options[option][0]
-    selected_comName = get_options[option][1]
+    if st.session_state['text_option'] == False:
+        # Get Selected Company ID    
+        selected_comID = get_options[option][0]
+        selected_comName = get_options[option][1]
 
 # Get Company Name Initial
 def initials(full_name):
@@ -113,7 +118,10 @@ date_time = str(now.strftime("%d%m%Y%H%M%S"))
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
 
-
+def save_file_to_temp (uploaded_file): 
+    # Upload into directory
+    with open(os.path.join("temp_files",uploaded_file.name),"wb") as f: 
+        f.write(uploaded_file.getbuffer())   
 
 def save_file (ID, uploaded_file, com_name):
 
@@ -146,15 +154,21 @@ if uploaded_file is not None:
     file_type = uploaded_file.type[position+1: ]
     # Accepted File Type
     supported_file_type=["pdf", "png", "jpg", "jpeg"]
+
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
     elif (uploaded_file.size>limit):
         st.error("File Size more than 200MB", icon="🚨")
-    else:   
-        # Preview Data
-        print(uploaded_file)
-        get_file_path (uploaded_file)
+    else:
+        # Check if the temp folder is empty
+        temp_path = "./temp_files"
+        dir = os.listdir(temp_path)
+        if len(dir) > 0:
+            for f in os.listdir(temp_path):
+                if (f != "test.txt"):
+                    os.remove(os.path.join(temp_path, f))
+        save_file_to_temp(uploaded_file)
         
         # Save into DB
         if st.session_state['text_option'] == True:
@@ -170,6 +184,12 @@ if uploaded_file is not None:
                     # If company name not entered
                     st.error("Please enter a company name", icon="🚨")
         else:
+            #Check total number of pages 
+            pdfReader = PyPDF2.PdfReader(uploaded_file)
+            total_page = len(pdfReader.pages)
+            print(f"Total Pages: {total_page}")
+            st.session_state['total_page'] = total_page
+            
             if st.button('Submit'):
                 save_file(selected_comID, uploaded_file, selected_comName)
                 
