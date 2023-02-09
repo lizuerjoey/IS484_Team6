@@ -11,6 +11,8 @@ from request import(
     get_allFiles
 )
 
+print(PyPDF2.__version__)
+
 def get_total_pgs_PDF (file):
     file = open(file, 'rb')
     pdf = PyPDF2.PdfFileReader(file)
