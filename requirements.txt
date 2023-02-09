@@ -13,3 +13,4 @@ SQLAlchemy==1.4.41
 st_pages==0.3.1
 streamlit==1.15.2
 streamlit_keyup==0.2.0
+streamlit-aggrid==0.3.3

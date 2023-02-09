@@ -4,11 +4,7 @@ import PyPDF2
 import os
 from st_aggrid import AgGrid
 import glob
-import PyPDF2
 import pandas as pd
-
-pages = "1"
-fname = ""
 
 # if 1 pg -> display tables
     # check if more than 1 table
@@ -30,11 +26,19 @@ def check_tables_multi_PDF (file, pages):
     tables = camelot.read_pdf(file, pages=pages, flavor="stream", edge_tol=100, row_tol=10)
     return (tables)
 
+st.subheader('Number Format & Currency')
+
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
 # if temp_files is not empty then extract
-if len(dir) > 0:
+if len(dir) > 1:
+    #!!!!!!!!!!!!!!!!!!!
+    # check file path
+    # pdf -> camelot
+    # jpg/ jpeg/ png -> aws
+    #!!!!!!!!!!!!!!!!!!!
+
     # retrieve the file from temp_files
     # get the first (because there will always be only one) pdf file in the list of all files of temp_files directory
     file_path = glob.glob("./temp_files/*.pdf")[0]
@@ -44,9 +48,13 @@ if len(dir) > 0:
     if (totalpages == 1):
         tables = check_tables_single_PDF(file_path)
 
+
         for i in range(len(tables)):
+
             tablenum = i + 1
             st.subheader('Extracted Table ' + str(tablenum))
+            option = st.selectbox('Select a Financial Statement', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), label_visibility='collapsed', key=str(i))
+            # st.write('You selected:', option)
             tables[i].to_csv(file_path + ".csv")
             df = pd.read_csv(file_path + ".csv")
             AgGrid(df, editable=True)
