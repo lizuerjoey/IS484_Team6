@@ -281,7 +281,10 @@ else:
             # Create Dataframe
             df_om = pd.DataFrame(data=other_metrics)
             df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cos tIncome Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
-
+        
+        if len(income_statement["Year"])<2 and len(balance_sheet["year"])<2 and len(cashflow["year"])<2 and len(other_metrics["year"])<2:
+            st.error("Please upload more reports", icon="🚨")
+            
         # Show Graph
         if not df_is.empty and len(income_statement["Year"])>=2:  
             ### INCOME STATEMENT 
