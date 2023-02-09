@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from st_clickable_images import clickable_images
 from st_pages import Page, show_pages, add_page_title
 import json
 import re
@@ -13,6 +11,7 @@ from request import(
     retrieve_data,
     get_months
 )
+st.set_page_config(layout="wide")
 # Specify what pages should be shown in the sidebar, and what their titles and icons
 # should be
 show_pages(
@@ -25,7 +24,6 @@ show_pages(
     ]
 )
 
-st.set_page_config(layout="wide")
 get_options = get_all_companies()["data"]
 
 # COMPANY
