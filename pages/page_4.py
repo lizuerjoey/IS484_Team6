@@ -1,18 +1,20 @@
 import streamlit as st
-import camelot.io as camelot
+# import camelot.io as camelot
+import camelot
 import PyPDF2
 import os
 from st_aggrid import AgGrid
 import glob
 import pandas as pd
-
+import boto3
+import io 
+from PIL import Image
 
 # if 1 pg -> display tables
     # check if more than 1 table
 
 # if more than 1pg -> call from sakinah
     # check if more than 1 table
-
 
 def get_total_pgs_PDF (file):
     file = open(file, 'rb')
