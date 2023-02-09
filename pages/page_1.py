@@ -166,7 +166,8 @@ if uploaded_file is not None:
         dir = os.listdir(temp_path)
         if len(dir) > 0:
             for f in os.listdir(temp_path):
-                 os.remove(os.path.join(temp_path, f))
+                if (f != "test.txt"):
+                    os.remove(os.path.join(temp_path, f))
         save_file_to_temp(uploaded_file)
         
         # Save into DB
