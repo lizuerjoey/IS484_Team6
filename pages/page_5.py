@@ -1,8 +1,11 @@
 import boto3
-ACCESS_KEY_ID = 'AKIAZNHLDV6QXCDKZD72'
-SECRET_ACCESS_KEY = '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'
+import os
 from PIL import Image
+from dotenv import load_dotenv
 
+load_dotenv()
+ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
+SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
 im = Image.open("pages\image.jpeg")
 
 import io
