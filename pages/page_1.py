@@ -10,7 +10,6 @@ from request import(
     add_file,
     add_company
 )
-import PyPDF2 
 
 st.header("Upload Reports")
 
@@ -29,9 +28,6 @@ if 'disable_btn' not in st.session_state:
 
 if len(get_options) == 0:
     st.session_state['text_option'] = True
-
-if 'total_page' not in st.session_state:
-    st.session_state['total_page'] = 0
 
 elif len(get_options) > 0:
     options = list(range(len(get_options)))
@@ -184,12 +180,7 @@ if uploaded_file is not None:
                     # If company name not entered
                     st.error("Please enter a company name", icon="🚨")
         else:
-            #Check total number of pages 
-            pdfReader = PyPDF2.PdfReader(uploaded_file)
-            total_page = len(pdfReader.pages)
-            print(f"Total Pages: {total_page}")
-            st.session_state['total_page'] = total_page
-            
+
             if st.button('Submit'):
                 save_file(selected_comID, uploaded_file, selected_comName)
                 
