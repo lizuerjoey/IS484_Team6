@@ -16,6 +16,10 @@ from PIL import Image
 # if more than 1pg -> call from sakinah
     # check if more than 1 table
 
+def get_file_name (file):
+    filename = os.path.splitext(file)[0]
+    return filename
+
 def get_total_pgs_PDF (file):
     file = open(file, 'rb')
     pdf = PyPDF2.PdfFileReader(file)
@@ -31,6 +35,8 @@ def check_tables_multi_PDF (file, pages):
     return (tables)
 
 st.subheader('Number Format & Currency')
+
+st.write(st.session_state.pg_input)
 
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
@@ -51,7 +57,7 @@ if len(dir) > 1:
 
     if (totalpages == 1):
         tables = check_tables_single_PDF(file_path)
-
+        file_name = get_file_name(file_path)
 
         for i in range(len(tables)):
 
@@ -59,8 +65,8 @@ if len(dir) > 1:
             st.subheader('Extracted Table ' + str(tablenum))
             option = st.selectbox('Select a Financial Statement', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), label_visibility='collapsed', key=str(i))
             # st.write('You selected:', option)
-            tables[i].to_csv(file_path + ".csv")
-            df = pd.read_csv(file_path + ".csv")
+            tables[i].to_csv(file_name + ".csv")
+            df = pd.read_csv(file_name + ".csv")
             AgGrid(df, editable=True)
     
     # else:

@@ -85,6 +85,8 @@ if len(dir) > 1:
                     
                     if status == True:
                         st.success("Successful", icon="✅")
+
+                        # Save successful user input to session, to retrieve in page 4
                         st.session_state['pg_input'] = num_page_input
 
                 st.text("")
