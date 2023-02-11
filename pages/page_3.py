@@ -123,7 +123,6 @@ if len(dir) > 1:
 
                 st.text("")
                 selected_dir = os.listdir(selected_path)
-                print ("LENGTH: " + str(len(selected_dir)))
                 if (len(selected_dir) > 1):
                     file_path = "./selected_files/selected_pages.pdf"
                 displayPDF(file_path, file_type)
