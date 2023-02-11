@@ -132,7 +132,7 @@ if len(dir) > 1:
                 st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
 
         # If file_type is not pdf    
-        elif file_type != ".csv":
+        elif file_type != ".csv" and file_type != '.xlsx':
             count += 1; 
     
     # Check if image was uploaded
