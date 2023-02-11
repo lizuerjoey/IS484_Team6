@@ -221,20 +221,20 @@ if len(dir) > 1:
                 dataframes.append(dataframe)
 
             # check if dataframe is empty
-            if dataframe.empty:
+            if len(dataframes) < 1:
                 st.error('Please upload an image with a table.', icon="🚨")
 
-            # if dataframe is not empty (manage to extract some things out)
+            else:
+                # if dataframe is not empty (manage to extract some things out)
+                st.subheader('Extracted Table 1')
+                option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
 
-            st.subheader('Extracted Table 1')
-            option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
-
-            dataframe.to_excel(file_name + ".xlsx")
-            num_format = get_number_format(file_name + ".xlsx")
-            new_num_list = sort_num_list(num_format)
-            selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
-            
-            AgGrid(dataframe, editable=True)
+                dataframe.to_excel(file_name + ".xlsx")
+                num_format = get_number_format(file_name + ".xlsx")
+                new_num_list = sort_num_list(num_format)
+                selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
+                
+                AgGrid(dataframe, editable=True)
 
 # no files was uploaded
 else:
