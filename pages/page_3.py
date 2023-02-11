@@ -35,6 +35,9 @@ def save_file_to_selected(uploaded_file):
 if 'pg_input' not in st.session_state:
     st.session_state['pg_input'] = ''
 
+if 'status' not in st.session_state:
+    st.session_state['status'] = False
+
 selected_path = "./selected_files"
 selected_dir = os.listdir(selected_path)
 
@@ -64,7 +67,7 @@ if len(dir) > 1:
                 
                 # Prompt user for page input
                 num_page_input = st.text_input("Select page(s) you want to extract tables from:", placeholder="Enter page number here..")
-
+                st.session_state['pg_input'] = num_page_input
                 st.text("Example: \n 1,3,6: Specific pages \n 1-6: A range of pages \n 1-end: All Pages")               
 
                 status = False
@@ -103,6 +106,7 @@ if len(dir) > 1:
                     
                     if status == True:
                         st.success("Successful", icon="✅")
+                        st.session_state['status'] = True
 
                         # When successful page input then change save pdf view
                         pdf = PyPDF2.PdfFileReader(file_path)
@@ -117,9 +121,6 @@ if len(dir) > 1:
 
                         with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
                             pdfWriter.write(f)
-
-                        # Save successful user input to session, to retrieve in page 4
-                        st.session_state['pg_input'] = num_page_input
 
                 st.text("")
                 selected_dir = os.listdir(selected_path)
