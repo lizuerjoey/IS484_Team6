@@ -117,7 +117,7 @@ uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
 def save_file_to_temp (uploaded_file): 
     # Upload into directory
     with open(os.path.join("temp_files",uploaded_file.name),"wb") as f: 
-        f.write(uploaded_file.getbuffer())   
+        f.write(uploaded_file.getbuffer())
 
 def save_file (ID, uploaded_file, com_name):
 

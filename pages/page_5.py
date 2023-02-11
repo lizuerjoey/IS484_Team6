@@ -4,6 +4,7 @@ from PIL import Image
 from dotenv import load_dotenv
 
 load_dotenv()
+
 ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
 SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
 im = Image.open("pages\image.jpeg")
