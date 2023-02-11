@@ -35,6 +35,14 @@ def save_file_to_selected(uploaded_file):
 if 'pg_input' not in st.session_state:
     st.session_state['pg_input'] = ''
 
+selected_path = "./selected_files"
+selected_dir = os.listdir(selected_path)
+
+# Delete when pdf is saved into the database
+for f in os.listdir(selected_path):
+    if (f != "test.txt"):
+        os.remove(os.path.join(selected_path, f))
+
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
@@ -114,14 +122,11 @@ if len(dir) > 1:
                         st.session_state['pg_input'] = num_page_input
 
                 st.text("")
-                
-                temp_path = "./selected_files"
-                dir = os.listdir(temp_path)
-                if (len(dir) > 1):
-                    selected_pages_file_path = "./selected_files/selected_pages.pdf"
-                    displayPDF(selected_pages_file_path, file_type)
-                else: 
-                    displayPDF(file_path, file_type)
+                selected_dir = os.listdir(selected_path)
+                print ("LENGTH: " + str(len(selected_dir)))
+                if (len(selected_dir) > 1):
+                    file_path = "./selected_files/selected_pages.pdf"
+                displayPDF(file_path, file_type)
 
             else: 
                 st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
