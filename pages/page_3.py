@@ -26,24 +26,6 @@ def displayPDF (file, file_type):
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
-# def newDisplayPDF(file, pgs):
-#     #pgs = [1,2]
-#     with open(file, "rb") as f:
-#         reader = PyPDF2.PdfReader(f)
-#         writer = PyPDF2.PdfWriter()
-#         rest_writer = PyPDF2.PdfWriter()
-#         for pg in range(len(reader.pgs)):
-#             if pg in pgs:
-#                 writer.addPage(reader.getPage(pg))
-#             else:
-#                 rest_writer.addPage(reader.getPage(pg))
-        
-#         with open("selected.pdf", "wb") as f2:
-#             writer.write(f2)
-
-#         with open("rest.pdf", "wb") as f2:
-#             rest_writer.write(f2)
-
 def save_file_to_selected(uploaded_file): 
     # Upload into directory
     with open(os.path.join("selected_files",uploaded_file.name),"wb") as f: 
@@ -116,7 +98,10 @@ if len(dir) > 1:
 
                         # When successful page input then change save pdf view
                         pdf = PyPDF2.PdfFileReader(file_path)
-                        pages = [0,1] # page 1, 2
+                        
+                        # Retrieve user input as a list
+                        pages = [1] # page 1, 2
+
                         pdfWriter = PyPDF2.PdfFileWriter()
 
                         for page_num in pages:
@@ -124,15 +109,19 @@ if len(dir) > 1:
 
                         with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
                             pdfWriter.write(f)
-                            f.close()
 
                         # Save successful user input to session, to retrieve in page 4
                         st.session_state['pg_input'] = num_page_input
 
                 st.text("")
                 
-                selected_pages_file_path = "./selected_files/selected_pages.pdf"
-                displayPDF(selected_pages_file_path, file_type)
+                temp_path = "./selected_files"
+                dir = os.listdir(temp_path)
+                if (len(dir) > 1):
+                    selected_pages_file_path = "./selected_files/selected_pages.pdf"
+                    displayPDF(selected_pages_file_path, file_type)
+                else: 
+                    displayPDF(file_path, file_type)
 
             else: 
                 st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
