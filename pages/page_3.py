@@ -11,12 +11,12 @@ def get_file_type (file):
     filetype = os.path.splitext(file)[1]
     return filetype
 
-# Get total page of PDF
-def get_total_pgs_PDF (file):
-    file = open(file, 'rb')
-    pdf = PyPDF2.PdfFileReader(file)
-    pages = pdf.numPages
-    return pages
+# # Get total page of PDF
+# def get_total_pgs_PDF (file):
+#     file = open(file, 'rb')
+#     pdf = PyPDF2.PdfFileReader(file)
+#     pages = pdf.numPages
+#     return pages
 
 # Display PDF
 def displayPDF (file, file_type):
@@ -26,6 +26,28 @@ def displayPDF (file, file_type):
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
+# def newDisplayPDF(file, pgs):
+#     #pgs = [1,2]
+#     with open(file, "rb") as f:
+#         reader = PyPDF2.PdfReader(f)
+#         writer = PyPDF2.PdfWriter()
+#         rest_writer = PyPDF2.PdfWriter()
+#         for pg in range(len(reader.pgs)):
+#             if pg in pgs:
+#                 writer.addPage(reader.getPage(pg))
+#             else:
+#                 rest_writer.addPage(reader.getPage(pg))
+        
+#         with open("selected.pdf", "wb") as f2:
+#             writer.write(f2)
+
+#         with open("rest.pdf", "wb") as f2:
+#             rest_writer.write(f2)
+
+def save_file_to_selected(uploaded_file): 
+    # Upload into directory
+    with open(os.path.join("selected_files",uploaded_file.name),"wb") as f: 
+        f.write(uploaded_file.getbuffer())
 
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
@@ -44,13 +66,33 @@ if len(dir) > 1:
             file_path = glob.glob("./temp_files/*.pdf")[0]
             pdfReader = PyPDF2.PdfReader(file_path)
             totalpages = len(pdfReader.pages)
-
+            pgs = [1,2]
             if totalpages > 1:
                 
                 # Prompt user for page input
                 num_page_input = st.text_input("Select page(s) you want to extract tables from:", placeholder="Enter page number here..")
 
                 st.text("Example: \n 1,3,6: Specific pages \n 1-6: A range of pages \n 1-end: All Pages")
+                
+                # Split PDF pages according to user input
+                with open(file_path, "rb") as f:
+                    reader = PyPDF2.PdfReader(f)
+                    writer = PyPDF2.PdfWriter()
+                    rest_writer = PyPDF2.PdfWriter()
+                    for pg in pgs:
+                        if pg in pgs:
+                            writer.add_page(reader.pages[pg])
+                        # else:
+                        #     rest_writer.add_page(reader.pages[pg])
+        
+                with open("selected.pdf", "wb") as f2:
+                    writer.write(f2)
+                    save_file_to_selected(f2)
+
+                
+                
+                # with open("rest.pdf", "wb") as f2:
+                #     rest_writer.write(f2)
 
                 status = False
 
@@ -62,9 +104,11 @@ if len(dir) > 1:
                         
                     elif "," in num_page_input: 
                         num_page_input = num_page_input.split(',')
+                        print(num_page_input)
                         i = 0
                         while i < len(num_page_input):
                             if int(num_page_input[i]) <= totalpages:
+                                #print(int(num_page_input[i]))
                                 status = True
                             else: 
                                 break
@@ -72,8 +116,12 @@ if len(dir) > 1:
 
                     elif "-end" in num_page_input:
                         num_page_input = num_page_input.split('-')
+                        print(num_page_input)
                         if num_page_input[0].isdigit() == True and int(num_page_input[0])>0 and int(num_page_input[0]) < totalpages:
                             status = True
+                        elif num_page_input[0] == "":
+                            st.error('Incorrect format. Please try again', icon="🚨")
+
                         else:
                             st.error('Incorrect range. Please try again', icon="🚨")
                         
