@@ -11,13 +11,6 @@ def get_file_type (file):
     filetype = os.path.splitext(file)[1]
     return filetype
 
-# # Get total page of PDF
-# def get_total_pgs_PDF (file):
-#     file = open(file, 'rb')
-#     pdf = PyPDF2.PdfFileReader(file)
-#     pages = pdf.numPages
-#     return pages
-
 # Display PDF
 def displayPDF (file, file_type):
     with open(file,"rb") as f: 
@@ -74,50 +67,91 @@ if len(dir) > 1:
 
                 if st.button('Proceed'):
                     print(num_page_input)
-                    
+                    final_input = []
+
+                    # User input single digit
                     if num_page_input.isdigit() == True and int(num_page_input) > 0 and int(num_page_input) <= totalpages:
+                        final_input.append(int(num_page_input)-1)
                         status = True
-                        
+
+                    # User input specific pages  (e.g 3,6,7) 
                     elif "," in num_page_input: 
                         num_page_input = num_page_input.split(',')
-                        print(num_page_input)
                         i = 0
                         while i < len(num_page_input):
-                            if int(num_page_input[i]) <= totalpages:
+                            # print(num_page_input[i])
+                            if int(num_page_input[i]) <= totalpages and int(num_page_input[i]) > 0:
                                 #print(int(num_page_input[i]))
                                 status = True
+
                             else: 
+                                status = False
                                 break
                             i += 1
 
+                        if status == True:
+                            for num in num_page_input:
+                                final_input.append(int(num)-1)
+                        else:
+                            st.error('Page number is out of range. Please try again', icon="🚨")
+                        
+                    # User input Range (e.g 2-6)
+                    elif "-" in num_page_input and "end" not in num_page_input:
+                        num_page_input = num_page_input.split('-')
+                        
+                        if num_page_input[1] == "":
+                            st.error('Page number is in the incorrect format. Please try again', icon="🚨")
+                        
+                        else:
+                            i = 0
+                            while i < len(num_page_input):
+                                if int(num_page_input[i]) <= totalpages and int(num_page_input[i]) > 0:
+                                    status = True
+                                else:
+                                    status = False
+                                    break
+                                i += 1
+                            if status == True:
+                                for num in range(int(num_page_input[0])-1, int(num_page_input[1])):
+                                    final_input.append(int(num))
+                            else:
+                                st.error('Page number is out of range. Please try again', icon="🚨")
+                    
+                    # User input Range but until the last page (e.g 5-end)
                     elif "-end" in num_page_input:
                         num_page_input = num_page_input.split('-')
-                        print(num_page_input)
                         if num_page_input[0].isdigit() == True and int(num_page_input[0])>0 and int(num_page_input[0]) < totalpages:
                             status = True
+                            for num in range(int(num_page_input[0])-1, totalpages):
+                                final_input.append(num)
+                            print(final_input)
+
                         elif num_page_input[0] == "":
-                            st.error('Incorrect format. Please try again', icon="🚨")
+                            st.error('Page number is in the incorrect format. Please try again', icon="🚨")
 
                         else:
-                            st.error('Incorrect range. Please try again', icon="🚨")
-                        
+                            st.error('Page number is in the incorrect range. Please try again', icon="🚨")
+                    
                     else:
-                        st.error('Incorrect format. Please try again', icon="🚨")
+                        st.error('Page number is in the incorrect format. Please try again', icon="🚨")
                     
                     if status == True:
                         st.success("Successful", icon="✅")
                         st.session_state['status'] = True
 
                         # When successful page input then change save pdf view
-                        pdf = PyPDF2.PdfFileReader(file_path)
+                        pdf = PyPDF2.PdfReader(file_path)
                         
-                        # Retrieve user input as a list
-                        pages = [1] # page 1, 2
+                        # Retrieve user input 
+                        selected_pages = final_input 
 
-                        pdfWriter = PyPDF2.PdfFileWriter()
+                        #print(selected_pages)
 
-                        for page_num in pages:
-                            pdfWriter.addPage(pdf.getPage(page_num))
+                        pdfWriter = PyPDF2.PdfWriter()
+
+                        for page_num in selected_pages:
+                            pdfWriter.add_page(pdf.pages[page_num])
+                            
 
                         with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
                             pdfWriter.write(f)
