@@ -70,33 +70,12 @@ if len(dir) > 1:
             file_path = glob.glob("./temp_files/*.pdf")[0]
             pdfReader = PyPDF2.PdfReader(file_path)
             totalpages = len(pdfReader.pages)
-            pgs = [1,2]
             if totalpages > 1:
                 
                 # Prompt user for page input
                 num_page_input = st.text_input("Select page(s) you want to extract tables from:", placeholder="Enter page number here..")
 
-                st.text("Example: \n 1,3,6: Specific pages \n 1-6: A range of pages \n 1-end: All Pages")
-                
-                # Split PDF pages according to user input
-                with open(file_path, "rb") as f:
-                    reader = PyPDF2.PdfReader(f)
-                    writer = PyPDF2.PdfWriter()
-                    rest_writer = PyPDF2.PdfWriter()
-                    for pg in pgs:
-                        if pg in pgs:
-                            writer.add_page(reader.pages[pg])
-                        # else:
-                        #     rest_writer.add_page(reader.pages[pg])
-        
-                with open("selected.pdf", "wb") as f2:
-                    writer.write(f2)
-                    save_file_to_selected(f2)
-
-                
-                
-                # with open("rest.pdf", "wb") as f2:
-                #     rest_writer.write(f2)
+                st.text("Example: \n 1,3,6: Specific pages \n 1-6: A range of pages \n 1-end: All Pages")               
 
                 status = False
 
@@ -135,12 +114,25 @@ if len(dir) > 1:
                     if status == True:
                         st.success("Successful", icon="✅")
 
+                        # When successful page input then change save pdf view
+                        pdf = PyPDF2.PdfFileReader(file_path)
+                        pages = [0,1] # page 1, 2
+                        pdfWriter = PyPDF2.PdfFileWriter()
+
+                        for page_num in pages:
+                            pdfWriter.addPage(pdf.getPage(page_num))
+
+                        with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
+                            pdfWriter.write(f)
+                            f.close()
+
                         # Save successful user input to session, to retrieve in page 4
                         st.session_state['pg_input'] = num_page_input
 
                 st.text("")
-
-                displayPDF(file_path, file_type)
+                
+                selected_pages_file_path = "./selected_files/selected_pages.pdf"
+                displayPDF(selected_pages_file_path, file_type)
 
             else: 
                 st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
