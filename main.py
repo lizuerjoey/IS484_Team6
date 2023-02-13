@@ -49,7 +49,6 @@ else:
     with base_currency_col:
         
         symbols = get_symbols()
-        print(symbols)
         data = json.loads(get_data["data"][0][3])
         base_code = data["currency"]
         st.markdown("""

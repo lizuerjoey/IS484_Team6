@@ -6,33 +6,10 @@ import os
 from st_aggrid import AgGrid
 import glob
 import pandas as pd
-import openpyxl
 from openpyxl import load_workbook
-import boto3
-import io
-from PIL import Image
-from dotenv import load_dotenv
+from extraction.pdf_to_image import (convert_file)
+from extraction.aws_image import (image_extraction)
 
-################## START-IMAGE FUNCTIONS ##################
-
-load_dotenv()
-
-ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
-SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
-
-def map_blocks(blocks, block_type):
-    return {
-        block['Id']: block
-        for block in blocks
-        if block['BlockType'] == block_type
-    }
-
-def get_children_ids(block):
-    for rels in block.get('Relationships', []):
-        if rels['Type'] == 'CHILD':
-            yield from rels['Ids']
-
-################## END-IMAGE FUNCTIONS ##################
 
 number = [            
             "Unable to Determine",
@@ -111,13 +88,19 @@ def sort_num_list(index):
     return number
 
 def extract_tables (tables):
+    # CHECK ACCURACY
+    convert_file()
     for i in range(len(tables)):
+        print("TABLES============")
+        print(tables[i].parsing_report)
+        print("============")
+
         tablenum = i + 1
         st.subheader('Extracted Table ' + str(tablenum))
         option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
         # st.write('You selected:', option)
         
-        tables[i].to_excel(file_name + ".xlsx")
+        tables[i].to_excel(file_name + ".xlsx")     
         num_format = get_number_format(file_name + ".xlsx")
 
         new_num_list = sort_num_list(num_format)
@@ -175,66 +158,23 @@ if len(dir) > 1:
             file_path = glob.glob("./temp_files/*" + file_type)[0]
             file_name = get_file_name(file_path)
 
-            im = Image.open(file_path)
-
-            buffered = io.BytesIO()
-            im.save(buffered, format='PNG')
-
-            client = boto3.client('textract',aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY, region_name= 'us-east-1')
-            response = client.analyze_document(
-                Document={'Bytes': buffered.getvalue()},
-                FeatureTypes=['TABLES']
-            )
-
-            blocks = response['Blocks']
-            tables = map_blocks(blocks, 'TABLE')
-            cells = map_blocks(blocks, 'CELL')
-            words = map_blocks(blocks, 'WORD')
-            selections = map_blocks(blocks, 'SELECTION_ELEMENT')
-
-            dataframes = []
-
-            for table in tables.values():
-                # Determine all the cells that belong to this table
-                table_cells = [cells[cell_id] for cell_id in get_children_ids(table)]
-
-                # Determine the table's number of rows and columns
-                n_rows = max(cell['RowIndex'] for cell in table_cells)
-                n_cols = max(cell['ColumnIndex'] for cell in table_cells)
-                content = [[None for _ in range(n_cols)] for _ in range(n_rows)]
-
-                # Fill in each cell
-                for cell in table_cells:
-                    cell_contents = [
-                        words[child_id]['Text']
-                        if child_id in words
-                        else selections[child_id]['SelectionStatus']
-                        for child_id in get_children_ids(cell)
-                    ]
-                    i = cell['RowIndex'] - 1
-                    j = cell['ColumnIndex'] - 1
-                    content[i][j] = ' '.join(cell_contents)
-                    
-
-                # We assume that the first row corresponds to the column names
-                dataframe = pd.DataFrame(content[1:], columns=content[0])
-                dataframes.append(dataframe)
-
+    
+            dataframes = image_extraction(file_path)
             # check if dataframe is empty
             if len(dataframes) < 1:
                 st.error('Please upload an image with a table.', icon="🚨")
 
             else:
-                # if dataframe is not empty (manage to extract some things out)
-                st.subheader('Extracted Table 1')
-                option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
-
-                dataframe.to_excel(file_name + ".xlsx")
-                num_format = get_number_format(file_name + ".xlsx")
-                new_num_list = sort_num_list(num_format)
-                selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
-                
-                AgGrid(dataframe, editable=True)
+               for i in range(len(dataframes)):
+                    # if dataframe is not empty (manage to extract some things out)
+                    st.subheader('Extracted Table 1')
+                    option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
+                    dataframes[i].to_excel(file_name + ".xlsx")
+                    num_format = get_number_format(file_name + ".xlsx")
+                    new_num_list = sort_num_list(num_format)
+                    selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
+                    
+                    AgGrid(dataframes[i], editable=True)
 
 # no files was uploaded
 else:
