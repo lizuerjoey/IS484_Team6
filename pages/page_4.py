@@ -88,13 +88,11 @@ def sort_num_list(index):
     return number
 
 def extract_tables (tables):
+    is_df_empty = False
     # CHECK ACCURACY
-    print(convert_file())
+    accuracy = []
     for i in range(len(tables)):
-        print("TABLES============")
-        print(tables[i].parsing_report)
-        print("============")
-
+        accuracy.append(tables[i].parsing_report["accuracy"])
         tablenum = i + 1
         st.subheader('Extracted Table ' + str(tablenum))
         option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
@@ -108,7 +106,19 @@ def extract_tables (tables):
 
         tables[i].to_csv(file_name + ".csv")
         df = pd.read_csv(file_name + ".csv")
-        AgGrid(df, editable=True)
+
+        if df.empty:
+            is_df_empty = True
+            break
+        else:
+            AgGrid(df, editable=True)
+   
+    # TESTING REQUIRED
+    if (any(i < 75 for i in accuracy) and is_df_empty):
+        dfs = convert_file()
+        for df in dfs:
+            AgGrid(df, editable=True)
+    
 
 # Initialization
 if 'pg_input' not in st.session_state:
