@@ -5,6 +5,7 @@ from PIL import Image
 import PyPDF2
 import glob
 import base64
+import shutil
 
 # Get file type
 def get_file_type (file):
@@ -163,6 +164,15 @@ if len(dir) > 1:
                 displayPDF(file_path, file_type)
 
             else: 
+                # Upload one page pdf into selected_files directory
+                origin = './temp_files/'
+                target = './selected_files/'
+                files = os.listdir(origin)
+                for file in files:
+                    if file!="test.txt":
+                        file_type = get_file_type(file)
+                        shutil.copy(origin+file, target)
+                        os.rename(target+file, target+"file"+file_type)
                 st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
 
         # If file_type is not pdf    

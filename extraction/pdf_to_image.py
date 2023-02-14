@@ -8,7 +8,7 @@ def convert_file():
     zoom_y = 2.0  # vertical zoom
     mat = fitz.Matrix(zoom_x, zoom_y)  # zoom factor 2 in each dimension
 
-    pdffile = "./selected_files/selected_pages.pdf"
+    pdffile = "./selected_files/selected_pages.pdf" if os.path.isfile( "./selected_files/selected_pages.pdf") else "./selected_files/file.pdf"
     doc = fitz.open(pdffile) # open document
     for i in range(len(doc)):
         page = doc.load_page(i)  

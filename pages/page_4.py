@@ -89,7 +89,7 @@ def sort_num_list(index):
 
 def extract_tables (tables):
     # CHECK ACCURACY
-    convert_file()
+    print(convert_file())
     for i in range(len(tables)):
         print("TABLES============")
         print(tables[i].parsing_report)
