@@ -87,15 +87,15 @@ def sort_num_list(index):
     number.insert(0, format)
     return number
 
-def viewer_func(df, num):
+def viewer_func(df, num, id):
     st.subheader('Extracted Table ' + str(num+1))
-    option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key='select'+str(num))
+    option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
 
     df.to_excel("./temp_files/" + str(num) + ".xlsx")     
     num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
 
     new_num_list = sort_num_list(num_format)
-    selected = st.selectbox("Number Format:", new_num_list, key="format" + str(num))
+    selected = st.selectbox("Number Format:", new_num_list, key="format -" + id + str(num))
 
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
@@ -110,7 +110,6 @@ def viewer_func(df, num):
 
 
 def extract_tables (tables):
-    
     # CHECK ACCURACY
     accuracy = []
     for i in range(len(tables)):
@@ -119,14 +118,13 @@ def extract_tables (tables):
         print(accuracy)
         dfs = convert_file()
         for i in range(len(dfs)):
-            statement, format, is_df_empty = viewer_func(dfs[i][0], i)
+            statement, format, is_df_empty = viewer_func(dfs[i][0], i, "pdfimg")
     else:
         for i in range(len(tables)):
-            statement, format, is_df_empty = viewer_func(tables[i], i)
+            statement, format, is_df_empty = viewer_func(tables[i], i, 'camelot')
     print(statement)
     print(format) 
     print (is_df_empty) 
-      
     print(accuracy)
 
 # Initialization
@@ -136,13 +134,14 @@ if 'pg_input' not in st.session_state:
 if 'status' not in st.session_state:
     st.session_state['status'] = False
 
+
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
 # if temp_files is not empty then extract
 if len(dir) > 1:
     st.subheader('Currency')
-
+    
     file_paths = glob.glob("./temp_files/*")
     count = 0
     for path in file_paths:
@@ -150,6 +149,14 @@ if len(dir) > 1:
 
         # file is pdf
         if file_type == '.pdf':
+            button_clicked = False
+            btn_placeholder = st.empty()
+            with btn_placeholder.container():
+                if st.session_state["status"]:
+                    if (st.button("Try AWS")):
+                        button_clicked = True
+                        btn_placeholder.empty()
+                
             file_path = glob.glob("./temp_files/*.pdf")[0]
             file_name = get_file_name(file_path)
             totalpages = get_total_pgs_PDF(file_path)
@@ -157,7 +164,9 @@ if len(dir) > 1:
             # single page pdf
             if (totalpages == 1):
                 tables = check_tables_single_PDF(file_path)
-                extract_tables(tables)
+                extraction_container = st.empty()
+                with extraction_container.container():
+                    extract_tables(tables)
             
             # multi page pdf
             else:
@@ -167,10 +176,19 @@ if len(dir) > 1:
                 # user input is successful on page 3
                 if (status == True and pg_input != ''):
                     tables = check_tables_multi_PDF(file_path, str(pg_input))
-                    extract_tables(tables)
+                    extraction_container = st.empty()
+                    with extraction_container.container():
+                        extract_tables(tables)
                     
                 else:
                     st.error("Please specify the pages you want to extract.", icon="🚨")
+            if button_clicked:
+                extraction_container.empty()
+                next_extraction = st.empty()
+                with next_extraction.container():
+                    dfs = convert_file()
+                    for i in range(len(dfs)):
+                        statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
 
         # file is image
         elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
@@ -184,12 +202,14 @@ if len(dir) > 1:
                 st.error('Please upload an image with a table.', icon="🚨")
 
             else:
-               for i in range(len(dataframes)):
-                    # if dataframe is not empty (manage to extract some things out)        
-                    statement, format, is_df_empty = viewer_func(dataframes[i], i) 
-                    print(statement)
-                    print(format) 
-                    print (is_df_empty)
+                extraction_container = st.empty()
+                with extraction_container.container():
+                    for i in range(len(dataframes)):
+                        # if dataframe is not empty (manage to extract some things out)        
+                        statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+                        print(statement)
+                        print(format) 
+                        print (is_df_empty)
 
 # no files was uploaded
 else:
