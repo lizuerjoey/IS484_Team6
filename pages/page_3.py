@@ -173,7 +173,7 @@ if len(dir) > 1:
                         file_type = get_file_type(file)
                         shutil.copy(origin+file, target)
                         os.rename(target+file, target+"file"+file_type)
-                st.error('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="🚨")
+                st.info('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="ℹ️")
 
         # If file_type is not pdf    
         elif file_type != ".csv" and file_type != '.xlsx':
@@ -181,7 +181,7 @@ if len(dir) > 1:
     
     # Check if image was uploaded
     if count > 1:
-        st.error('Uploaded file is either a png, jpg or jpeg, please try again with a multi-page pdf.', icon="🚨")
+        st.info('Uploaded file is either a png, jpg or jpeg.', icon="ℹ️")
 
 # Check if any supported file was uploaded
 else:

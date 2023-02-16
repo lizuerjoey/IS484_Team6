@@ -87,38 +87,47 @@ def sort_num_list(index):
     number.insert(0, format)
     return number
 
+def viewer_func(df, num):
+    st.subheader('Extracted Table ' + str(num+1))
+    option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key='select'+str(num))
+
+    df.to_excel("./temp_files/" + str(num) + ".xlsx")     
+    num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
+
+    new_num_list = sort_num_list(num_format)
+    selected = st.selectbox("Number Format:", new_num_list, key="format" + str(num))
+
+    df.to_csv("./temp_files/" + str(num) + ".csv")
+    dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
+    
+    is_df_empty = True
+    if dataframe.empty:
+        is_df_empty = True
+    else:
+        AgGrid(dataframe, editable=True)
+
+    return (option, selected, is_df_empty)
+
+
 def extract_tables (tables):
-    is_df_empty = False
+    
     # CHECK ACCURACY
     accuracy = []
     for i in range(len(tables)):
         accuracy.append(tables[i].parsing_report["accuracy"])
-        tablenum = i + 1
-        st.subheader('Extracted Table ' + str(tablenum))
-        option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
-        # st.write('You selected:', option)
-        
-        tables[i].to_excel(file_name + ".xlsx")     
-        num_format = get_number_format(file_name + ".xlsx")
-
-        new_num_list = sort_num_list(num_format)
-        selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
-
-        tables[i].to_csv(file_name + ".csv")
-        df = pd.read_csv(file_name + ".csv")
-
-        if df.empty:
-            is_df_empty = True
-            break
-        else:
-            AgGrid(df, editable=True)
-   
-    # TESTING REQUIRED
-    if (any(i < 75 for i in accuracy) and is_df_empty):
+    if (any(i < 75 for i in accuracy)):
+        print(accuracy)
         dfs = convert_file()
-        for df in dfs:
-            AgGrid(df, editable=True)
-    
+        for i in range(len(dfs)):
+            statement, format, is_df_empty = viewer_func(dfs[i][0], i)
+    else:
+        for i in range(len(tables)):
+            statement, format, is_df_empty = viewer_func(tables[i], i)
+    print(statement)
+    print(format) 
+    print (is_df_empty) 
+      
+    print(accuracy)
 
 # Initialization
 if 'pg_input' not in st.session_state:
@@ -176,15 +185,11 @@ if len(dir) > 1:
 
             else:
                for i in range(len(dataframes)):
-                    # if dataframe is not empty (manage to extract some things out)
-                    st.subheader('Extracted Table 1')
-                    option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=str(i))
-                    dataframes[i].to_excel(file_name + ".xlsx")
-                    num_format = get_number_format(file_name + ".xlsx")
-                    new_num_list = sort_num_list(num_format)
-                    selected = st.selectbox("Number Format:", new_num_list, key="x" + str(i))
-                    
-                    AgGrid(dataframes[i], editable=True)
+                    # if dataframe is not empty (manage to extract some things out)        
+                    statement, format, is_df_empty = viewer_func(dataframes[i], i) 
+                    print(statement)
+                    print(format) 
+                    print (is_df_empty)
 
 # no files was uploaded
 else:
