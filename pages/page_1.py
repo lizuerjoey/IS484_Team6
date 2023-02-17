@@ -166,23 +166,23 @@ if uploaded_file is not None:
                     os.remove(os.path.join(temp_path, f))
         save_file_to_temp(uploaded_file)
         
-        # Save into DB
-        if st.session_state['text_option'] == True:
-            if st.button('Submit'):
-                if com_name:
-                    add_com = add_company(com_ID, com_name)
-                    if (add_com["message"] == "Added"):
-                        st.success("Company Added", icon="✅")
-                        save_file(com_ID, uploaded_file, com_name)
-                    else:
-                        st.error('Error adding company. Please try again later', icon="🚨")
-                else:
-                    # If company name not entered
-                    st.error("Please enter a company name", icon="🚨")
-        else:
+        # # Save into DB
+        # if st.session_state['text_option'] == True:
+        #     if st.button('Submit'):
+        #         if com_name:
+        #             add_com = add_company(com_ID, com_name)
+        #             if (add_com["message"] == "Added"):
+        #                 st.success("Company Added", icon="✅")
+        #                 save_file(com_ID, uploaded_file, com_name)
+        #             else:
+        #                 st.error('Error adding company. Please try again later', icon="🚨")
+        #         else:
+        #             # If company name not entered
+        #             st.error("Please enter a company name", icon="🚨")
+        # else:
 
-            if st.button('Submit'):
-                save_file(selected_comID, uploaded_file, selected_comName)
+        #     if st.button('Submit'):
+        #         save_file(selected_comID, uploaded_file, selected_comName)
                 
 
 ############## CSS

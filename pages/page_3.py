@@ -6,6 +6,7 @@ import PyPDF2
 import glob
 import base64
 import shutil
+from streamlit_extras.switch_page_button import switch_page
 
 # Get file type
 def get_file_type (file):
@@ -31,6 +32,9 @@ if 'pg_input' not in st.session_state:
 
 if 'status' not in st.session_state:
     st.session_state['status'] = False
+
+if 'disabled' not in st.session_state:
+    st.session_state['disabled'] = True
 
 selected_path = "./selected_files"
 selected_dir = os.listdir(selected_path)
@@ -66,7 +70,13 @@ if len(dir) > 1:
 
                 status = False
 
-                if st.button('Proceed'):
+                col1, col2 = st.columns(2)
+                with col1:
+                    cfmpg = st.button("Confirm Page", key="confirmpg")
+                # with col2:
+                    # previewdata = st.button("Preview Extracted Data", key="previewdata", disabled=st.session_state.disabled)
+                    
+                if cfmpg:
                     print(num_page_input)
                     final_input = []
 
@@ -139,6 +149,14 @@ if len(dir) > 1:
                     if status == True:
                         st.success("Successful", icon="✅")
                         st.session_state['status'] = True
+                        
+                        # If pg input is correct, show preview button
+                        with col2:
+                            previewdata = st.button("Preview Extracted Data", key="previewdata")
+
+                            # If button is clicked, switch page to preview extracted data
+                            if previewdata:
+                                switch_page("preview extracted data")
 
                         # When successful page input then change save pdf view
                         pdf = PyPDF2.PdfReader(file_path)
@@ -152,7 +170,6 @@ if len(dir) > 1:
 
                         for page_num in selected_pages:
                             pdfWriter.add_page(pdf.pages[page_num])
-                            
 
                         with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
                             pdfWriter.write(f)
@@ -161,7 +178,7 @@ if len(dir) > 1:
                 selected_dir = os.listdir(selected_path)
                 if (len(selected_dir) > 1):
                     file_path = "./selected_files/selected_pages.pdf"
-                displayPDF(file_path, file_type)
+                displayPDF(file_path, file_type)                    
 
             else: 
                 # Upload one page pdf into selected_files directory
@@ -188,4 +205,13 @@ else:
     st.error('Please upload a multi-page pdf file to select pages for extraction.', icon="🚨")
 
 
-
+############## CSS
+st.markdown("""
+    <style>
+        #root > div:nth-child(1) > div.withScreencast > div > div > div > section.main.css-k1vhr4.egzxvld3 > div > div:nth-child(1) > div > div.css-ocqkz7.e1tzin5v4 > div:nth-child(2) > div:nth-child(1) > div > div > div > button {
+            float: right;
+            display: flex;
+            margin-right: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)

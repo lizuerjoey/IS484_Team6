@@ -7,6 +7,7 @@ from st_aggrid import AgGrid
 import glob
 import pandas as pd
 from openpyxl import load_workbook
+from request import (get_symbols)
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
 
@@ -18,6 +19,22 @@ number = [
             "Billion",
             "Trillion",
             "Quadrillion"
+        ]
+
+month = [
+            "Not Selected",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
         ]
 
 def get_file_name (file):
@@ -87,15 +104,33 @@ def sort_num_list(index):
     number.insert(0, format)
     return number
 
+def get_currency_list():
+    currency_acronyms = []
+    symbols = get_symbols()
+    for key in symbols:
+        currency_acronyms.append(key + " (" + symbols[key] + ")")
+    currency_acronyms.insert(0, "Not Selected")
+    return currency_acronyms
+
 def viewer_func(df, num, id):
     st.subheader('Extracted Table ' + str(num+1))
+
+    # financial statement ddl
     option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
 
     df.to_excel("./temp_files/" + str(num) + ".xlsx")     
     num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
 
-    new_num_list = sort_num_list(num_format)
-    selected = st.selectbox("Number Format:", new_num_list, key="format -" + id + str(num))
+    col1, col2 = st.columns(2)
+
+    # number format ddl
+    with col1:
+        new_num_list = sort_num_list(num_format)
+        selected = st.selectbox("Number Format:", new_num_list, key="format -" + id + str(num))
+
+    # fiscal month ddl
+    with col2:
+        selected = st.selectbox("Fiscal Month:", month, key="fiscalmnth -" + id + str(num))
 
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
@@ -124,7 +159,7 @@ def extract_tables (tables):
             statement, format, is_df_empty = viewer_func(tables[i], i, 'camelot')
     print(statement)
     print(format) 
-    print (is_df_empty) 
+    print(is_df_empty) 
     print(accuracy)
 
 # Initialization
@@ -141,6 +176,10 @@ dir = os.listdir(temp_path)
 # if temp_files is not empty then extract
 if len(dir) > 1:
     st.subheader('Currency')
+    
+    # currency
+    currency_list = get_currency_list()
+    option = st.selectbox('Select a Currency:', currency_list, key="currency")
     
     file_paths = glob.glob("./temp_files/*")
     count = 0
@@ -209,7 +248,7 @@ if len(dir) > 1:
                         statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
                         print(statement)
                         print(format) 
-                        print (is_df_empty)
+                        print(is_df_empty)
 
 # no files was uploaded
 else:
