@@ -5,7 +5,8 @@ import PyPDF2
 import os
 import base64
 from datetime import datetime
-from st_aggrid import AgGrid
+from st_aggrid import AgGrid, GridUpdateMode
+from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
 import pandas as pd
 from openpyxl import load_workbook
@@ -135,12 +136,80 @@ def viewer_func(df, num, id):
 
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
-    
+
+    edit_table = st.checkbox("Edit Table", key="table -" + str(num))
+
+    if edit_table:
+        st.subheader("Edit Headers")
+        st.caption("Enter new header name below:")
+
+        col1, col2 = st.columns(2)
+
+        col_index = 0
+        for col in dataframe.columns:
+            if col_index % 2 == 0:
+                with col1:
+                    column_name = st.text_input( "",placeholder= col, key="table -" + str(num) + str(col_index))
+                    delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
+
+                    # EDIT COL NAME
+                    if column_name == "":
+                        print(col)
+                    else:
+                        print(column_name)
+                        dataframe.rename(columns = {col: column_name}, inplace = True) 
+
+                    # DELETE COL
+                    if delete_column:
+                        dataframe.drop(col, axis=1, inplace = True)
+                    
+                    col_index +=1
+            else:
+                with col2:
+                    column_name = st.text_input( "",placeholder= col, key="table -" + str(num) + str(col_index))
+                    delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
+                    
+                    # EDIT COL NAME
+                    if column_name == "":
+                        print(col)
+                    else:
+                        print(column_name)
+                        dataframe.rename(columns = {col: column_name}, inplace = True) 
+                    
+                    # DELETE COL
+                    if delete_column:
+                        dataframe.drop(col, axis=1, inplace = True)
+                    
+                    col_index +=1
+                        
     is_df_empty = True
     if dataframe.empty:
         is_df_empty = True
     else:
-        AgGrid(dataframe, editable=True)
+        gd = GridOptionsBuilder.from_dataframe(dataframe)
+        gd.configure_pagination(enabled=True)
+        gd.configure_default_column(editable=True, groupable=True)
+        #gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
+
+        gridoptions = gd.build()
+        #grid_table = AgGrid(dataframe, editable=True, gridOptions=gridoptions, update_mode=GridUpdateMode.SELECTION_CHANGED)
+        AgGrid(dataframe, editable=True, gridOptions=gridoptions)
+
+        # DELETE ROW 
+        #selected_rows = grid_table['selected_rows']
+        #st.write(selected_rows)
+        # if selected_rows:
+        #     selected_indices = [i['_selectedRowNodeInfo']
+        #                         ['nodeRowIndex'] for i in selected_rows]
+        #     #df_indices = st.session_state.df_for_grid.index[selected_indices]
+        #     print("Row_index:" + str(selected_indices))
+
+        #     drop_row_list = []
+        #     for i in selected_indices:
+        #         print("Row index " + str(i))
+        #         drop_row_list.append(dataframe.index(i))
+
+        #     dataframe = dataframe.drop(selected_indices, inplace=True, axis=0)
 
     return (option, selected, is_df_empty)
 
