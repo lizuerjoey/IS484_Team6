@@ -149,7 +149,7 @@ def viewer_func(df, num, id):
         for col in dataframe.columns:
             if col_index % 2 == 0:
                 with col1:
-                    column_name = st.text_input( "",placeholder= col, key="table -" + str(num) + str(col_index))
+                    column_name = st.text_input("Column", label_visibility="hidden", placeholder= col, key="table -" + str(num) + str(col_index))
                     delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
 
                     # EDIT COL NAME
@@ -166,7 +166,7 @@ def viewer_func(df, num, id):
                     col_index +=1
             else:
                 with col2:
-                    column_name = st.text_input( "",placeholder= col, key="table -" + str(num) + str(col_index))
+                    column_name = st.text_input("Column", label_visibility="hidden", placeholder= col, key="table -" + str(num) + str(col_index))
                     delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
                     
                     # EDIT COL NAME
@@ -281,11 +281,15 @@ dir = os.listdir(temp_path)
 
 # if temp_files is not empty then extract
 if len(dir) > 1:
-    st.subheader('Currency')
+
+    pg_input = st.session_state.pg_input
+    status = st.session_state.status
     
-    # currency
-    currency_list = get_currency_list()
-    option = st.selectbox('Select a Currency:', currency_list, key="currency")
+    if (status == True and pg_input != ''):
+        st.subheader('Currency')
+        # currency
+        currency_list = get_currency_list()
+        option = st.selectbox('Select a Currency:', currency_list, key="currency")
     
     file_paths = glob.glob("./temp_files/*")
     count = 0
@@ -316,9 +320,6 @@ if len(dir) > 1:
             
             # multi page pdf
             else:
-                pg_input = st.session_state.pg_input
-                status = st.session_state.status
-
                 # user input is successful on page 3
                 if (status == True and pg_input != ''):
                     tables = check_tables_multi_PDF(file_path, str(pg_input))
@@ -357,22 +358,22 @@ if len(dir) > 1:
                         print(format) 
                         print(is_df_empty)
 
-    # Save into DB
-    if st.session_state["text_option"] == True:
-        if st.button('Submit'):
-            if com_name:
-                add_com = add_company(com_id, com_name)
-                if (add_com["message"] == "Added"):
-                    st.success("Company Added", icon="✅")
-                    save_file(com_id, st.session_state["uploaded_file"], com_name)
-                else:
-                    st.error('Error adding company. Please try again later', icon="🚨")
-            else:
-                # If company name not entered
-                st.error("Please enter a company name in Upload Report Page", icon="🚨")
-    else:
-        if st.button('Submit'):
-            save_file(selected_comID, st.session_state["uploaded_file"], selected_comName)
+    # # Save into DB
+    # if st.session_state["text_option"] == True:
+    #     if st.button('Submit'):
+    #         if com_name:
+    #             add_com = add_company(com_id, com_name)
+    #             if (add_com["message"] == "Added"):
+    #                 st.success("Company Added", icon="✅")
+    #                 save_file(com_id, st.session_state["uploaded_file"], com_name)
+    #             else:
+    #                 st.error('Error adding company. Please try again later', icon="🚨")
+    #         else:
+    #             # If company name not entered
+    #             st.error("Please enter a company name in Upload Report Page", icon="🚨")
+    # else:
+    #     if st.button('Submit'):
+    #         save_file(selected_comID, st.session_state["uploaded_file"], selected_comName)
 
 # no files was uploaded
 else:
