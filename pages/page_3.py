@@ -194,7 +194,7 @@ if len(dir) > 1:
 
         # If file_type is not pdf    
         elif file_type != ".csv" and file_type != '.xlsx':
-            count += 1; 
+            count += 1 
     
     # Check if image was uploaded
     if count > 1:

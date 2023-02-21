@@ -3,9 +3,17 @@ import pandas as pd
 import os
 import hashlib
 import random
+import PyPDF2
+import glob
+from streamlit_extras.switch_page_button import switch_page
 from request import(
     get_all_companies,
 ) 
+
+# Get file type
+def get_file_type (file):
+    filetype = os.path.splitext(file)[1]
+    return filetype
 
 st.header("Upload Reports")
 
@@ -142,21 +150,53 @@ if uploaded_file is not None:
     # Accepted File Type
     supported_file_type=["pdf", "png", "jpg", "jpeg"]
 
+    # Check if the temp folder is empty
+    temp_path = "./temp_files"
+    dir = os.listdir(temp_path)
+
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
     elif (uploaded_file.size>limit):
         st.error("File Size more than 200MB", icon="🚨")
     else:
-        # Check if the temp folder is empty
-        temp_path = "./temp_files"
-        dir = os.listdir(temp_path)
         if len(dir) > 0:
             for f in os.listdir(temp_path):
                 if (f != "test.txt"):
                     os.remove(os.path.join(temp_path, f))
         save_file_to_temp(uploaded_file)
+    
+    # Check if user uploaded a file into temp files
+    if len(dir) > 1:
+        # Check if file type uploaded to temp files is a PDF
+        file_paths = glob.glob("./temp_files/*")
+        count = 0
+        txtcount = 0
+        for path in file_paths:
+            file_type = get_file_type(path)
+
+            if file_type == '.pdf':
+                file_path = glob.glob("./temp_files/*.pdf")[0]
+                pdfReader = PyPDF2.PdfReader(file_path)
+                totalpages = len(pdfReader.pages)
                 
+                if totalpages > 1:
+                    # uploaded file is multi pdf -> select
+                    multipgpdf = st.button("Select Pages (PDF)", key="multipgpdf")
+                    if multipgpdf:
+                        switch_page("select pages (pdf)")
+                else:
+                    # uploaded file is single pg -> preview
+                    previewpdf = st.button("Preview Extracted Data", key="previewpdf")
+                    if previewpdf:
+                        switch_page("preview extracted data")
+            
+            
+            elif (file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg') and not (uploaded_file.name.endswith('.csv') or uploaded_file.name.endswith('.xlsx')):
+                st.write(uploaded_file.name.endswith('.csv')) 
+                previewimg = st.button("Preview Extracted Data", key="previewimg")
+                if previewimg:
+                    switch_page("preview extracted data")                
 
 ############## CSS
 st.markdown("""
