@@ -166,35 +166,39 @@ if uploaded_file is not None:
                     os.remove(os.path.join(temp_path, f))
         save_file_to_temp(uploaded_file)
     
-    # Check if user uploaded a file into temp files
-    if len(dir) > 1:
-        # Check if file type uploaded to temp files is a PDF
-        file_paths = glob.glob("./temp_files/*")
-        count = 0
-        txtcount = 0
-        for path in file_paths:
-            file_type = get_file_type(path)
+    # Check if uploaded file is not csv or xlsx
+    if not (uploaded_file.name.endswith('.csv') or uploaded_file.name.endswith('.xlsx')):
+        # Check if user uploaded a file into temp files
+        if len(dir) > 1:
+            # Check if file type uploaded to temp files is a PDF
+            file_paths = glob.glob("./temp_files/*")
+            count = 0
+            txtcount = 0
+            for path in file_paths:
+                file_type = get_file_type(path)
 
-            if file_type == '.pdf':
-                file_path = glob.glob("./temp_files/*.pdf")[0]
-                pdfReader = PyPDF2.PdfReader(file_path)
-                totalpages = len(pdfReader.pages)
+                if file_type == '.pdf':
+                    file_path = glob.glob("./temp_files/*.pdf")[0]
+                    pdfReader = PyPDF2.PdfReader(file_path)
+                    totalpages = len(pdfReader.pages)
+                    
+                    if totalpages > 1:
+                        # uploaded file is multi pdf -> select
+                        multipgpdf = st.button("Select Pages (PDF)", key="multipgpdf")
+                        if multipgpdf:
+                            switch_page("select pages (pdf)")
+                    else:
+                        # uploaded file is single pg -> preview
+                        previewpdf = st.button("Preview Extracted Data", key="previewpdf")
+                        if previewpdf:
+                            switch_page("preview extracted data")
                 
-                if totalpages > 1:
-                    # uploaded file is multi pdf -> select
-                    multipgpdf = st.button("Select Pages (PDF)", key="multipgpdf")
-                    if multipgpdf:
-                        switch_page("select pages (pdf)")
-                else:
-                    # uploaded file is single pg -> preview
-                    previewpdf = st.button("Preview Extracted Data", key="previewpdf")
-                    if previewpdf:
-                        switch_page("preview extracted data")
-            
-            
-            elif (file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg') and not (uploaded_file.name.endswith('.csv') or uploaded_file.name.endswith('.xlsx')):
-                st.write(uploaded_file.name.endswith('.csv')) 
-                previewimg = st.button("Preview Extracted Data", key="previewimg")
+                elif file_type != ".csv" and file_type != '.xlsx':
+                    count += 1 
+
+            # uploaded file is img   
+            if count > 1:
+                previewimg = st.button("Preview Extracted Data 1", key="previewimg")
                 if previewimg:
                     switch_page("preview extracted data")                
 
