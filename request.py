@@ -110,3 +110,36 @@ def get_months(mnth):
             12: "December"
         }
     return month[mnth]
+
+# GET FINANCIAL WORDS
+def get_financial_words(sheet):
+    words = {
+        "Income Statement": {
+            "revenue": [],
+            "cost": [],
+            "gross profit": ["earnings", "gross income"],
+            "gross loss": [],
+            "net profit": ["net income", "net earnings"],
+            "net loss": [],
+            "income tax": [],
+            "interest": ["interest expense"],
+            "depreciation": ["amortization", "depletion"],
+        },
+        "Balance Sheet": {
+            "total equities": [],
+            "total liabilities": [],
+            "total current liabilties": [],
+            "total non current liabitilies": [],
+            "total assets": [],
+            "total current assets": [],
+            "total non current assets": [],
+            "debt": [],
+            "cash": [],
+        },
+        "Cash Flow": {
+            "operating net cash flow": [],
+            "investing net cash flow": [],
+            "financing net cashFlow": [],
+        },
+    }
+    return words[sheet]

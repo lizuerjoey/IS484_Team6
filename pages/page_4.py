@@ -116,9 +116,12 @@ def get_currency_list():
 
 def viewer_func(df, num, id):
     st.subheader('Extracted Table ' + str(num+1))
-
+    
     # financial statement ddl
     option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
+    
+    if option != "Not Selected":
+        st.session_state['financial_format'].append(option)
 
     df.to_excel("./temp_files/" + str(num) + ".xlsx")     
     num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
@@ -128,11 +131,16 @@ def viewer_func(df, num, id):
     # number format ddl
     with col1:
         new_num_list = sort_num_list(num_format)
-        selected = st.selectbox("Number Format:", new_num_list, key="format -" + id + str(num))
+        options = list(range(len(new_num_list)))
+        i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
+        if new_num_list[i] != "Unable to Determine":
+            st.session_state['number_format'].append(new_num_list[i])
 
     # fiscal month ddl
     with col2:
         selected = st.selectbox("Fiscal Month:", month, key="fiscalmnth -" + id + str(num))
+        if selected != "Not Selected":
+            st.session_state['fiscal_month'].append(selected)
 
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
@@ -181,13 +189,25 @@ def viewer_func(df, num, id):
                         dataframe.drop(col, axis=1, inplace = True)
                     
                     col_index +=1
+
+    # assuming if edit is confirm, proceed to select headers to search through
+    
+    # get column headers
+    column_headers = list(dataframe.columns)
+
+    confirm_headers = st.multiselect(
+    'Select the Columns with Financial Statement Keywords:',
+    column_headers,
+    column_headers[0], key="confirm_headers -" + str(num))
+
+    # st.write('You selected:', confirm_headers)
                         
     is_df_empty = True
     if dataframe.empty:
         is_df_empty = True
     else:
         gd = GridOptionsBuilder.from_dataframe(dataframe)
-        gd.configure_pagination(enabled=True)
+        # gd.configure_pagination(enabled=True)
         gd.configure_default_column(editable=True, groupable=True)
         #gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
 
@@ -216,6 +236,9 @@ def viewer_func(df, num, id):
 def extract_tables (tables):
     # CHECK ACCURACY
     accuracy = []
+    st.session_state['financial_format'] = []
+    st.session_state['number_format'] = []
+    st.session_state['fiscal_month'] = []
     for i in range(len(tables)):
         accuracy.append(tables[i].parsing_report["accuracy"])
     if (any(i < 75 for i in accuracy)):
@@ -266,6 +289,19 @@ if 'status' not in st.session_state:
 if 'uploaded_file' not in st.session_state:
     st.session_state['uploaded_file'] = ''
 
+if 'currency' not in st.session_state:
+    st.session_state['currency'] = ""
+
+if 'financial_format' not in st.session_state:
+    st.session_state['financial_format'] = []
+
+if 'number_format' not in st.session_state:
+    st.session_state['number_format'] = []
+
+if 'fiscal_month' not in st.session_state:
+    st.session_state['fiscal_month'] = []
+
+
 com_name = st.session_state["com_name"]
 com_id = st.session_state["com_id"]
 selected_comName = st.session_state["selected_comName"]
@@ -290,6 +326,8 @@ if len(dir) > 1:
         # currency
         currency_list = get_currency_list()
         option = st.selectbox('Select a Currency:', currency_list, key="currency")
+        if option != "Not Selected":
+            st.session_state['currency'] = option
     
     file_paths = glob.glob("./temp_files/*")
     count = 0
@@ -329,6 +367,7 @@ if len(dir) > 1:
                     
                 else:
                     st.error("Please specify the pages you want to extract.", icon="🚨")
+            
             if button_clicked:
                 extraction_container.empty()
                 next_extraction = st.empty()
@@ -358,6 +397,12 @@ if len(dir) > 1:
                         print(format) 
                         print(is_df_empty)
 
+    if st.button("Save"):
+        st.write(st.session_state['financial_format'])
+        st.write(st.session_state['number_format'])
+        st.write(st.session_state['fiscal_month'])
+        st.write(st.session_state['currency'])
+        
     # # Save into DB
     # if st.session_state["text_option"] == True:
     #     if st.button('Submit'):
