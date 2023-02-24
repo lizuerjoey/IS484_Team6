@@ -5,6 +5,7 @@ import PyPDF2
 import os
 import base64
 from datetime import datetime
+from streamlit import session_state
 from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
@@ -14,10 +15,45 @@ from request import (
         get_symbols,
         add_company,
         add_file,
+        get_financial_words
     )
-# from extraction.pdf_to_image import (convert_file)
-# from extraction.aws_image import (image_extraction)
+from extraction.pdf_to_image import (convert_file)
+from extraction.aws_image import (image_extraction)
 
+# Initialization
+if 'pg_input' not in session_state:
+    session_state['pg_input'] = ''
+
+if 'status' not in session_state:
+    session_state['status'] = False
+
+if 'uploaded_file' not in session_state:
+    session_state['uploaded_file'] = ''
+
+if 'currency' not in session_state:
+    session_state['currency'] = ""
+
+if 'financial_format' not in session_state:
+    session_state['financial_format'] = []
+
+if 'number_format' not in session_state:
+    session_state['number_format'] = []
+
+if 'fiscal_month' not in session_state:
+    session_state['fiscal_month'] = []
+
+confirm_headers_list = []
+dataframe_list = [] 
+
+com_name = session_state["com_name"]
+com_id = session_state["com_id"]
+selected_comName = session_state["selected_comName"]
+selected_comID = session_state["selected_comID"]
+
+if session_state["text_option"] == True:
+    st.header(com_name)
+else:
+    st.header(selected_comName)
 
 number = [            
             "Unable to Determine",
@@ -130,7 +166,7 @@ def viewer_func(df, num, id):
     option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
     
     if option != "Not Selected":
-        st.session_state['financial_format'].append(option)
+        session_state['financial_format'].append(option)
 
     df.to_excel("./temp_files/" + str(num) + ".xlsx")     
     num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
@@ -143,13 +179,13 @@ def viewer_func(df, num, id):
         options = list(range(len(new_num_list)))
         i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
         if new_num_list[i] != "Unable to Determine":
-            st.session_state['number_format'].append(new_num_list[i])
+            session_state['number_format'].append(new_num_list[i])
 
     # fiscal month ddl
     with col2:
         selected = st.selectbox("Fiscal Month:", month, key="fiscalmnth -" + id + str(num))
         if selected != "Not Selected":
-            st.session_state['fiscal_month'].append(selected)
+            session_state['fiscal_month'].append(selected)
 
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
@@ -188,14 +224,13 @@ def viewer_func(df, num, id):
     
     # get column headers
     column_headers = list(dataframe.columns)
-
+    
     confirm_headers = st.multiselect(
     'Select the Columns with Financial Statement Keywords:',
     column_headers,
     column_headers[0], key="confirm_headers -" + str(num))
 
-    # st.write('You selected:', confirm_headers)
-                        
+    confirm_headers_list.append(confirm_headers)                       
     is_df_empty = True
     if dataframe.empty:
         is_df_empty = True
@@ -234,17 +269,23 @@ def viewer_func(df, num, id):
         done_button = st.button("Done", key="done -" + str(num))
         if done_button:
             new_df = grid_table['data']
+            dataframe_list.append(new_df)
             st.success("Table saved successfully")
             #st.write(new_df)
 
     return (option, selected, is_df_empty)
 
+def total_num_tables(df):
+    session_state["total_num_tables"] = len(df)
+    return session_state["total_num_tables"]
+
 def extract_tables (tables):
     # CHECK ACCURACY
     accuracy = []
-    st.session_state['financial_format'] = []
-    st.session_state['number_format'] = []
-    st.session_state['fiscal_month'] = []
+    session_state['financial_format'] = []
+    session_state['number_format'] = []
+    session_state['fiscal_month'] = []
+    confirm_headers_list = []
     for i in range(len(tables)):
         accuracy.append(tables[i].parsing_report["accuracy"])
     if (any(i < 75 for i in accuracy)):
@@ -259,6 +300,12 @@ def extract_tables (tables):
     print(format) 
     print(is_df_empty) 
     print(accuracy)
+
+def concat_lists(lists):
+    result = []
+    for items in zip(*lists):
+        result.append(" ".join(str(item) for item in items if not pd.isnull(item)))
+    return result
 
 def save_file (ID, uploaded_file, com_name):
     now = datetime.now()
@@ -330,8 +377,8 @@ dir = os.listdir(temp_path)
 # if temp_files is not empty then extract
 if len(dir) > 1:
 
-    pg_input = st.session_state.pg_input
-    status = st.session_state.status
+    pg_input = session_state.pg_input
+    status = session_state.status
     
     if (status == True and pg_input != ''):
         st.subheader('Currency')
@@ -339,7 +386,7 @@ if len(dir) > 1:
         currency_list = get_currency_list()
         option = st.selectbox('Select a Currency:', currency_list, key="currency")
         if option != "Not Selected":
-            st.session_state['currency'] = option
+            session_state['currency'] = option
     
     file_paths = glob.glob("./temp_files/*")
     count = 0
@@ -351,13 +398,13 @@ if len(dir) > 1:
             button_clicked = False
             btn_placeholder = st.empty()
             with btn_placeholder.container():
-                if st.session_state["status"]:
+                if session_state["status"]:
                     if (st.button("Try AWS")):
                         button_clicked = True
                         btn_placeholder.empty()
                 
             file_path = glob.glob("./temp_files/*.pdf")[0]
-            st.session_state["uploaded_file"] = file_path
+            session_state["uploaded_file"] = file_path
             file_name = get_file_name(file_path)
             totalpages = get_total_pgs_PDF(file_path)
 
@@ -392,7 +439,6 @@ if len(dir) > 1:
         elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
             file_path = glob.glob("./temp_files/*" + file_type)[0]
             file_name = get_file_name(file_path)
-
     
             dataframes = image_extraction(file_path)
             # check if dataframe is empty
@@ -410,19 +456,100 @@ if len(dir) > 1:
                         print(is_df_empty)
 
     if st.button("Save"):
-        st.write(st.session_state['financial_format'])
-        st.write(st.session_state['number_format'])
-        st.write(st.session_state['fiscal_month'])
-        st.write(st.session_state['currency'])
+        # below are required fields --> REMEBER TO CHECK FOR EMPTY
+        # st.write(session_state['financial_format'])
+        # st.write(session_state['number_format'])
+        # st.write(session_state['fiscal_month'])
+        # st.write(session_state['currency'])
+
+        total_num_tables = total_num_tables(dataframe_list)
+        big_col = []
+        new_col_list = []
+        for table in range(total_num_tables):
+            # multiple selected headers
+            if len(confirm_headers_list[table]) > 1:
+                
+                # check each column selected for merged cells
+                for colname in dataframe_list[table]:
+                    if colname in confirm_headers_list[table]:
+                        
+                        # check if each cell is blank
+                        empty = 0
+                        keyword = 0
+                        replace_keyword = ""
+                        index = -1
+                        colvalues = dataframe_list[table][colname].values
+                        
+                        for cell in colvalues:
+                            index += 1
+                            
+                            # first few cells is empty
+                            if keyword == 0 and (pd.isnull(cell) == True or str(cell) == "None" or str(cell) == " "):
+                                empty += 1
+
+                            # first few cells is empty but a cell with keyword is found
+                            elif empty > 0 and pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                replace_keyword = str(cell)
+                                keyword += 1
+                                empty = 0
+
+                            # first cell contains a keyword and not empty
+                            elif empty == 0 and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                replace_keyword = str(cell)
+                                keyword += 1
+
+                            # check if cell below keyword is another keyword
+                            elif keyword > 0 and empty == 0:
+                                # another keyword or edited and became empty string or None                             
+                                if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                    keyword += 1
+                                    replace_keyword = str(cell)
+                                
+                                # empty cell
+                                if str(cell) == "None" or str(cell) == " " or str(cell) == "":
+                                    colvalues[index] = replace_keyword
+                        
+                        new_col_list.append(colvalues)
+
+                    # merge the text in each column into one big column
+                    big_col = concat_lists(new_col_list)
+    
+                        
+                    
+
+                        
+
+
+
+                        
+
+                #new_df = dataframe_list[table]["Unnamed: 0"].replace('', "Na")
+                # new_df = pd.Series(new_df).fillna(method='ffill')
+                # new_df = new_df.replace('None', pd.np.nan)
+                # new_df = new_df.fillna(method='ffill')
+
+
+                # takes care of merge cells by filling the same word
+                # for column in confirm_headers_list[table]:
+                #     dataframe_list[table][column] = pd.Series(dataframe_list[table][column]).fillna(method='ffill')
+                #     dataframe_list[table][column]
+                    
+            
+            # single selected header
+            else:
+                st.write("single")
+            # for column in range(len(confirm_headers_list[table])):
+            #     st.write(confirm_headers_list[table][column])
+
         
     # # Save into DB
-    # if st.session_state["text_option"] == True:
+    # if session_state["text_option"] == True:
     #     if st.button('Submit'):
     #         if com_name:
     #             add_com = add_company(com_id, com_name)
     #             if (add_com["message"] == "Added"):
     #                 st.success("Company Added", icon="✅")
-    #                 save_file(com_id, st.session_state["uploaded_file"], com_name)
+    #                 save_file(com_id, session_state["uploaded_file"], com_name)
     #             else:
     #                 st.error('Error adding company. Please try again later', icon="🚨")
     #         else:
@@ -430,7 +557,7 @@ if len(dir) > 1:
     #             st.error("Please enter a company name in Upload Report Page", icon="🚨")
     # else:
     #     if st.button('Submit'):
-    #         save_file(selected_comID, st.session_state["uploaded_file"], selected_comName)
+    #         save_file(selected_comID, session_state["uploaded_file"], selected_comName)
 
 # no files was uploaded
 else:

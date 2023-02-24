@@ -198,7 +198,7 @@ if uploaded_file is not None:
 
             # uploaded file is img   
             if count > 1:
-                previewimg = st.button("Preview Extracted Data 1", key="previewimg")
+                previewimg = st.button("Preview Extracted Data", key="previewimg")
                 if previewimg:
                     switch_page("preview extracted data")                
 
