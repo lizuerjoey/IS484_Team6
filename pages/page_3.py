@@ -112,6 +112,9 @@ if len(dir) > 1:
                         
                         if num_page_input[1] == "":
                             st.error('Page number is in the incorrect format. Please try again', icon="🚨")
+
+                        elif num_page_input[0] > num_page_input[1]:
+                            st.error('Page number is in the incorrect format. Please try again', icon="🚨")
                         
                         else:
                             i = 0

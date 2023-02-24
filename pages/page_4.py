@@ -5,7 +5,7 @@ import PyPDF2
 import os
 import base64
 from datetime import datetime
-from st_aggrid import AgGrid, GridUpdateMode
+from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
 import pandas as pd
@@ -15,8 +15,8 @@ from request import (
         add_company,
         add_file,
     )
-from extraction.pdf_to_image import (convert_file)
-from extraction.aws_image import (image_extraction)
+# from extraction.pdf_to_image import (convert_file)
+# from extraction.aws_image import (image_extraction)
 
 
 number = [            
@@ -115,7 +115,16 @@ def get_currency_list():
     return currency_acronyms
 
 def viewer_func(df, num, id):
-    st.subheader('Extracted Table ' + str(num+1))
+
+    c1,c2 = st.columns([3,1])
+    with c1:
+        st.subheader('Extracted Table ' + str(num+1))
+    
+    # with c2:
+    #     delete_table = st.button("🗑", key="trash -" + str(num))
+
+    # if delete_table:
+    #     st.success("Table successfully deleted")
     
     # financial statement ddl
     option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
@@ -145,50 +154,35 @@ def viewer_func(df, num, id):
     df.to_csv("./temp_files/" + str(num) + ".csv")
     dataframe = pd.read_csv("./temp_files/" + str(num) + ".csv")
 
-    edit_table = st.checkbox("Edit Table", key="table -" + str(num))
+    st.subheader("Edit Headers")
 
-    if edit_table:
-        st.subheader("Edit Headers")
-        st.caption("Enter new header name below:")
+    col1, col2 = st.columns(2)
+            
+    with col1:
+        options = st.multiselect('Select Header(s) to Delete:',
+        list(dataframe.columns),
+        )
+        st.session_state['column_del'] = True
+            
+        for col_option in options:
+            dataframe.drop(col_option, axis=1, inplace=True)
+            
+        # st.write('You selected:', options)
+        #st.write("existing: ",list(dataframe.columns))
+            
+    with col2:
+        options = st.multiselect('Select Header(s) to Rename:',
+        list(dataframe.columns),
+        )
 
-        col1, col2 = st.columns(2)
+        for i in range(len(options)):
+            column_name = st.text_input("Enter New Header Name for "+ str(options[i]), placeholder= options[i], key="table -" + str(num) + str(i))
+            st.session_state['column_input'] = True
 
-        col_index = 0
-        for col in dataframe.columns:
-            if col_index % 2 == 0:
-                with col1:
-                    column_name = st.text_input("Column", label_visibility="hidden", placeholder= col, key="table -" + str(num) + str(col_index))
-                    delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
+            dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
 
-                    # EDIT COL NAME
-                    if column_name == "":
-                        print(col)
-                    else:
-                        print(column_name)
-                        dataframe.rename(columns = {col: column_name}, inplace = True) 
-
-                    # DELETE COL
-                    if delete_column:
-                        dataframe.drop(col, axis=1, inplace = True)
-                    
-                    col_index +=1
-            else:
-                with col2:
-                    column_name = st.text_input("Column", label_visibility="hidden", placeholder= col, key="table -" + str(num) + str(col_index))
-                    delete_column = st.checkbox("Delete column", key="table -" + str(num) + " column -" +str(col_index))
-                    
-                    # EDIT COL NAME
-                    if column_name == "":
-                        print(col)
-                    else:
-                        print(column_name)
-                        dataframe.rename(columns = {col: column_name}, inplace = True) 
-                    
-                    # DELETE COL
-                    if delete_column:
-                        dataframe.drop(col, axis=1, inplace = True)
-                    
-                    col_index +=1
+        # st.write('You selected:', options)
+        #st.write("existing: ",list(dataframe.columns))
 
     # assuming if edit is confirm, proceed to select headers to search through
     
@@ -206,30 +200,42 @@ def viewer_func(df, num, id):
     if dataframe.empty:
         is_df_empty = True
     else:
+        js = JsCode("""
+        function(e) {
+            let api = e.api;
+            let sel = api.getSelectedRows();
+            api.applyTransaction({remove: sel})    
+        };
+        """)  
+        
+        st.info('To Delete Row(s): Click the checkbox', icon="ℹ️")
+        #add_row = st.button("Add Row", key="add -" + str(num))
+
+        # if add_row:
+        #     dataframe = dataframe.append({}, ignore_index=True)
+        #     st.write(dataframe)
+
         gd = GridOptionsBuilder.from_dataframe(dataframe)
-        # gd.configure_pagination(enabled=True)
-        gd.configure_default_column(editable=True, groupable=True)
-        #gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
+        gd.configure_default_column(editable=True,groupable=True)
+        gd.configure_selection(selection_mode= 'multiple',use_checkbox=True)
+        gd.configure_grid_options(onRowSelected = js,pre_selected_rows=[])
 
-        gridoptions = gd.build()
-        #grid_table = AgGrid(dataframe, editable=True, gridOptions=gridoptions, update_mode=GridUpdateMode.SELECTION_CHANGED)
-        AgGrid(dataframe, editable=True, gridOptions=gridoptions)
-
-        # DELETE ROW 
-        #selected_rows = grid_table['selected_rows']
-        #st.write(selected_rows)
-        # if selected_rows:
-        #     selected_indices = [i['_selectedRowNodeInfo']
-        #                         ['nodeRowIndex'] for i in selected_rows]
-        #     #df_indices = st.session_state.df_for_grid.index[selected_indices]
-        #     print("Row_index:" + str(selected_indices))
-
-        #     drop_row_list = []
-        #     for i in selected_indices:
-        #         print("Row index " + str(i))
-        #         drop_row_list.append(dataframe.index(i))
-
-        #     dataframe = dataframe.drop(selected_indices, inplace=True, axis=0)
+        gridOptions = gd.build()
+        grid_table = AgGrid(dataframe, 
+                    gridOptions = gridOptions, 
+                    enable_enterprise_modules = True,
+                    fit_columns_on_grid_load = True,
+                    update_mode = GridUpdateMode.SELECTION_CHANGED,
+                    editable = True,
+                    allow_unsafe_jscode=True)      
+        
+        # st.info("Total Rows :" + str(len(grid_table['data']))) 
+        # print("Selected row: " + str(grid_table["selected_rows"]))
+        done_button = st.button("Done", key="done -" + str(num))
+        if done_button:
+            new_df = grid_table['data']
+            st.success("Table saved successfully")
+            #st.write(new_df)
 
     return (option, selected, is_df_empty)
 
@@ -300,6 +306,12 @@ if 'number_format' not in st.session_state:
 
 if 'fiscal_month' not in st.session_state:
     st.session_state['fiscal_month'] = []
+
+if 'column_input' not in st.session_state:
+    st.session_state['column_input'] = False
+
+if 'column_del' not in st.session_state:
+    st.session_state['column_del'] = False
 
 
 com_name = st.session_state["com_name"]
