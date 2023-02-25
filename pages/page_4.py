@@ -39,12 +39,6 @@ if 'number_format' not in session_state:
 if 'fiscal_month' not in session_state:
     session_state['fiscal_month'] = []
 
-if 'column_input' not in st.session_state:
-    st.session_state['column_input'] = False
-
-if 'column_del' not in st.session_state:
-    st.session_state['column_del'] = False
-
 currency = ""
 confirm_headers_list = []
 dataframe_list = []
@@ -193,6 +187,7 @@ def viewer_func(df, num, id):
             old_name = options[i]
             column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
             st.session_state['column_input'] = True
+            
             if column_name in (dataframe.columns) and old_name !=column_name:
                 st.error("Header name already exisit. Try a different name")
             else:
