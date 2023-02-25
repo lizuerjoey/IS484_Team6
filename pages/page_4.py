@@ -6,7 +6,7 @@ import os
 import base64
 from datetime import datetime
 from streamlit import session_state
-from st_aggrid import AgGrid, GridUpdateMode, JsCode
+from st_aggrid import AgGrid, GridUpdateMode, JsCode, DataReturnMode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
 import pandas as pd
@@ -43,17 +43,15 @@ if 'fiscal_month' not in session_state:
     session_state['fiscal_month'] = []
 
 confirm_headers_list = []
-dataframe_list = [] 
+dataframe_list = []
+
+if 'dataframes' not in session_state:
+    session_state['dataframes'] = []
 
 com_name = session_state["com_name"]
 com_id = session_state["com_id"]
 selected_comName = session_state["selected_comName"]
 selected_comID = session_state["selected_comID"]
-
-if session_state["text_option"] == True:
-    st.header(com_name)
-else:
-    st.header(selected_comName)
 
 number = [            
             "Unable to Determine",
@@ -195,7 +193,7 @@ def viewer_func(df, num, id):
     col1, col2 = st.columns(2)
             
     with col1:
-        options = st.multiselect('Select Header(s) to Delete:',
+        options = st.multiselect('Select Columns to Delete:',
         list(dataframe.columns),
         )
         st.session_state['column_del'] = True
@@ -207,7 +205,7 @@ def viewer_func(df, num, id):
         #st.write("existing: ",list(dataframe.columns))
             
     with col2:
-        options = st.multiselect('Select Header(s) to Rename:',
+        options = st.multiselect('Select Column Header(s) to Rename:',
         list(dataframe.columns),
         )
 
@@ -226,7 +224,7 @@ def viewer_func(df, num, id):
     column_headers = list(dataframe.columns)
     
     confirm_headers = st.multiselect(
-    'Select the Columns with Financial Statement Keywords:',
+    'Select the Column(s) with Financial Statement Keywords:',
     column_headers,
     column_headers[0], key="confirm_headers -" + str(num))
 
@@ -242,36 +240,92 @@ def viewer_func(df, num, id):
             api.applyTransaction({remove: sel})    
         };
         """)  
-        
-        st.info('To Delete Row(s): Click the checkbox', icon="ℹ️")
-        #add_row = st.button("Add Row", key="add -" + str(num))
 
-        # if add_row:
-        #     dataframe = dataframe.append({}, ignore_index=True)
-        #     st.write(dataframe)
+        string_to_add_row = "\n\n function(e) { \n \
+        let api = e.api; \n \
+        let rowIndex = e.rowIndex + 1; \n \
+        api.applyTransaction({addIndex: rowIndex, add: [{}]}); \n \
+            }; \n \n"
+        
+        cell_button_add = JsCode('''
+            class BtnAddCellRenderer {
+                init(params) {
+                    this.params = params;
+                    this.eGui = document.createElement('div');
+                    this.eGui.innerHTML = `
+                    <span>
+                        <style>
+                        .btn_add {
+                        border: none;
+                        color: black;
+                        text-align: center;
+                        text-decoration: none;
+                        display: inline-block;
+                        font-size: 10px;
+                        font-weight: bold;
+                        height: 2.5em;
+                        width: 8em;
+                        cursor: pointer;
+                        }
+
+                        .btn_add :hover {
+                        background-color: #05d588;
+                        }
+                        </style>
+                        <button id='click-button' 
+                            class="btn_add" 
+                            >Add Row Below</button>
+                    </span>
+                `;
+                }
+
+                getGui() {
+                    return this.eGui;
+                }
+
+            };
+            ''')
+        
+        st.info('To Delete Row(s): Click the checkbox \n\n To Add Row(s): Click any cell on a row you wish to add a row below \n\n Once happy with the edit, click on Update', icon="ℹ️")
 
         gd = GridOptionsBuilder.from_dataframe(dataframe)
         gd.configure_default_column(editable=True,groupable=True)
-        gd.configure_selection(selection_mode= 'multiple',use_checkbox=True)
-        gd.configure_grid_options(onRowSelected = js,pre_selected_rows=[])
+        gd.configure_column("", onCellClicked=JsCode(string_to_add_row), cellRenderer=cell_button_add, editable=False, autoHeight=True,lockPosition='left')
+        gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
+        gd.configure_grid_options(onRowSelected = js, pre_selected_rows=[])
+
+        # gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)\
+        # .configure_grid_options(onRowSelected = js, pre_selected_rows=[])\
+        # .configure_selection(selection_mode= 'single')\
+        # .configure_grid_options(onCellClicked = JsCode(string_to_add_row))
+
+        # gd.configure_grid_options(selection_mode='multiple', onRowSelected=js, pre_selected_rows=[])
+        # gd.configure_grid_options(selection_mode='single', onRowSelected=JsCode(string_to_add_row))
+
+
+        # gd.configure_column("", onCellClicked=JsCode(string_to_add_row))
 
         gridOptions = gd.build()
         grid_table = AgGrid(dataframe, 
                     gridOptions = gridOptions, 
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
-                    update_mode = GridUpdateMode.SELECTION_CHANGED,
+                    update_mode = GridUpdateMode.MANUAL,
+                    data_return_mode= DataReturnMode.AS_INPUT,
                     editable = True,
-                    allow_unsafe_jscode=True)      
+                    allow_unsafe_jscode=True)
+
+        grid_table     
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
         # print("Selected row: " + str(grid_table["selected_rows"]))
-        done_button = st.button("Done", key="done -" + str(num))
-        if done_button:
-            new_df = grid_table['data']
-            dataframe_list.append(new_df)
-            st.success("Table saved successfully")
-            #st.write(new_df)
+
+        # ----- SAVE EDIT BUTTON HERE -----
+        # done_button = st.button("Save Edit", key="done -" + str(num))
+        # if done_button:
+        new_df = grid_table['data']
+        dataframe_list.append(new_df)
+        # st.success("Table saved successfully")
 
     return (option, selected, is_df_empty)
 
@@ -454,13 +508,19 @@ if len(dir) > 1:
                         print(statement)
                         print(format) 
                         print(is_df_empty)
+    
+    # session_state['dataframes'] = dataframe_list
+    # session_state['dataframes']
 
-    if st.button("Save"):
+    if st.button("Extract", key="extract"):
+        dataframe_list[0]
+        # session_state['dataframes']
         # below are required fields --> REMEBER TO CHECK FOR EMPTY
         # st.write(session_state['financial_format'])
         # st.write(session_state['number_format'])
         # st.write(session_state['fiscal_month'])
         # st.write(session_state['currency'])
+        
 
         total_num_tables = total_num_tables(dataframe_list)
         big_col = []
@@ -513,26 +573,15 @@ if len(dir) > 1:
 
                     # merge the text in each column into one big column
                     big_col = concat_lists(new_col_list)
+
+                    big_col
     
-                        
-                    
-
-                        
-
-
-
-                        
-
-                #new_df = dataframe_list[table]["Unnamed: 0"].replace('', "Na")
-                # new_df = pd.Series(new_df).fillna(method='ffill')
-                # new_df = new_df.replace('None', pd.np.nan)
-                # new_df = new_df.fillna(method='ffill')
+                    # search through the word dictionary
+                    # Retrieve the income statement financial words
+                    income_statement_words = get_financial_words("Income Statement")
+                    st.write(income_statement_words)
 
 
-                # takes care of merge cells by filling the same word
-                # for column in confirm_headers_list[table]:
-                #     dataframe_list[table][column] = pd.Series(dataframe_list[table][column]).fillna(method='ffill')
-                #     dataframe_list[table][column]
                     
             
             # single selected header
