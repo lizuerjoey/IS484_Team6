@@ -6,7 +6,7 @@ import os
 import base64
 from datetime import datetime
 from streamlit import session_state
-from st_aggrid import AgGrid, GridUpdateMode, JsCode, DataReturnMode
+from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
 import pandas as pd
@@ -286,7 +286,7 @@ def viewer_func(df, num, id):
             };
             ''')
         
-        st.info('To Delete Row(s): Click the checkbox \n\n To Add Row(s): Click any cell on a row you wish to add a row below \n\n Once happy with the edit, click on Update', icon="ℹ️")
+        st.info('To Delete Row(s): Click the checkbox', icon="ℹ️")
 
         gd = GridOptionsBuilder.from_dataframe(dataframe)
         gd.configure_default_column(editable=True,groupable=True)
@@ -294,28 +294,17 @@ def viewer_func(df, num, id):
         gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
         gd.configure_grid_options(onRowSelected = js, pre_selected_rows=[])
 
-        # gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)\
-        # .configure_grid_options(onRowSelected = js, pre_selected_rows=[])\
-        # .configure_selection(selection_mode= 'single')\
-        # .configure_grid_options(onCellClicked = JsCode(string_to_add_row))
-
-        # gd.configure_grid_options(selection_mode='multiple', onRowSelected=js, pre_selected_rows=[])
-        # gd.configure_grid_options(selection_mode='single', onRowSelected=JsCode(string_to_add_row))
-
-
-        # gd.configure_column("", onCellClicked=JsCode(string_to_add_row))
-
         gridOptions = gd.build()
         grid_table = AgGrid(dataframe, 
                     gridOptions = gridOptions, 
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
-                    update_mode = GridUpdateMode.MANUAL,
-                    data_return_mode= DataReturnMode.AS_INPUT,
+                    update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
+                    height= 450,
                     allow_unsafe_jscode=True)
 
-        grid_table     
+        grid_table["data"]     
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
         # print("Selected row: " + str(grid_table["selected_rows"]))
