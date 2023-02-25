@@ -11,6 +11,7 @@ from st_aggrid.grid_options_builder import GridOptionsBuilder
 import glob
 import pandas as pd
 from openpyxl import load_workbook
+import shutil
 from request import (
         get_symbols,
         add_company,
@@ -214,11 +215,11 @@ def viewer_func(df, num, id):
 
     # check if an empty dataframe is extracted
     if dataframe.empty:
-        is_df_empty.append(True)
+        # is_df_empty.append(True)
         df_empty_msg = "Empty dataframe, please upload a pdf with a filled table or Try AWS."
         st.error(df_empty_msg, icon="🚨")
     else:
-        is_df_empty.append(False)
+        # is_df_empty.append(False)
         
         # with c2:
         #     delete_table = st.button("🗑", key="trash -" + str(num))
@@ -481,8 +482,21 @@ if len(dir) > 1:
                 button_clicked = False
                 btn_placeholder = st.empty()
                 with btn_placeholder.container():
-                    if session_state["status"]:
+                    # if session_state["status"]:
                         if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                            origin = './temp_files/'
+                            target = './selected_files/'
+                            files = os.listdir(origin)
+                            files_target = os.listdir(target)
+                            for file in files_target:
+                                if file=="file.pdf":
+                                    os.remove(target+file)
+                            for file in files:
+                                if file!="test.txt" and file.endswith(".pdf"):
+                                    file_type = get_file_type(file)
+                                    shutil.copy(origin+file, target)
+                                    os.rename(target+file, target+"file"+file_type)
+
                             button_clicked = True
                             btn_placeholder.empty()
                     
