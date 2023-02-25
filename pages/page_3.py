@@ -73,8 +73,6 @@ if len(dir) > 1:
                 col1, col2 = st.columns(2)
                 with col1:
                     cfmpg = st.button("Confirm Page", key="confirmpg")
-                # with col2:
-                    # previewdata = st.button("Preview Extracted Data", key="previewdata", disabled=st.session_state.disabled)
                     
                 if cfmpg:
                     print(num_page_input)
@@ -148,18 +146,12 @@ if len(dir) > 1:
                     
                     else:
                         st.error('Page number is in the incorrect format. Please try again', icon="🚨")
-                    
-                    if status == True:
+
+                    if status != True:
+                        st.session_state['status'] = False
+                    else:
                         st.success("Successful", icon="✅")
                         st.session_state['status'] = True
-                        
-                        # If pg input is correct, show preview button
-                        with col2:
-                            previewdata = st.button("Preview Extracted Data", key="previewdata")
-
-                            # If button is clicked, switch page to preview extracted data
-                            if previewdata:
-                                switch_page("preview extracted data")
 
                         # When successful page input then change save pdf view
                         pdf = PyPDF2.PdfReader(file_path)
@@ -181,7 +173,16 @@ if len(dir) > 1:
                 selected_dir = os.listdir(selected_path)
                 if (len(selected_dir) > 1):
                     file_path = "./selected_files/selected_pages.pdf"
-                displayPDF(file_path, file_type)                    
+                displayPDF(file_path, file_type)
+
+                # If pg input is correct, show preview button
+                if st.session_state['status'] == True:
+                    with col2:
+                        previewdata = st.button("Preview Extracted Data", key="previewdata")
+
+                        # If button is clicked, switch page to preview extracted data
+                        if previewdata:
+                            switch_page("preview extracted data")                    
 
             else: 
                 # Upload one page pdf into selected_files directory
