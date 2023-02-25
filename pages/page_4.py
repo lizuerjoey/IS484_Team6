@@ -42,6 +42,12 @@ if 'number_format' not in session_state:
 if 'fiscal_month' not in session_state:
     session_state['fiscal_month'] = []
 
+if 'column_input' not in st.session_state:
+    st.session_state['column_input'] = False
+
+if 'column_del' not in st.session_state:
+    st.session_state['column_del'] = False
+
 confirm_headers_list = []
 dataframe_list = []
 
@@ -205,15 +211,16 @@ def viewer_func(df, num, id):
         #st.write("existing: ",list(dataframe.columns))
             
     with col2:
-        options = st.multiselect('Select Column Header(s) to Rename:',
-        list(dataframe.columns),
-        )
-
+        options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns))
+        
         for i in range(len(options)):
-            column_name = st.text_input("Enter New Header Name for "+ str(options[i]), placeholder= options[i], key="table -" + str(num) + str(i))
+            old_name = options[i]
+            column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
             st.session_state['column_input'] = True
-
-            dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
+            if column_name in (dataframe.columns) and old_name !=column_name:
+                st.error("Header name already exisit. Try a different name")
+            else:
+                dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
 
         # st.write('You selected:', options)
         #st.write("existing: ",list(dataframe.columns))
@@ -375,35 +382,6 @@ def save_file (ID, uploaded_file, com_name):
     else:
         st.error('Error adding file. Please try again later', icon="🚨")
 
-# Initialization
-if 'pg_input' not in st.session_state:
-    st.session_state['pg_input'] = ''
-
-if 'status' not in st.session_state:
-    st.session_state['status'] = False
-
-if 'uploaded_file' not in st.session_state:
-    st.session_state['uploaded_file'] = ''
-
-if 'currency' not in st.session_state:
-    st.session_state['currency'] = ""
-
-if 'financial_format' not in st.session_state:
-    st.session_state['financial_format'] = []
-
-if 'number_format' not in st.session_state:
-    st.session_state['number_format'] = []
-
-if 'fiscal_month' not in st.session_state:
-    st.session_state['fiscal_month'] = []
-
-if 'column_input' not in st.session_state:
-    st.session_state['column_input'] = False
-
-if 'column_del' not in st.session_state:
-    st.session_state['column_del'] = False
-
-
 com_name = st.session_state["com_name"]
 com_id = st.session_state["com_id"]
 selected_comName = st.session_state["selected_comName"]
@@ -478,7 +456,7 @@ if len(dir) > 1:
                     for i in range(len(dfs)):
                         statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
 
-        # file is image
+        #file is image
         elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
             file_path = glob.glob("./temp_files/*" + file_type)[0]
             file_name = get_file_name(file_path)
