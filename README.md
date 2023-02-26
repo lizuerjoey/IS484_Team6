@@ -1,8 +1,10 @@
 # IS484 T06
 
 ## Pre-Requisites
--- Python 3.7 - 3.10 <br>
--- Pip
+<ul>
+<li>Python 3.7 - 3.10 </li>
+<li>Pip</li>
+</ul>
 
 ## Environment Setup
 To install dependencies, run:
