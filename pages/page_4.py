@@ -17,7 +17,9 @@ from request import (
         add_company,
         add_file,
         get_financial_words_col,
-        get_financial_words_row
+        get_financial_words_row,
+        get_json_financial_format,
+        get_json_format
     )
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
@@ -32,16 +34,12 @@ if 'status' not in session_state:
 if 'uploaded_file' not in session_state:
     session_state['uploaded_file'] = ''
 
-if 'number_format' not in session_state:
-    session_state['number_format'] = []
-
-if 'fiscal_month' not in session_state:
-    session_state['fiscal_month'] = []
-
 currency = ""
 confirm_headers_list = []
 confirm_rows_list = []
 financial_format =[]
+number_format = []
+fiscal_month = []
 dataframe_list = []
 is_df_empty_list = []
 button_clicked = False
@@ -235,13 +233,13 @@ def viewer_func(df, num, id):
             options = list(range(len(new_num_list)))
             i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
             if new_num_list[i] != "Unable to Determine":
-                session_state['number_format'].append(new_num_list[i])
+                number_format.append(new_num_list[i])
 
         # fiscal month ddl
         with col2:
             selected = st.selectbox("Fiscal Month:", month, key="fiscalmnth -" + id + str(num))
             if selected != "Not Selected":
-                session_state['fiscal_month'].append(selected)
+                fiscal_month.append(selected)
         
         st.subheader("Edit Headers")
 
@@ -272,7 +270,6 @@ def viewer_func(df, num, id):
 
         # get column headers
         column_headers = list(dataframe.columns)
-
         confirm_headers_tooltip = "Select the columns with all rows consisting of financial keywords in your word dictionary e.g. Revenue, Liabilities, Operating Net Cash Flow etc."
         confirm_headers = st.multiselect(
         'Select the Column(s) with Financial Statement Keywords:',
@@ -280,6 +277,9 @@ def viewer_func(df, num, id):
         column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
 
         confirm_headers_list.append(confirm_headers)
+        
+        if len(confirm_headers_list[num]) < 1:
+            st.error("You need to select at least 1 column headers", icon="🚨")
 
         delete_row = JsCode("""
             function(e) {
@@ -350,7 +350,8 @@ def viewer_func(df, num, id):
                     update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
                     height= 450,
-                    allow_unsafe_jscode=True)    
+                    allow_unsafe_jscode=True,
+                    key="aggrid -" + id + str(num))    
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
         # print("Selected row: " + str(grid_table["selected_rows"]))
@@ -380,8 +381,8 @@ def extract_tables (tables):
     # CHECK ACCURACY
     accuracy = []
     financial_format = []
-    session_state['number_format'] = []
-    session_state['fiscal_month'] = []
+    number_format = []
+    fiscal_month = []
     confirm_headers_list = []
     confirm_rows_list = []
     if len(tables) == 0:
@@ -403,6 +404,58 @@ def concat_lists(lists):
     for items in zip(*lists):
         result.append(" ".join(str(item) for item in items if not pd.isnull(item)))
     return result
+
+def merge_col_cells(confirm_headers_table, table):
+    # check each column selected for merged cells
+    if colname in confirm_headers_table:
+        # check if each cell is blank
+        empty = 0
+        keyword = 0
+        replace_keyword = ""
+        index = -1
+        colvalues = dataframe_list[table][colname].values
+        
+        for cell in colvalues:
+            index += 1
+            
+            # first few cells is empty
+            if keyword == 0 and (pd.isnull(cell) == True or str(cell) == "None" or str(cell) == " "):
+                empty += 1
+
+            # first few cells is empty but a cell with keyword is found
+            elif empty > 0 and pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                replace_keyword = str(cell)
+                keyword += 1
+                empty = 0
+
+            # first cell contains a keyword and not empty
+            elif empty == 0 and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                replace_keyword = str(cell)
+                keyword += 1
+
+            # check if cell below keyword is another keyword
+            elif keyword > 0 and empty == 0:
+                # another keyword or edited and became empty string or None                             
+                if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                    keyword += 1
+                    replace_keyword = str(cell)
+                
+                # empty cell
+                if str(cell) == "None" or str(cell) == " " or str(cell) == "":
+                    colvalues[index] = replace_keyword
+        
+        new_col_list.append(colvalues)
+        
+    return new_col_list
+
+def merge_row_cells(confirm_row_table, table):
+    # didn't check for empty cells because if it is a merged cell, it will be difficult to fill it horizontally wise                        
+    for row_index in confirm_row_table:
+        new_row_list.append(list(dataframe_list[table].iloc[row_index]))
+    new_row_list.insert(0, list(dataframe_list[table].columns))
+    
+    big_row = concat_lists(new_row_list)
+    return big_row
 
 def save_file (ID, uploaded_file, com_name):
     now = datetime.now()
@@ -453,11 +506,11 @@ if session_state['upload_file_status'] == True:
                 if (totalpages == 1):
 
                     # currency
-                    st.subheader('Currency')
-                    currency_list = get_currency_list()
-                    option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                    if option != "Not Selected":
-                        currency = option
+                    # st.subheader('Currency')
+                    # currency_list = get_currency_list()
+                    # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
+                    # if option != "Not Selected":
+                    #     currency = option
                     
                     # try aws button
                     button_clicked = False
@@ -491,11 +544,11 @@ if session_state['upload_file_status'] == True:
                     # user input is successful on page 3
                     if (status == True and pg_input != ''):
                         # currency
-                        st.subheader('Currency')
-                        currency_list = get_currency_list()
-                        option = st.selectbox('Select a Currency:', currency_list, key="currency_multipg_pdf")
-                        if option != "Not Selected":
-                            currency = option
+                        # st.subheader('Currency')
+                        # currency_list = get_currency_list()
+                        # option = st.selectbox('Select a Currency:', currency_list, key="currency_multipg_pdf")
+                        # if option != "Not Selected":
+                        #     currency = option
 
                         # try aws button 
                         button_clicked = False
@@ -544,25 +597,21 @@ if session_state['upload_file_status'] == True:
         if False in is_df_empty_list:
             # show extract button
             if st.button("Extract", key="extract"):
-                # below are required fields --> REMEBER TO CHECK FOR EMPTY
-                # financial_format = st.write(session_state['financial_format'])
-                # st.write(session_state['number_format'])
-                # st.write(session_state['fiscal_month'])
-                # st.write(session_state['currency'])
-                
-
+                # below are required fields --> REMEBER TO CHECK FOR EMPTY              
+                save_status = False
                 total_num_tables = total_num_tables(dataframe_list)
                 big_col = []
+                big_row = []
                 new_col_list = []
                 new_row_list = []
                 yr_qtr = []
+                matched_column_headers = []
                 matched_list_row = []
-                matched_list_col = []
-                # headers_dict = {}
-
-                # variables for json saving
+                matched_dict_col = {}
 
                 for table in range(total_num_tables):
+                    big_col = []
+                    new_col_list = []
                     # multiple selected headers
                     if len(confirm_headers_list[table]) > 1:
                         for colname in dataframe_list[table]:
@@ -571,109 +620,110 @@ if session_state['upload_file_status'] == True:
                             if colname not in confirm_headers_list[table]:
                                 if "_" not in colname:
                                     yr_qtr.append(colname)
-                            
-                                # create a dictionary where yr_qtr is the key to the col headers of dataframe
-                                # headers_dict = {y: [y2 for y2 in dataframe_list[table] if y in y2] for y in yr_qtr}
-
-                                    
-                            # check each column selected for merged cells
-                            if colname in confirm_headers_list[table]:
-                                # check if each cell is blank
-                                empty = 0
-                                keyword = 0
-                                replace_keyword = ""
-                                index = -1
-                                colvalues = dataframe_list[table][colname].values
-                                
-                                for cell in colvalues:
-                                    index += 1
-                                    
-                                    # first few cells is empty
-                                    if keyword == 0 and (pd.isnull(cell) == True or str(cell) == "None" or str(cell) == " "):
-                                        empty += 1
-
-                                    # first few cells is empty but a cell with keyword is found
-                                    elif empty > 0 and pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                        replace_keyword = str(cell)
-                                        keyword += 1
-                                        empty = 0
-
-                                    # first cell contains a keyword and not empty
-                                    elif empty == 0 and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                        replace_keyword = str(cell)
-                                        keyword += 1
-
-                                    # check if cell below keyword is another keyword
-                                    elif keyword > 0 and empty == 0:
-                                        # another keyword or edited and became empty string or None                             
-                                        if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                            keyword += 1
-                                            replace_keyword = str(cell)
-                                        
-                                        # empty cell
-                                        if str(cell) == "None" or str(cell) == " " or str(cell) == "":
-                                            colvalues[index] = replace_keyword
-                                
-                                new_col_list.append(colvalues)
-
-                        # check if rows with keyword is selected and merge row
-                        # didn't check for empty cells because if it is a merged cell, it will be difficult to fill it horizontally wise
-                        # new_row_list.append(list(dataframe_list[table].columns))
-                        for row_index in confirm_rows_list[table]:
-                            new_row_list.append(list(dataframe_list[table].iloc[row_index]))
-                        new_row_list.insert(0, list(dataframe_list[table].columns))
-                        
-                        big_row = concat_lists(new_row_list)
-
-                        # get financial word (row)
-                        row_words = get_financial_words_row(financial_format[table])
-                        for item in list_all_lower(big_row):
-                            for key, synonyms in row_words.items(): 
-                                if key in item:
-                                    matched_list_row.append(item)
-                                for x in synonyms:
-                                    if x.lower() in item:
-                                        matched_list_row.append(item)
-                        
-                        # split to get column name                        
-                        for i in range(len(matched_list_row)):
-                            matched_list_row[i] = str(matched_list_row[i]).split()
-                            print(str(type(matched_list_row[i])) + str(matched_list_row[i]))
-
-                        # assuming that they follow the year quarter format
-                        matched_column_headers = []
-                        for i in range(len(matched_list_row[table])):
-                            matched_column_headers.append(matched_list_row[i][0])
+                                                            
+                            new_col_list = merge_col_cells(confirm_headers_list[table], table)
                         
                         # merge the text in each column into one big column
-                        dataframe_list[table].index
                         new_col_list.insert(0, dataframe_list[table].index)
                         big_col = concat_lists(new_col_list)
-                        
-                        # get financial word (col)
-                        col_words = get_financial_words_col(financial_format[table])
-                        for item in list_all_lower(big_col):
-                            for key, synonyms in col_words.items(): 
-                                if key in item:
-                                    st.write(str(item) + "match" + str(key))
-                                    # matched_list_col.append(item)
-                                for x in synonyms:
-                                    if x.lower() in item:
-                                        st.write(str(item) + "match" + str(key))
-                                        # matched_list_col.append(item)
+                            
+                    # single header
+                    elif len(confirm_headers_list[table]) == 1:
+                        # return just the confirmed header
+                        confirmed_header = confirm_headers_list[table][0]
+                        new_col_list.append(dataframe_list[table][confirmed_header])
+                        new_col_list.insert(0, dataframe_list[table].index)
+                        big_col = concat_lists(new_col_list)
 
-            
-                            # search through the word dictionary
-                            # Retrieve the income statement financial words
-                            # income_statement_words = get_financial_words_col("Income Statement")
-                            # st.write(income_statement_words)
+                    # no header selected
+                    else:
+                        save_status = False
+
+                    # multiple selected rows
+                    if len(confirm_rows_list[table]) > 1:
+                        big_row = merge_row_cells(confirm_rows_list[table], table)
+
+                    # single header
+                    else:
+                        print("hello")
+                    
+                    big_row
+                    
+                    # get financial word (row)
+                    row_words = get_financial_words_row(financial_format[table])
+                    for item in list_all_lower(big_row):
+                        for key, synonyms in row_words.items(): 
+                            if key in item:
+                                matched_list_row.append(item)
+                            for x in synonyms:
+                                if x.lower() in item:
+                                    matched_list_row.append(item)
+
+                    # check if matched list row length more than 0
+                    if len(matched_list_row) > 0:
+                        # found something
+                        for i in range(len(matched_list_row)):
+                            matched_list_row[i] = str(matched_list_row[i]).split()
+                        
+                        # check whether yearly or quarterly format
+                        is_quarterly = False
+                        for item in list_all_lower(list(dataframe_list[table].columns)):
+                            if 'q' in item:
+                                is_quarterly = True
+
+                        if is_quarterly == False:
+                            for i in range(len(matched_list_row[table])):
+                                matched_column_headers.append(matched_list_row[i][0])
+                        else:
+                            for i in range(len(matched_list_row[table])):
+
+                                join_year_qtr = str(matched_list_row[i][0]) + " " + str(matched_list_row[i][1])
+                                matched_column_headers.append(join_year_qtr)
+                        
+                    else:
+                        st.error("Unable to locate keywords e.g. Total in rows selected", icon="🚨")
+                        
+
+                        
+
+
+                        # if len of each keyword has more than 1 result -> take the first result
+                        result_dict = {}
+
+                        for date in matched_column_headers:
+                                if "_" in date:
+                                    year_quarter, parts = date.split("_")
+                                
+                                if year_quarter not in result_dict:
+                                    result_dict[year_quarter] = {}
+
+                                for key, values in matched_dict_col.items():
+                                    row_id = int(values[0])
+                                    cell = dataframe_list[table].loc[row_id][str(date).upper()]
+                                    if key in result_dict[year_quarter]:
+                                        result_dict[year_quarter][key].append(cell)
+                                    else:
+                                        result_dict[year_quarter][key] = [cell]
+
+                        
+                        # saving data in json
+                        basic_format = get_json_format()
+                        basic_format
+                        financial_statement_format = get_json_financial_format()
+                        
+                        fiscal_month
+                        currency
+                        # for basic in basic_format:
+                        #     if basic == "currency":
+
+
 
 
                             
                     
                     # single selected header
-                    else:
-                        st.write("single")
+                    # else:
+                    #     st.write("single")
                     # for column in range(len(confirm_headers_list[table])):
                     #     st.write(confirm_headers_list[table][column])
 

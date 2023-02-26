@@ -116,7 +116,7 @@ def get_financial_words_col(sheet):
     words = {
         "Income Statement": {
             "revenue": ["total revenue"],
-            "cost": ["total cost"],
+            "total cost": [],
             "gross profit": ["earnings", "gross income"],
             "gross loss": [],
             "net profit": ["net income", "net earnings"],
@@ -157,3 +157,63 @@ def get_financial_words_row(sheet):
         },
     }
     return words[sheet]
+
+# JSON FORMAT
+def get_json_format():
+    format = {
+        "currency": "",
+        "fiscal_start_month": "",
+        "income_statement": [],
+        "balance_sheet": [],
+        "cash_flow": [],
+        "other_metrics": [
+            {
+                "year": "",
+                "numberFormat": "", 
+                "returnOnAsset": "",
+                "netInterestMargin": "",
+                "netInterestIncomeRatio": "",
+                "costIncomeRatio": "",
+                "ebidta": ""
+            }
+        ]
+    }
+    return format
+
+def get_json_financial_format():
+    sheets = {
+        "income_statement": {
+            "year": "",
+            "numberFormat": "", 
+            "revenue": "",
+            "cost": "",
+            "grossProfit": "",
+            "grossLoss": "",
+            "netProfit": "",
+            "netLoss": "",
+            "incomeTax": "",
+            "interest": "",
+            "depreciation": "",
+        },
+        "balance_sheet": {
+            "year": "",
+            "numberFormat": "", 
+            "revenue": "",
+            "cost": "",
+            "grossProfit": "",
+            "grossLoss": "",
+            "netProfit": "",
+            "netLoss": "",
+            "incomeTax": "",
+            "interest": "",
+            "depreciation": ""
+        },
+        "cash_flow": {
+            "year": "",
+            "numberFormat": "", 
+            "operatingNetCashFlow": "",
+            "investingNetCashFlow": "",
+            "financingNetCashFlow": ""
+        }
+    }
+    return sheets
