@@ -33,7 +33,6 @@ if 'pg_input' not in st.session_state:
 if 'status' not in st.session_state:
     st.session_state['status'] = False
 
-st.session_state['status'] = False
 selected_path = "./selected_files"
 selected_dir = os.listdir(selected_path)
 
