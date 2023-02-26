@@ -260,7 +260,7 @@ def viewer_func(df, num, id):
 
                 
         with col2:
-            renamecol_tooltip = "Column headers must be unique and strictly for years or years+quarters. For yearly statements, you can rename other column which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
+            renamecol_tooltip = "Column headers must be unique and strictly years or years+quarters. For yearly statements, you can rename columns which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
             options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
             
             for i in range(len(options)):
@@ -620,10 +620,15 @@ if session_state['upload_file_status'] == True:
                 matched_list_row = []
                 matched_dict_col = {}
 
-                # below are required fields
-                if ((currency == 'Not Selected') or ('Not Selected' in financial_format) or ('Unable to Determine' in number_format) or ('Not Selected' in fiscal_month)):
+                # below are required fields; if at least one field is not correct -> cannot save to json
+                if ((currency == 'Not Selected') or 
+                    ('Not Selected' in financial_format or len(financial_format) == 0) or 
+                    ('Unable to Determine' in number_format or len(number_format) == 0) or 
+                    ('Not Selected' in fiscal_month or len(fiscal_month) == 0)):
                     save_status = False
+                    st.error("Please check the required fields.", icon="🚨")
 
+                count2 = 0
                 for table in range(total_num_tables):
                     big_col = []
                     big_row = []
@@ -634,15 +639,10 @@ if session_state['upload_file_status'] == True:
                     matched_column_headers = []
                     matched_list_row = []
                     matched_dict_col = {}
+                    count = 0
                     # multiple selected headers
                     if len(confirm_headers_list[table]) > 1:
-                        for colname in dataframe_list[table]:
-
-                            # get the years/ quarters in the statement
-                            if colname not in confirm_headers_list[table]:
-                                if "_" not in colname:
-                                    yr_qtr.append(colname)
-                                                            
+                        for colname in dataframe_list[table]:                                                           
                             new_col_list = merge_col_cells(confirm_headers_list[table], table)
                         
                         # merge the text in each column into one big column
@@ -670,88 +670,123 @@ if session_state['upload_file_status'] == True:
                         big_row = list(dataframe_list[table].columns)
                     
                     # search through (col) for financial word
-                    col_words = get_financial_words_col(financial_format[table])
-                    for item in list_all_lower(big_col):
-                        for key, synonyms in col_words.items(): 
-                            if key in item:
-                                st.write(str(item) + " match " + str(key))
-                                if key not in matched_dict_col:
-                                    matched_dict_col[key] = []
-                                matched_dict_col[key].append(item)
-                            for x in synonyms:
-                                if x.lower() in item:
-                                    st.write(str(item) + " match " + str(key))
+                    if 'Not Selected' not in financial_format and len(financial_format) != 0:
+                        col_words = get_financial_words_col(financial_format[table])
+                        for item in list_all_lower(big_col):
+                            for key, synonyms in col_words.items():
+                                if key in item:
                                     if key not in matched_dict_col:
                                         matched_dict_col[key] = []
                                     matched_dict_col[key].append(item)
+                                for x in synonyms:
+                                    if x.lower() in item:
+                                        if key not in matched_dict_col:
+                                            matched_dict_col[key] = []
+                                        matched_dict_col[key].append(item)
 
-                    # search through (row) for financial word
-                    row_words = get_financial_words_row(financial_format[table])
-                    for item in list_all_lower(big_row):
-                        for key, synonyms in row_words.items(): 
-                            if key in item:
-                                matched_list_row.append(item)
-                            for x in synonyms:
-                                if x.lower() in item:
+                        # search through (row) for financial word
+                        row_words = get_financial_words_row(financial_format[table])
+                        for item in list_all_lower(big_row):
+                            for key, synonyms in row_words.items(): 
+                                if key in item:
                                     matched_list_row.append(item)
-                    matched_list_row
+                                for x in synonyms:
+                                    if x.lower() in item:
+                                        matched_list_row.append(item)
                 
                     # check if matched list row length more than 0
-                    # if len(matched_list_row) > 0:
-                    #     # found something
-                    #     for i in range(len(matched_list_row)):
-                    #         matched_list_row[i] = str(matched_list_row[i]).split()
+                    if len(matched_list_row) > 0:
+                        # found something in row
+                        for i in range(len(matched_list_row)):
+                            matched_list_row[i] = str(matched_list_row[i]).split()
                         
-                    #     # check whether yearly or quarterly format
-                    #     is_quarterly = False
-                    #     for item in list_all_lower(list(dataframe_list[table].columns)):
-                    #         if 'q' in item:
-                    #             is_quarterly = True
+                        # check whether yearly or quarterly format
+                        is_quarterly = False
+                        for item in list_all_lower(list(dataframe_list[table].columns)):
+                            if 'q' in item:
+                                is_quarterly = True
 
-                    #     if is_quarterly == False:
-                    #         for i in range(len(matched_list_row[table])):
-                    #             matched_column_headers.append(matched_list_row[i][0])
-                    #     else:
-                    #         for i in range(len(matched_list_row[table])):
-
-                    #             join_year_qtr = str(matched_list_row[i][0]) + " " + str(matched_list_row[i][1])
-                    #             matched_column_headers.append(join_year_qtr)
+                        if is_quarterly == False:
+                            for i in range(len(matched_list_row[table])):
+                                matched_column_headers.append(matched_list_row[i][0])
+                        else:
+                            for i in range(len(matched_list_row[table])):
+                                join_year_qtr = str(matched_list_row[i][0]) + " " + str(matched_list_row[i][1])
+                                matched_column_headers.append(join_year_qtr)
                         
-                    # else:
-                    #     st.error("Unable to locate keywords e.g. Total in rows selected", icon="🚨")
+                    else:
+                        # no keywords found, will take the values of year and quarter e.g. 2020 or 2020 Q1
+                        # st.info("Unable to locate keywords (e.g. Total) in the headers or rows selected", icon="ℹ️")
+                        # get the years/ quarters in the statement
+                        for colname in dataframe_list[table]:
+                            if colname not in confirm_headers_list[table]:
+                                # year
+                                if ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 4):
+                                    yr_qtr.append(colname)
+                                # quarter; assuming there are only 4 quarters so len will always be 7 e.g. 2020 Q1 never 2020 Q11
+                                if ('q' in colname.lower()) and ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 7):
+                                    yr_qtr.append(colname)
+                        matched_column_headers = yr_qtr
+
+                    # using col headers and row id -> identify the cell and append to the col financial keyword
+                    # if len of each keyword has more than 1 result -> take the first result
+                    result_dict = {}
+
+                    for date in matched_column_headers:
+                        if "_" in date:
+                            year_quarter, parts = date.split("_")
+                        else:
+                            year_quarter = date
                         
+                        if year_quarter not in result_dict:
+                            result_dict[year_quarter] = {}
 
-                        
+                        for key, values in matched_dict_col.items():
+                            # always take the first result in for the each financial keyword
+                            row_id = values[0]
 
+                            # last row id of the table
+                            last_row_id = dataframe_list[table].last_valid_index() 
 
-                        # if len of each keyword has more than 1 result -> take the first result
-                        # result_dict = {}
+                            # if row_id is not numeric or the length of the row_id is more than the total row_id of the table -> high chance is a string
+                            if row_id.isnumeric() == False or len(row_id) > last_row_id:
+                                row_id = int(row_id.split()[0])
+                            
+                            # unnamed cannot be used as a column header, because even if retrieved the value what year/ month am I going to store it by
+                            if "unnamed" not in date:
+                                date = str(date.upper())                     
+                                cell = dataframe_list[table].loc[row_id][str(date)]
+                                if key in result_dict[year_quarter]:
+                                    result_dict[year_quarter][key].append(cell)
+                                else:
+                                    result_dict[year_quarter][key] = [cell]
+                            
+                            else:
+                                # DO HERE AS A LIST TMR
+                                if count == 0:
+                                    st.info("You might want to rename the unnamed columns to either a year or quarter for it to be saved.", icon="ℹ️")
+                                    count = 1
 
-                        # for date in matched_column_headers:
-                        #         if "_" in date:
-                        #             year_quarter, parts = date.split("_")
-                                
-                        #         if year_quarter not in result_dict:
-                        #             result_dict[year_quarter] = {}
-
-                        #         for key, values in matched_dict_col.items():
-                        #             row_id = int(values[0])
-                        #             cell = dataframe_list[table].loc[row_id][str(date).upper()]
-                        #             if key in result_dict[year_quarter]:
-                        #                 result_dict[year_quarter][key].append(cell)
-                        #             else:
-                        #                 result_dict[year_quarter][key] = [cell]
-
-                        
-                        # saving data in json
-                        # basic_format = get_json_format()
-                        # basic_format
-                        # financial_statement_format = get_json_financial_format()
+ 
+                    # saving data in json when there is extracted header values e.g. year/ quarter
+                    result_dict
+                    if len(result_dict) > 0:
+                        for i in result_dict:
+                            # saving data in json when there is extracted cell values
+                            if len(result_dict[i]) > 0:
+                                basic_format = get_json_format()
+                                financial_statement_format = get_json_financial_format()
+                            
+                            else:
+                                # DO HERE AS A LIST TMR
+                                if count2 == 0:
+                                    st.error("Nothing was extracted. Please check financial words dictionary or your table values and try again.", icon="🚨")
+                                    count2 = 1
                         
                         # fiscal_month
                         # currency
                         # for basic in basic_format:
-                        #     if basic == "currency":
+                            # if basic == "currency":
 
 
 
