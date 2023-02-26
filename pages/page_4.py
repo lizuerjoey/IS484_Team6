@@ -16,7 +16,8 @@ from request import (
         get_symbols,
         add_company,
         add_file,
-        get_financial_words
+        get_financial_words_col,
+        get_financial_words_row
     )
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
@@ -31,9 +32,6 @@ if 'status' not in session_state:
 if 'uploaded_file' not in session_state:
     session_state['uploaded_file'] = ''
 
-if 'financial_format' not in session_state:
-    session_state['financial_format'] = []
-
 if 'number_format' not in session_state:
     session_state['number_format'] = []
 
@@ -42,6 +40,8 @@ if 'fiscal_month' not in session_state:
 
 currency = ""
 confirm_headers_list = []
+confirm_rows_list = []
+financial_format =[]
 dataframe_list = []
 is_df_empty_list = []
 button_clicked = False
@@ -58,13 +58,16 @@ if 'column_del' not in st.session_state:
 if "upload_file_status" not in st.session_state:
     session_state['upload_file_status'] = True
 
-if (("com_name" and "com_id") or ("selected_comName" and "selected_comID")) not in st.session_state:
+# re-initalise again to update previous false
+session_state['upload_file_status'] = True
+
+if ("com_name" and "selected_comName" and "com_id" and "selected_comID") not in st.session_state:
     st.session_state['com_name'] = ""
     st.session_state['com_id'] = ""
     st.session_state['selected_comName'] = ""
     session_state['selected_comID'] = ""
     session_state['upload_file_status'] = False
-    st.error("No file was uploaded or the previous extraction was not submitted, please try again with a new file.", icon="🚨")
+    st.error("No file was uploaded", icon="🚨")
 
 if "text_option" not in st.session_state:
     session_state['text_option'] = False
@@ -75,7 +78,11 @@ com_id = session_state["com_id"]
 selected_comName = session_state["selected_comName"]
 selected_comID = session_state["selected_comID"]
 
-if st.session_state['text_option'] == True:
+temp_path = "./temp_files"
+dir = os.listdir(temp_path)
+
+# check if file was uploaded
+if st.session_state['text_option'] == True and session_state['upload_file_status'] and len(dir) > 1:
     st.header(com_name)
 else:
     st.header(selected_comName)
@@ -162,6 +169,9 @@ def get_number_format (excel_path):
     
     return index
 
+def list_all_lower(my_list):
+    return [x.lower() for x in my_list]
+
 def sort_num_list(index):
     format = number.pop(index)
     number.insert(0, format)
@@ -213,7 +223,7 @@ def viewer_func(df, num, id):
         option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
         
         if option != "Not Selected":
-            session_state['financial_format'].append(option)
+            financial_format.append(option)
 
         num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
 
@@ -246,7 +256,8 @@ def viewer_func(df, num, id):
 
                 
         with col2:
-            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), key="colrename -" + id + str(num))
+            renamecol_tooltip = "Column headers must be unique and strictly for years or years+quarters. For yearly statements, you can rename other column which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
+            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
             
             for i in range(len(options)):
                 old_name = options[i]
@@ -353,10 +364,11 @@ def viewer_func(df, num, id):
 
         # get updated row id
         row_list = list(new_df.index)
-        confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. 1Q, 1st Half, Total etc."
+        confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. Total"
         confirm_rows = st.multiselect(
         'Select the Row(s) with Keywords:',
             row_list, help=confirm_rows_tooltip, key="confirm_rows -" + id + str(num))
+        confirm_rows_list.append(confirm_rows)
 
     return (option, selected, is_df_empty)
 
@@ -367,10 +379,11 @@ def total_num_tables(df):
 def extract_tables (tables):
     # CHECK ACCURACY
     accuracy = []
-    session_state['financial_format'] = []
+    financial_format = []
     session_state['number_format'] = []
     session_state['fiscal_month'] = []
     confirm_headers_list = []
+    confirm_rows_list = []
     if len(tables) == 0:
         st.error('Please upload a pdf with a table.', icon="🚨")
     else:
@@ -416,217 +429,272 @@ def save_file (ID, uploaded_file, com_name):
     else:
         st.error('Error adding file. Please try again later', icon="🚨")
 
-temp_path = "./temp_files"
-dir = os.listdir(temp_path)
+# make sure a file was being uploaded first
+if session_state['upload_file_status'] == True:
+    # if temp_files is not empty then extract
+    if len(dir) > 1:
 
-# if temp_files is not empty then extract
-if len(dir) > 1:
+        pg_input = session_state.pg_input
+        status = session_state.status
+        
+        file_paths = glob.glob("./temp_files/*")
+        count = 0
+        for path in file_paths:
+            file_type = get_file_type(path)
 
-    pg_input = session_state.pg_input
-    status = session_state.status
-    
-    file_paths = glob.glob("./temp_files/*")
-    count = 0
-    for path in file_paths:
-        file_type = get_file_type(path)
+            # file is pdf
+            if file_type == '.pdf':                
+                file_path = glob.glob("./temp_files/*.pdf")[0]
+                session_state["uploaded_file"] = file_path
+                file_name = get_file_name(file_path)
+                totalpages = get_total_pgs_PDF(file_path)
 
-        # file is pdf
-        if file_type == '.pdf':                
-            file_path = glob.glob("./temp_files/*.pdf")[0]
-            session_state["uploaded_file"] = file_path
-            file_name = get_file_name(file_path)
-            totalpages = get_total_pgs_PDF(file_path)
+                # single page pdf
+                if (totalpages == 1):
 
-            # single page pdf
-            if (totalpages == 1):
-
-                # currency
-                st.subheader('Currency')
-                currency_list = get_currency_list()
-                option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                if option != "Not Selected":
-                    currency = option
-                
-                # try aws button
-                button_clicked = False
-                btn_placeholder = st.empty()
-                with btn_placeholder.container():
-                    # if session_state["status"]:
-                        if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                            origin = './temp_files/'
-                            target = './selected_files/'
-                            files = os.listdir(origin)
-                            files_target = os.listdir(target)
-                            for file in files_target:
-                                if file=="file.pdf":
-                                    os.remove(target+file)
-                            for file in files:
-                                if file!="test.txt" and file.endswith(".pdf"):
-                                    file_type = get_file_type(file)
-                                    shutil.copy(origin+file, target)
-                                    os.rename(target+file, target+"file"+file_type)
-
-                            button_clicked = True
-                            btn_placeholder.empty()
-                    
-                tables = check_tables_single_PDF(file_path)
-                extraction_container = st.empty()
-                with extraction_container.container():
-                    extract_tables(tables)
-            
-            # multi page pdf
-            else:
-                # user input is successful on page 3
-                if (status == True and pg_input != ''):
                     # currency
                     st.subheader('Currency')
                     currency_list = get_currency_list()
-                    option = st.selectbox('Select a Currency:', currency_list, key="currency_multipg_pdf")
+                    option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
                     if option != "Not Selected":
                         currency = option
-
-                    # try aws button 
+                    
+                    # try aws button
                     button_clicked = False
                     btn_placeholder = st.empty()
                     with btn_placeholder.container():
-                        if session_state["status"]:
-                            if (st.button("Try AWS", key="aws_multipg_pdf")):
+                        # if session_state["status"]:
+                            if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                                origin = './temp_files/'
+                                target = './selected_files/'
+                                files = os.listdir(origin)
+                                files_target = os.listdir(target)
+                                for file in files_target:
+                                    if file=="file.pdf":
+                                        os.remove(target+file)
+                                for file in files:
+                                    if file!="test.txt" and file.endswith(".pdf"):
+                                        file_type = get_file_type(file)
+                                        shutil.copy(origin+file, target)
+                                        os.rename(target+file, target+"file"+file_type)
+
                                 button_clicked = True
                                 btn_placeholder.empty()
-
-                    tables = check_tables_multi_PDF(file_path, str(pg_input))
+                        
+                    tables = check_tables_single_PDF(file_path)
                     extraction_container = st.empty()
                     with extraction_container.container():
                         extract_tables(tables)
-                    
-                else:
-                    if (session_state['upload_file_status'] == True):
-                        st.error("Please specify the pages you want to extract.", icon="🚨")
-            
-            if button_clicked:
-                extraction_container.empty()
-                next_extraction = st.empty()
-                with next_extraction.container():
-                    dfs = convert_file()
-                    for i in range(len(dfs[0])):
-                        statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
-
-        #file is image
-        elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
-            file_path = glob.glob("./temp_files/*" + file_type)[0]
-            file_name = get_file_name(file_path)
-    
-            dataframes = image_extraction(file_path)
-            # check if dataframe is empty
-            if len(dataframes) < 1:
-                st.error('Please upload an image with a table.', icon="🚨")
-
-            else:
-                extraction_container = st.empty()
-                with extraction_container.container():
-                    for i in range(len(dataframes)):
-                        # if dataframe is not empty (manage to extract some things out)        
-                        statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
-
-    # if at least 1 dataframe is not empty
-    if False in is_df_empty_list:
-        # show extract button
-        if st.button("Extract", key="extract"):
-            dataframe_list[0]
-            # session_state['dataframes']
-            # below are required fields --> REMEBER TO CHECK FOR EMPTY
-            # st.write(session_state['financial_format'])
-            # st.write(session_state['number_format'])
-            # st.write(session_state['fiscal_month'])
-            # st.write(session_state['currency'])
-            
-
-            total_num_tables = total_num_tables(dataframe_list)
-            big_col = []
-            new_col_list = []
-            for table in range(total_num_tables):
-                # multiple selected headers
-                if len(confirm_headers_list[table]) > 1:
-                    
-                    # check each column selected for merged cells
-                    for colname in dataframe_list[table]:
-                        if colname in confirm_headers_list[table]:
-                            
-                            # check if each cell is blank
-                            empty = 0
-                            keyword = 0
-                            replace_keyword = ""
-                            index = -1
-                            colvalues = dataframe_list[table][colname].values
-                            
-                            for cell in colvalues:
-                                index += 1
-                                
-                                # first few cells is empty
-                                if keyword == 0 and (pd.isnull(cell) == True or str(cell) == "None" or str(cell) == " "):
-                                    empty += 1
-
-                                # first few cells is empty but a cell with keyword is found
-                                elif empty > 0 and pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                    replace_keyword = str(cell)
-                                    keyword += 1
-                                    empty = 0
-
-                                # first cell contains a keyword and not empty
-                                elif empty == 0 and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                    replace_keyword = str(cell)
-                                    keyword += 1
-
-                                # check if cell below keyword is another keyword
-                                elif keyword > 0 and empty == 0:
-                                    # another keyword or edited and became empty string or None                             
-                                    if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
-                                        keyword += 1
-                                        replace_keyword = str(cell)
-                                    
-                                    # empty cell
-                                    if str(cell) == "None" or str(cell) == " " or str(cell) == "":
-                                        colvalues[index] = replace_keyword
-                            
-                            new_col_list.append(colvalues)
-
-                        # merge the text in each column into one big column
-                        big_col = concat_lists(new_col_list)
-
-                        big_col
-        
-                        # search through the word dictionary
-                        # Retrieve the income statement financial words
-                        income_statement_words = get_financial_words("Income Statement")
-                        st.write(income_statement_words)
-
-
-                        
                 
-                # single selected header
+                # multi page pdf
                 else:
-                    st.write("single")
-                # for column in range(len(confirm_headers_list[table])):
-                #     st.write(confirm_headers_list[table][column])
+                    # user input is successful on page 3
+                    if (status == True and pg_input != ''):
+                        # currency
+                        st.subheader('Currency')
+                        currency_list = get_currency_list()
+                        option = st.selectbox('Select a Currency:', currency_list, key="currency_multipg_pdf")
+                        if option != "Not Selected":
+                            currency = option
+
+                        # try aws button 
+                        button_clicked = False
+                        btn_placeholder = st.empty()
+                        with btn_placeholder.container():
+                            if session_state["status"]:
+                                if (st.button("Try AWS", key="aws_multipg_pdf")):
+                                    button_clicked = True
+                                    btn_placeholder.empty()
+
+                        tables = check_tables_multi_PDF(file_path, str(pg_input))
+                        extraction_container = st.empty()
+                        with extraction_container.container():
+                            extract_tables(tables)
+                        
+                    else:
+                        if (session_state['upload_file_status'] == True):
+                            st.error("Please specify the pages you want to extract.", icon="🚨")
+                
+                if button_clicked:
+                    extraction_container.empty()
+                    next_extraction = st.empty()
+                    with next_extraction.container():
+                        dfs = convert_file()
+                        for i in range(len(dfs[0])):
+                            statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
+
+            #file is image
+            elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
+                file_path = glob.glob("./temp_files/*" + file_type)[0]
+                file_name = get_file_name(file_path)
+        
+                dataframes = image_extraction(file_path)
+                # check if dataframe is empty
+                if len(dataframes) < 1:
+                    st.error('Please upload an image with a table.', icon="🚨")
+
+                else:
+                    extraction_container = st.empty()
+                    with extraction_container.container():
+                        for i in range(len(dataframes)):
+                            # if dataframe is not empty (manage to extract some things out)        
+                            statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+
+        # if at least 1 dataframe is not empty
+        if False in is_df_empty_list:
+            # show extract button
+            if st.button("Extract", key="extract"):
+                # below are required fields --> REMEBER TO CHECK FOR EMPTY
+                # financial_format = st.write(session_state['financial_format'])
+                # st.write(session_state['number_format'])
+                # st.write(session_state['fiscal_month'])
+                # st.write(session_state['currency'])
+                
+
+                total_num_tables = total_num_tables(dataframe_list)
+                big_col = []
+                new_col_list = []
+                new_row_list = []
+                yr_qtr = []
+                matched_list_row = []
+                matched_list_col = []
+                # headers_dict = {}
+
+                # variables for json saving
+
+                for table in range(total_num_tables):
+                    # multiple selected headers
+                    if len(confirm_headers_list[table]) > 1:
+                        for colname in dataframe_list[table]:
+
+                            # get the years/ quarters in the statement
+                            if colname not in confirm_headers_list[table]:
+                                if "_" not in colname:
+                                    yr_qtr.append(colname)
+                            
+                                # create a dictionary where yr_qtr is the key to the col headers of dataframe
+                                # headers_dict = {y: [y2 for y2 in dataframe_list[table] if y in y2] for y in yr_qtr}
+
+                                    
+                            # check each column selected for merged cells
+                            if colname in confirm_headers_list[table]:
+                                # check if each cell is blank
+                                empty = 0
+                                keyword = 0
+                                replace_keyword = ""
+                                index = -1
+                                colvalues = dataframe_list[table][colname].values
+                                
+                                for cell in colvalues:
+                                    index += 1
+                                    
+                                    # first few cells is empty
+                                    if keyword == 0 and (pd.isnull(cell) == True or str(cell) == "None" or str(cell) == " "):
+                                        empty += 1
+
+                                    # first few cells is empty but a cell with keyword is found
+                                    elif empty > 0 and pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                        replace_keyword = str(cell)
+                                        keyword += 1
+                                        empty = 0
+
+                                    # first cell contains a keyword and not empty
+                                    elif empty == 0 and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                        replace_keyword = str(cell)
+                                        keyword += 1
+
+                                    # check if cell below keyword is another keyword
+                                    elif keyword > 0 and empty == 0:
+                                        # another keyword or edited and became empty string or None                             
+                                        if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
+                                            keyword += 1
+                                            replace_keyword = str(cell)
+                                        
+                                        # empty cell
+                                        if str(cell) == "None" or str(cell) == " " or str(cell) == "":
+                                            colvalues[index] = replace_keyword
+                                
+                                new_col_list.append(colvalues)
+
+                        # check if rows with keyword is selected and merge row
+                        # didn't check for empty cells because if it is a merged cell, it will be difficult to fill it horizontally wise
+                        # new_row_list.append(list(dataframe_list[table].columns))
+                        for row_index in confirm_rows_list[table]:
+                            new_row_list.append(list(dataframe_list[table].iloc[row_index]))
+                        new_row_list.insert(0, list(dataframe_list[table].columns))
+                        
+                        big_row = concat_lists(new_row_list)
+
+                        # get financial word (row)
+                        row_words = get_financial_words_row(financial_format[table])
+                        for item in list_all_lower(big_row):
+                            for key, synonyms in row_words.items(): 
+                                if key in item:
+                                    matched_list_row.append(item)
+                                for x in synonyms:
+                                    if x.lower() in item:
+                                        matched_list_row.append(item)
+                        
+                        # split to get column name                        
+                        for i in range(len(matched_list_row)):
+                            matched_list_row[i] = str(matched_list_row[i]).split()
+                            print(str(type(matched_list_row[i])) + str(matched_list_row[i]))
+
+                        # assuming that they follow the year quarter format
+                        matched_column_headers = []
+                        for i in range(len(matched_list_row[table])):
+                            matched_column_headers.append(matched_list_row[i][0])
+                        
+                        # merge the text in each column into one big column
+                        dataframe_list[table].index
+                        new_col_list.insert(0, dataframe_list[table].index)
+                        big_col = concat_lists(new_col_list)
+                        
+                        # get financial word (col)
+                        col_words = get_financial_words_col(financial_format[table])
+                        for item in list_all_lower(big_col):
+                            for key, synonyms in col_words.items(): 
+                                if key in item:
+                                    st.write(str(item) + "match" + str(key))
+                                    # matched_list_col.append(item)
+                                for x in synonyms:
+                                    if x.lower() in item:
+                                        st.write(str(item) + "match" + str(key))
+                                        # matched_list_col.append(item)
 
             
-        # # Save into DB
-        # if session_state["text_option"] == True:
-        #     if st.button('Submit'):
-        #         if com_name:
-        #             add_com = add_company(com_id, com_name)
-        #             if (add_com["message"] == "Added"):
-        #                 st.success("Company Added", icon="✅")
-        #                 save_file(com_id, session_state["uploaded_file"], com_name)
-        #             else:
-        #                 st.error('Error adding company. Please try again later', icon="🚨")
-        #         else:
-        #             # If company name not entered
-        #             st.error("Please enter a company name in Upload Report Page", icon="🚨")
-        # else:
-        #     if st.button('Submit'):
-        #         save_file(selected_comID, session_state["uploaded_file"], selected_comName)
+                            # search through the word dictionary
+                            # Retrieve the income statement financial words
+                            # income_statement_words = get_financial_words_col("Income Statement")
+                            # st.write(income_statement_words)
 
-# no files was uploaded
-else:
-    st.error('Please upload a file for extraction.', icon="🚨")
+
+                            
+                    
+                    # single selected header
+                    else:
+                        st.write("single")
+                    # for column in range(len(confirm_headers_list[table])):
+                    #     st.write(confirm_headers_list[table][column])
+
+                
+            # # Save into DB
+            # if session_state["text_option"] == True:
+            #     if st.button('Submit'):
+            #         if com_name:
+            #             add_com = add_company(com_id, com_name)
+            #             if (add_com["message"] == "Added"):
+            #                 st.success("Company Added", icon="✅")
+            #                 save_file(com_id, session_state["uploaded_file"], com_name)
+            #             else:
+            #                 st.error('Error adding company. Please try again later', icon="🚨")
+            #         else:
+            #             # If company name not entered
+            #             st.error("Please enter a company name in Upload Report Page", icon="🚨")
+            # else:
+            #     if st.button('Submit'):
+            #         save_file(selected_comID, session_state["uploaded_file"], selected_comName)
+
+    # no files was uploaded
+    else:
+        st.error('Please upload a file for extraction.', icon="🚨")

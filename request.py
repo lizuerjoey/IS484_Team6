@@ -112,11 +112,11 @@ def get_months(mnth):
     return month[mnth]
 
 # GET FINANCIAL WORDS
-def get_financial_words(sheet):
+def get_financial_words_col(sheet):
     words = {
         "Income Statement": {
-            "revenue": [],
-            "cost": [],
+            "revenue": ["total revenue"],
+            "cost": ["total cost"],
             "gross profit": ["earnings", "gross income"],
             "gross loss": [],
             "net profit": ["net income", "net earnings"],
@@ -140,6 +140,20 @@ def get_financial_words(sheet):
             "operating net cash flow": [],
             "investing net cash flow": [],
             "financing net cashFlow": [],
+        },
+    }
+    return words[sheet]
+
+def get_financial_words_row(sheet):
+    words = {
+        "Income Statement": {
+            "total": [],
+        },
+        "Balance Sheet": {
+            "total": []
+        },
+        "Cash Flow": {
+            "total": []
         },
     }
     return words[sheet]
