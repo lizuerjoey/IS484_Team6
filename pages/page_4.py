@@ -55,10 +55,30 @@ if 'column_input' not in st.session_state:
 if 'column_del' not in st.session_state:
     st.session_state['column_del'] = False
 
+if "upload_file_status" not in st.session_state:
+    session_state['upload_file_status'] = True
+
+if (("com_name" and "com_id") or ("selected_comName" and "selected_comID")) not in st.session_state:
+    st.session_state['com_name'] = ""
+    st.session_state['com_id'] = ""
+    st.session_state['selected_comName'] = ""
+    session_state['selected_comID'] = ""
+    session_state['upload_file_status'] = False
+    st.error("No file was uploaded or the previous extraction was not submitted, please try again with a new file.", icon="🚨")
+
+if "text_option" not in st.session_state:
+    session_state['text_option'] = False
+
+# retrieve from upload files page
 com_name = session_state["com_name"]
 com_id = session_state["com_id"]
 selected_comName = session_state["selected_comName"]
 selected_comID = session_state["selected_comID"]
+
+if st.session_state['text_option'] == True:
+    st.header(com_name)
+else:
+    st.header(selected_comName)
 
 number = [            
             "Unable to Determine",
@@ -396,16 +416,6 @@ def save_file (ID, uploaded_file, com_name):
     else:
         st.error('Error adding file. Please try again later', icon="🚨")
 
-com_name = st.session_state["com_name"]
-com_id = st.session_state["com_id"]
-selected_comName = st.session_state["selected_comName"]
-selected_comID = st.session_state["selected_comID"]
-
-if st.session_state["text_option"] == True:
-    st.header(com_name)
-else:
-    st.header(selected_comName)
-
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
@@ -490,7 +500,8 @@ if len(dir) > 1:
                         extract_tables(tables)
                     
                 else:
-                    st.error("Please specify the pages you want to extract.", icon="🚨")
+                    if (session_state['upload_file_status'] == True):
+                        st.error("Please specify the pages you want to extract.", icon="🚨")
             
             if button_clicked:
                 extraction_container.empty()

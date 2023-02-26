@@ -94,7 +94,7 @@ if st.session_state['text_option'] == True:
         col1, col2 = st.columns([10,2])
         with col1:
             com_name = st.text_input(
-                "Company Name:",
+                "Company Name:", st.session_state['com_name'],
                 placeholder = "Enter Company Name",
                 key="col1",
                 label_visibility="collapsed"
