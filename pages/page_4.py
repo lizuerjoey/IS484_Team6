@@ -43,7 +43,7 @@ if 'fiscal_month' not in session_state:
 currency = ""
 confirm_headers_list = []
 dataframe_list = []
-is_df_empty = []
+is_df_empty_list = []
 button_clicked = False
 
 if 'dataframes' not in session_state:
@@ -168,46 +168,7 @@ def viewer_func(df, num, id):
     selected = ""
 
     col1, col2 = st.columns(2)
-            
-    with col1:
-        options = st.multiselect('Select Columns to Delete:',
-        list(dataframe.columns),
-        )
-        st.session_state['column_del'] = True
-            
-        for col_option in options:
-            dataframe.drop(col_option, axis=1, inplace=True)
-            
-        # st.write('You selected:', options)
-        #st.write("existing: ",list(dataframe.columns))
-            
-    with col2:
-        options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns))
-        
-        for i in range(len(options)):
-            old_name = options[i]
-            column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
-            st.session_state['column_input'] = True
-            
-            if column_name in (dataframe.columns) and old_name !=column_name:
-                st.error("Header name already exisit. Try a different name")
-            else:
-                dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
-
-        # st.write('You selected:', options)
-        #st.write("existing: ",list(dataframe.columns))
-
-    # assuming if edit is confirm, proceed to select headers to search through
-    
-    # get column headers
-    column_headers = list(dataframe.columns)
-    
-    confirm_headers = st.multiselect(
-    'Select the Column(s) with Financial Statement Keywords:',
-    column_headers,
-    column_headers[0], key="confirm_headers -" + str(num))
-
-    confirm_headers_list.append(confirm_headers)                       
+                       
     is_df_empty = True
     c1,c2 = st.columns([3,1])
     with c1:
@@ -215,11 +176,13 @@ def viewer_func(df, num, id):
 
     # check if an empty dataframe is extracted
     if dataframe.empty:
-        # is_df_empty.append(True)
+        is_df_empty = True
+        is_df_empty_list.append(True)
         df_empty_msg = "Empty dataframe, please upload a pdf with a filled table or Try AWS."
         st.error(df_empty_msg, icon="🚨")
     else:
-        # is_df_empty.append(False)
+        is_df_empty = False
+        is_df_empty_list.append(False)
         
         # with c2:
         #     delete_table = st.button("🗑", key="trash -" + str(num))
@@ -254,11 +217,9 @@ def viewer_func(df, num, id):
         st.subheader("Edit Headers")
 
         col1, col2 = st.columns(2)
-                
+
         with col1:
-            options = st.multiselect('Select Columns to Delete:',
-            list(dataframe.columns),
-            )
+            options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete - " + str(num))
             st.session_state['column_del'] = True
                 
             for col_option in options:
@@ -268,16 +229,20 @@ def viewer_func(df, num, id):
             #st.write("existing: ",list(dataframe.columns))
                 
         with col2:
-            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns))
-
+            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), key="colrename - " + str(num))
+            
             for i in range(len(options)):
-                column_name = st.text_input("Enter New Header Name for "+ str(options[i]), placeholder= options[i], key="table -" + str(num) + str(i))
+                old_name = options[i]
+                column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
                 st.session_state['column_input'] = True
+                
+                if column_name in (dataframe.columns) and old_name !=column_name:
+                    st.error("Header name already exisit. Try a different name")
+                else:
+                    dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
 
-                dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
-
-        # st.write('You selected:', options)
-        #st.write("existing: ",list(dataframe.columns))
+            # st.write('You selected:', options)
+            #st.write("existing: ",list(dataframe.columns))
 
         # get column headers
         column_headers = list(dataframe.columns)
@@ -559,10 +524,10 @@ if len(dir) > 1:
                         statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
 
     # if at least 1 dataframe is not empty
-    if False in is_df_empty:
+    is_df_empty_list
+    if False in is_df_empty_list:
         # show extract button
         if st.button("Extract", key="extract"):
-            st.write(is_df_empty)
             dataframe_list[0]
             # session_state['dataframes']
             # below are required fields --> REMEBER TO CHECK FOR EMPTY
