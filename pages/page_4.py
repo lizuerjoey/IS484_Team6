@@ -169,7 +169,6 @@ def viewer_func(df, num, id):
 
     col1, col2 = st.columns(2)
                        
-    is_df_empty = True
     c1,c2 = st.columns([3,1])
     with c1:
         st.subheader('Extracted Table ' + str(num+1))
@@ -219,17 +218,15 @@ def viewer_func(df, num, id):
         col1, col2 = st.columns(2)
 
         with col1:
-            options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete - " + str(num))
+            options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num))
             st.session_state['column_del'] = True
                 
             for col_option in options:
                 dataframe.drop(col_option, axis=1, inplace=True)
-                
-            # st.write('You selected:', options)
-            #st.write("existing: ",list(dataframe.columns))
+
                 
         with col2:
-            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), key="colrename - " + str(num))
+            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), key="colrename -" + id + str(num))
             
             for i in range(len(options)):
                 old_name = options[i]
@@ -241,8 +238,6 @@ def viewer_func(df, num, id):
                 else:
                     dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
 
-            # st.write('You selected:', options)
-            #st.write("existing: ",list(dataframe.columns))
 
         # get column headers
         column_headers = list(dataframe.columns)
@@ -251,10 +246,9 @@ def viewer_func(df, num, id):
         confirm_headers = st.multiselect(
         'Select the Column(s) with Financial Statement Keywords:',
         column_headers,
-        column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + str(num))
+        column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
 
         confirm_headers_list.append(confirm_headers)
-
 
         delete_row = JsCode("""
             function(e) {
@@ -342,7 +336,7 @@ def viewer_func(df, num, id):
         confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. 1Q, 1st Half, Total etc."
         confirm_rows = st.multiselect(
         'Select the Row(s) with Keywords:',
-            row_list, help=confirm_rows_tooltip, key="confirm_rows -" + str(num))
+            row_list, help=confirm_rows_tooltip, key="confirm_rows -" + id + str(num))
 
     return (option, selected, is_df_empty)
 
@@ -365,8 +359,8 @@ def extract_tables (tables):
         if (any(i < 75 for i in accuracy)):
             print(accuracy)
             dfs = convert_file()
-            for i in range(len(dfs)):
-                statement, format, is_df_empty = viewer_func(dfs[i][0], i, "pdfimg")
+            for i in range(len(dfs[0])):
+                statement, format, is_df_empty = viewer_func(dfs[0][i], i, "pdfimg")
         else:
             for i in range(len(tables)):
                 statement, format, is_df_empty = viewer_func(tables[i], i, 'camelot')
@@ -503,8 +497,8 @@ if len(dir) > 1:
                 next_extraction = st.empty()
                 with next_extraction.container():
                     dfs = convert_file()
-                    for i in range(len(dfs)):
-                        statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
+                    for i in range(len(dfs[0])):
+                        statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
 
         #file is image
         elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
@@ -524,7 +518,6 @@ if len(dir) > 1:
                         statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
 
     # if at least 1 dataframe is not empty
-    is_df_empty_list
     if False in is_df_empty_list:
         # show extract button
         if st.button("Extract", key="extract"):
