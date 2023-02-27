@@ -28,7 +28,10 @@ if 'disable_dropdown' not in st.session_state:
     st.session_state['disable_dropdown'] = False
 
 if 'disable_btn' not in st.session_state:
-    st.session_state['disable_btn'] = False    
+    st.session_state['disable_btn'] = False   
+
+if 'og_uploaded_file' not in st.session_state:
+    st.session_state['og_uploaded_file'] = None
 
 ## -- input new company name -- ##
 if 'com_name' not in st.session_state:
@@ -135,6 +138,7 @@ if st.session_state['text_option'] == True:
 
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")
+st.session_state['og_uploaded_file'] = uploaded_file
 
 def save_file_to_temp (uploaded_file): 
     # Upload into directory

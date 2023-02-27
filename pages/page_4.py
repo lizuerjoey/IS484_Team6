@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 # import camelot.io as camelot
 import camelot
 import PyPDF2
@@ -19,7 +20,9 @@ from request import (
         get_financial_words_col,
         get_financial_words_row,
         get_json_financial_format,
-        get_json_format
+        get_json_format,
+        insert_data,
+        get_allFiles
     )
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
@@ -31,8 +34,8 @@ if 'pg_input' not in session_state:
 if 'status' not in session_state:
     session_state['status'] = False
 
-if 'uploaded_file' not in session_state:
-    session_state['uploaded_file'] = ''
+if 'og_uploaded_file' not in session_state:
+    session_state['og_uploaded_file'] = None
 
 currency = ""
 fiscal_month = ""
@@ -217,9 +220,8 @@ def viewer_func(df, num, id):
         with col1:
             option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
             
-            if option != "Not Selected":
-                financial_format.append(option)
-            else:
+            financial_format.append(option)
+            if option == "Not Selected":
                 st.warning("Financial Statement is a required field", icon="⭐")
         
         # number format ddl
@@ -228,10 +230,18 @@ def viewer_func(df, num, id):
             new_num_list = sort_num_list(num_format)
             options = list(range(len(new_num_list)))
             i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
-            if new_num_list[i] != "Unable to Determine":
-                number_format.append(new_num_list[i])
-            else:
+            number_format.append(new_num_list[i])
+            if new_num_list[i] == "Unable to Determine":
                 st.warning("Number Format is a required field.", icon="⭐")
+            
+            # each financial statement should have a consistent number format
+            different = 0
+            for saved_num in number_format:
+                if new_num_list[i] != saved_num:
+                    different += 1
+
+            if different > 0:
+                st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
         
         st.subheader("Edit Headers")
 
@@ -335,14 +345,13 @@ def viewer_func(df, num, id):
         gd.configure_grid_options(onRowSelected = delete_row, pre_selected_rows=[])
 
         gridOptions = gd.build()
-        grid_table = AgGrid(dataframe, 
+        grid_table = AgGrid(dataframe, key=None, 
                     gridOptions = gridOptions, 
-                    key = None,
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
                     update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
-                    height = 450,
+                    height= 450,
                     allow_unsafe_jscode=True)    
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
@@ -454,30 +463,95 @@ def remove_space_caps_next_letter(key):
     new_key = first_letter + new_key[1:]
     return new_key
 
-def save_file (ID, uploaded_file, com_name):
+# check if same type of sheet
+# same type -> check for each year
+# for each year match the keyword and take the value if the keyword is empty
+# if keyword exist, average the second value
+def merge_sheets(sheet_lists):
+    # create a new dictionary to hold the merged results
+    merged_dict = {}
+    
+    # iterate over each sheet in the list
+    for sheet in sheet_lists:
+
+        # iterate over each data(s) extracted in the list
+        for data_index in range(len(sheet)):
+            year = sheet[data_index]['year']
+            if year in merged_dict:
+
+                #  loop through for the financial keywords
+                for key, val in sheet[data_index].items():
+                    
+                    # if the value is a float and exist in merge dict -> compute the average 
+                    if isinstance(val, float) and isinstance(merged_dict[year][key], float):
+                        merged_dict[year][key] = (merged_dict[year][key] + val) / 2
+                    
+            else:
+                merged_dict[year] = sheet[data_index]
+    
+        new_merged_list = []
+        for key, val in merged_dict.items():
+            new_merged_list.append(val)
+
+    return new_merged_list
+
+def save_file (ID, uploaded_file, com_name, json):
+
+    # uploaded_file_name = os.path.basename(uploaded_file_path)
+    uploaded_file_name = uploaded_file.name
+
     now = datetime.now()
     date_time = str(now.strftime("%d%m%Y%H%M%S"))
 
     # Upload into directory
-    with open(os.path.join("upload_files",uploaded_file.name),"wb") as f: 
-        f.write(uploaded_file.getbuffer())   
+    # pdfWriter = PyPDF2.PdfWriter()
+    with open(os.path.join("upload_files", uploaded_file_name),"wb") as f: 
+        # pdfWriter.write(uploaded_file_name) 
+        f.write(uploaded_file.getbuffer())     
 
     # Change file name to directory before saving into DB
-    old_path = os.path.join("upload_files",uploaded_file.name)
-    new_file_name = com_name.replace(" ", "") +"_" + date_time +"_" + uploaded_file.name
+    old_path = os.path.join("upload_files",uploaded_file_name)
+    new_file_name = com_name.replace(" ", "") +"_" + date_time +"_" + uploaded_file_name
     new_path = os.path.join("upload_files",new_file_name)
     os.rename(old_path, new_path)
 
     # Encode file details before saving in the database
     new_file_name = base64.b64encode(new_file_name.encode("ascii")).decode("ascii")
 
-    # Call API
+    # split the file type by / and take the last
+    file_type = uploaded_file.type.split("/")[-1]
+
+    # Call API to add file into database
     add_com = add_file(ID, new_file_name, file_type)
-    
+
     if (add_com["message"] == "Added"):
-        st.success("Saved File", icon="✅")
+        st.success("Saved File!", icon="✅")
+
+        # call API to retrieve all files -> last file should be the most updated
+        all_files = get_allFiles()
+        last_file = len(all_files["data"]) - 1
+        fid = all_files["data"][last_file][0]
+
+        # call API to insert json data
+        result = insert_data(fid, ID, json)
+
+        if (result["message"] == "Added"):
+            st.success("Successful Extraction!", icon="✅")
+
+            # delete everything except test.txt from temp folder
+            if len(dir) > 0:
+                for f in os.listdir(temp_path):
+                    if (f != "test.txt"):
+                        os.remove(os.path.join(temp_path, f))
+            time.sleep(3)
+            st.experimental_rerun()
+
+        else:
+            st.error('Error inserting extraction into database. Please try again later', icon="🚨")
+
     else:
         st.error('Error adding file. Please try again later', icon="🚨")
+
 
 # make sure a file was being uploaded first
 if session_state['upload_file_status'] == True:
@@ -497,35 +571,34 @@ if session_state['upload_file_status'] == True:
                 file_type = get_file_type(path)
 
                 # file is pdf
-                if file_type == '.pdf':                
+                if file_type == '.pdf':               
                     file_path = glob.glob("./temp_files/*.pdf")[0]
                     session_state["uploaded_file"] = file_path
                     file_name = get_file_name(file_path)
                     totalpages = get_total_pgs_PDF(file_path)
 
-                    # at least 1 page
-                    if (totalpages > 0):
-                        
-                        st.subheader('Basic Form Data')
-                        col1, col2 = st.columns(2)
-                        
-                        # with col1:
-                            # currency
-                            # currency_list = get_currency_list()
-                            # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                            # if option != "Not Selected":
-                            #     currency = option
-                            # else:
-                            #     st.warning("Currency is a required field", icon="⭐")
-                        
-                        # fiscal month ddl
-                        with col2:
-                            month_list = list(range(len(month)))
-                            selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth"+str(num))
-                            if selected != 0:
-                                fiscal_month = selected
-                            else:
-                                st.warning("Fiscal Start Month is a required field.", icon="⭐")
+                # at least 1 page
+                if (totalpages > 0):
+                    
+                    st.subheader('Basic Form Data')
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        currency_list = get_currency_list()
+                        option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
+                        if option != "Not Selected":
+                            currency = option
+                        else:
+                            st.warning("Currency is a required field", icon="⭐")
+                    
+                    # fiscal month ddl
+                    with col2:
+                        month_list = list(range(len(month)))
+                        selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth")
+                        if selected != 0:
+                            fiscal_month = selected
+                        else:
+                            st.warning("Fiscal Start Month is a required field.", icon="⭐")
 
                     # single page pdf
                     if (totalpages == 1):
@@ -621,22 +694,29 @@ if session_state['upload_file_status'] == True:
                 matched_dict_col = {}
 
                 # below are required fields; if at least one field is not correct -> cannot save to json
-                if ((currency == 'Not Selected') or (fiscal_month == 0) or
-                    ('Not Selected' in financial_format or len(financial_format) == 0) or 
-                    ('Unable to Determine' in number_format or len(number_format) == 0)):
+                # (currency == 'Not Selected') or
+                if ((str(fiscal_month) == " ") or
+                    ('Not Selected' in financial_format) or 
+                    ('Unable to Determine' in number_format)):
                     save_status = False
                     st.error("Please check the required fields.", icon="🚨")
+                else:
+                    save_status = True
 
                 # error message
                 unnamed_error = []
                 nothing_error = []
 
                 # saving to db
-                table_json_list = []
                 all_tables_json_list = []
+                table_count = 0
 
                 # loop through each tables in the dataframe list
                 for table in range(total_num_tables):
+                    # table count
+                    table_count += 1
+
+                    # searching through table
                     big_col = []
                     big_row = []
                     header_big_row = []
@@ -646,6 +726,11 @@ if session_state['upload_file_status'] == True:
                     matched_column_headers = []
                     matched_list_row = []
                     matched_dict_col = {}
+
+                    # saving data to db each table
+                    table_json_list = []
+                    found_count_list = []
+
                     # multiple selected headers
                     if len(confirm_headers_list[table]) > 1:
                         for colname in dataframe_list[table]:                                                           
@@ -676,7 +761,7 @@ if session_state['upload_file_status'] == True:
                         big_row = list(dataframe_list[table].columns)
                     
                     # search through (col) for financial word
-                    if 'Not Selected' not in financial_format and len(financial_format) != 0:
+                    if financial_format[table] != "Not Selected":
                         col_words = get_financial_words_col(financial_format[table])
                         for item in list_all_lower(big_col):
                             for key, synonyms in col_words.items():
@@ -735,16 +820,17 @@ if session_state['upload_file_status'] == True:
                         matched_column_headers = yr_qtr
 
                     # using col headers and row id -> identify the cell and append to the col financial keyword
-                    # if len of each keyword has more than 1 result -> take the first result
+                    # if len of each keyword has more than 1 result -> take the first result (first few rows usually contains total)
                     result_dict = {}
                     is_unnamed = False
+                    is_nothing = False
                     for date in matched_column_headers:
                         if "_" in date:
                             year_quarter, parts = date.split("_")
                         else:
                             # check if it is unnamed
                             # unnamed cannot be used as a column header, because even if retrieved the value what year/ month am I going to store it by
-                            if "unnamed" in date:
+                            if "Unnamed" in date:
                                 is_unnamed = True
                             year_quarter = date
                         
@@ -752,7 +838,7 @@ if session_state['upload_file_status'] == True:
                             result_dict[year_quarter] = {}
 
                         for key, values in matched_dict_col.items():
-                            # always take the first result in for the each financial keyword
+                            # always take the first result in for the each financial keyword (first few rows usually contains total)
                             row_id = values[0]
 
                             # last row id of the table
@@ -776,21 +862,18 @@ if session_state['upload_file_status'] == True:
  
                     # saving data in json when there is extracted header values e.g. year/ quarter
                     unnamed_error.append(is_unnamed)
-                    extracted_nothing = False
-                    # result_dict
                     if len(result_dict) > 0:
                         for yr_qtr, fin_words in result_dict.items():
                             # saving data in json when there is extracted cell values
                             if len(result_dict[yr_qtr]) > 0:
+                                is_nothing = False
 
                                 # save per financial statement
                                 financial_statement = financial_format[table].lower().replace(" ", "_")
                                 
                                 # for each year/ qtr
-                                # result_dict
+                                financial_statement_format = get_json_financial_format(financial_statement)
                                 for keyword in result_dict[yr_qtr]:
-                                    
-                                    financial_statement_format = get_json_financial_format(financial_statement)
                                     
                                     # loop through the list of financial words retrieved from table and append it to json format
                                     for format_words in financial_statement_format:
@@ -798,13 +881,14 @@ if session_state['upload_file_status'] == True:
                                             financial_statement_format[format_words] = yr_qtr
 
                                         elif format_words == "numberFormat":
-                                            financial_statement_format[format_words] = number_format[table]
+                                            financial_statement_format[format_words] = number_format[table].lower()
 
                                         elif keyword == format_words:
-                                            financial_statement_format[keyword] = fin_words[keyword][0]
+                                            financial_statement_format[keyword] = float(fin_words[keyword][0])
                                 
-
+                                # append all the data extracted for each dates
                                 table_json_list.append(financial_statement_format)
+                                
 
                                 # save basic format
                                 basic_format = get_json_format()
@@ -819,48 +903,123 @@ if session_state['upload_file_status'] == True:
                                     elif format_words == financial_statement:
                                         basic_format[format_words] = table_json_list
                             
+                            # no extracted cell values
                             else:
-                                extracted_nothing = True
-                                nothing_error.append(True)
+                                basic_format = get_json_format()
+                                for format_words in basic_format:
+                                    if format_words == "currency":
+                                        basic_format[format_words] = currency[0:3]
 
-                # append json and check if exist (if same sheet) or not
-                all_tables_json_list.append(basic_format)
+                                    elif format_words == "fiscal_start_month":
+                                        basic_format[format_words] = fiscal_month
 
-                all_tables_json_list
+                                is_nothing = True
 
-                # basic_format
-
-                # display error msg outside of table loop
-                # unnamed_error
-                # nothing_error
-                # st.info("You might want to rename the unnamed columns to either a year or quarter for it to be saved.", icon="ℹ️")
-                # st.error("Nothing was extracted. Please check financial words dictionary or your table values and try again.", icon="🚨")
-
-                            
+                        # append basic format for each table
+                        all_tables_json_list.append(basic_format)
                     
-                    # single selected header
-                    # else:
-                    #     st.write("single")
-                    # for column in range(len(confirm_headers_list[table])):
-                    #     st.write(confirm_headers_list[table][column])
+                    # couldn't search anything in headers
+                    elif len(result_dict) == 0:
+                        is_nothing = True
+                    
+                    # append nothing extracted error for each table
+                    nothing_error.append(is_nothing)
 
+                # for each financial statements
+                income_statement_list = []
+                balance_sheet_list = []
+                cash_flow_list = []                
+
+                # for each table json
+                for json in all_tables_json_list:
+                    if len(json) > 0:                    
+                        if len(json["income_statement"]) > 0:
+                            income_statement_list.append(json["income_statement"])
+                        elif len(json["balance_sheet"]) > 0:
+                            balance_sheet_list.append(json["balance_sheet"])
+                        elif len(json["cash_flow"]) > 0:
+                            cash_flow_list.append(json["cash_flow"])
+
+                # got more than 1 json data extracted under the same financial statement
+                if len(income_statement_list) > 0:
+                    income_statement_json = merge_sheets(income_statement_list)
+                else:
+                    income_statement_json = income_statement_list
+
+                if len(balance_sheet_list) > 0:
+                    balance_sheet_json = merge_sheets(balance_sheet_list)
+                else:
+                    balance_sheet_json = balance_sheet_list
+
+
+                if len(cash_flow_list) > 0:
+                    cash_flow_json = merge_sheets(cash_flow_list)
+                else:
+                    cash_flow_json = cash_flow_list
+    
+                # check if there is result saved in the json variable, if no data was extracted -> extract empty json from api
+                if len(income_statement_json) > 0: 
+                    basic_format["income_statement"] = income_statement_json
+                else:
+                    # only have length 0
+                    fs_dict = get_json_financial_format("income_statement")
+                    new_fs_dict = {
+                        0: fs_dict
+                    }
+                    basic_format["income_statement"] = new_fs_dict
                 
-            # # Save into DB
-            # if session_state["text_option"] == True:
-            #     if st.button('Submit'):
-            #         if com_name:
-            #             add_com = add_company(com_id, com_name)
-            #             if (add_com["message"] == "Added"):
-            #                 st.success("Company Added", icon="✅")
-            #                 save_file(com_id, session_state["uploaded_file"], com_name)
-            #             else:
-            #                 st.error('Error adding company. Please try again later', icon="🚨")
-            #         else:
-            #             # If company name not entered
-            #             st.error("Please enter a company name in Upload Report Page", icon="🚨")
-            # else:
-            #     if st.button('Submit'):
-            #         save_file(selected_comID, session_state["uploaded_file"], selected_comName)
+                if len(balance_sheet_json) > 0: 
+                    basic_format["balance_sheet"] = balance_sheet_json
+                else:
+                    # only have length 0
+                    bs_dict = get_json_financial_format("balance_sheet")
+                    new_bs_dict = {
+                        0: bs_dict
+                    }
+                    basic_format["balance_sheet"] = new_bs_dict
+
+                if len(cash_flow_json) > 0:
+                    basic_format["cash_flow"] = cash_flow_json
+                else:
+                    # only have length 0
+                    cf_dict = get_json_financial_format("cash_flow")
+                    new_cf_dict = {
+                        0: cf_dict
+                    }
+                    basic_format["cash_flow"] = new_cf_dict               
+
+                # if all required fields are filled
+                if save_status == True:
+                    for table in range(len(unnamed_error)):
+                        if unnamed_error[table] == True:
+                            table_num = table + 1
+                            st.info("Data was detected but the column header is not a year or year and quarter. You might want to rename the unnamed columns in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
+                        
+                    no_extraction = 0
+                    for table in range(len(nothing_error)):
+                        if nothing_error[table] == True:
+                            table_num = table + 1
+                            st.error("Table " + str(table_num) + " could not extract any data. Please check your table values, headers or the financial words dictionary and try again later.", icon="🚨")
+                            no_extraction += 1
+
+                    # at least 1 table could extract something
+                    if no_extraction < len(nothing_error):
+                        # Save into DB
+                        if session_state["text_option"] == True:
+                            if com_name:
+                                add_com = add_company(com_id, com_name)
+                                if (add_com["message"] == "Added"):
+                                    st.success("Company Added", icon="✅")
+                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                                else:
+                                    st.error('Error adding company. Please try again later', icon="🚨")
+                            else:
+                                # If company name not entered
+                                st.error("Please enter a company name in Upload Report Page", icon="🚨")
+                        else:
+                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+               
+
 
     # no files was uploaded
     else:
