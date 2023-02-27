@@ -46,9 +46,8 @@ def add_file(cid, file, type):
     body = {
         "cid": cid,
         "file": file,
-        "type": type
+        "type": type,
     }
-    
     data = post(session, f"http://127.0.0.1:5000/insert_file", body)
     return data
 
@@ -116,7 +115,7 @@ def get_financial_words_col(sheet):
     words = {
         "Income Statement": {
             "revenue": ["total revenue"],
-            "total cost": [],
+            "cost": ["total cost"],
             "gross profit": ["earnings", "gross income"],
             "gross loss": [],
             "net profit": ["net income", "net earnings"],
@@ -198,15 +197,15 @@ def get_json_financial_format(sheet):
         "balance_sheet": {
             "year": "",
             "numberFormat": "", 
-            "revenue": "",
-            "cost": "",
-            "grossProfit": "",
-            "grossLoss": "",
-            "netProfit": "",
-            "netLoss": "",
-            "incomeTax": "",
-            "interest": "",
-            "depreciation": ""
+            "totalEquities": "",
+            "totalLiabilities": "",
+            "totalCurrentLiabilties": "",
+            "totalNonCurrentLiabitilies": "",
+            "totalAssets": "",
+            "totalCurrentAssets": "",
+            "totalNonCurrentAssets": "",
+            "debt": "",
+            "cash": ""
         },
         "cash_flow": {
             "year": "",
