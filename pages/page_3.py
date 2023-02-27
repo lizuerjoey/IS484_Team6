@@ -150,9 +150,12 @@ if len(dir) > 1:
                         st.success("Successful", icon="✅")
                         st.session_state['status'] = True
 
+                        
+
                         # When successful page input then change save pdf view
                         pdf = PyPDF2.PdfReader(file_path)
                         
+
                         # Retrieve user input 
                         selected_pages = final_input 
 
@@ -162,10 +165,23 @@ if len(dir) > 1:
 
                         for page_num in selected_pages:
                             pdfWriter.add_page(pdf.pages[page_num])
-
+                        
                         with open(os.path.join("selected_files","selected_pages.pdf"),"wb") as f: 
                             pdfWriter.write(f)
-
+                        
+                        origin = './selected_files/'
+                        target = './temp_files/'
+                        files = os.listdir(origin)
+                        files_target = os.listdir(target)
+                        for file in files_target:
+                            if file=="selected_pages.pdf":
+                                os.remove(target+file)
+                        for file in files:
+                            if file!="test.txt" and file.endswith(".pdf"):
+                                file_type = get_file_type(file)
+                                shutil.copy(origin+file, target)
+                                os.rename(target+file, target+"selected_pages"+file_type)
+                                
                 st.text("")
                 selected_dir = os.listdir(selected_path)
                 if (len(selected_dir) > 1):
@@ -179,6 +195,8 @@ if len(dir) > 1:
 
                         # If button is clicked, switch page to preview extracted data
                         if previewdata:
+                            
+
                             switch_page("preview extracted data")                    
 
             else: 

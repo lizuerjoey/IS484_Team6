@@ -485,119 +485,123 @@ if session_state['upload_file_status'] == True:
 
         pg_input = session_state.pg_input
         status = session_state.status
-        
+        num = 0 
         file_paths = glob.glob("./temp_files/*")
         count = 0
-        for path in file_paths:
-            file_type = get_file_type(path)
+       
+        for path in (file_paths):
+            print("PATH: "  + path)
+            print("PATH: "  + str(path == "./temp_files\selected_pages.pdf"))
+            if path!="./temp_files\selected_pages.pdf":
+                file_type = get_file_type(path)
 
-            # file is pdf
-            if file_type == '.pdf':                
-                file_path = glob.glob("./temp_files/*.pdf")[0]
-                session_state["uploaded_file"] = file_path
-                file_name = get_file_name(file_path)
-                totalpages = get_total_pgs_PDF(file_path)
+                # file is pdf
+                if file_type == '.pdf':                
+                    file_path = glob.glob("./temp_files/*.pdf")[0]
+                    session_state["uploaded_file"] = file_path
+                    file_name = get_file_name(file_path)
+                    totalpages = get_total_pgs_PDF(file_path)
 
-                # at least 1 page
-                if (totalpages > 0):
-                    
-                    st.subheader('Basic Form Data')
-                    col1, col2 = st.columns(2)
-                    
-                    # with col1:
-                        # currency
-                        # currency_list = get_currency_list()
-                        # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                        # if option != "Not Selected":
-                        #     currency = option
-                        # else:
-                        #     st.warning("Currency is a required field", icon="⭐")
-                    
-                    # fiscal month ddl
-                    with col2:
-                        month_list = list(range(len(month)))
-                        selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth")
-                        if selected != 0:
-                            fiscal_month = selected
-                        else:
-                            st.warning("Fiscal Start Month is a required field.", icon="⭐")
-
-                # single page pdf
-                if (totalpages == 1):
-
-                    # try aws button
-                    button_clicked = False
-                    btn_placeholder = st.empty()
-                    with btn_placeholder.container():
-                        # if session_state["status"]:
-                            if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                                origin = './temp_files/'
-                                target = './selected_files/'
-                                files = os.listdir(origin)
-                                files_target = os.listdir(target)
-                                for file in files_target:
-                                    if file=="file.pdf":
-                                        os.remove(target+file)
-                                for file in files:
-                                    if file!="test.txt" and file.endswith(".pdf"):
-                                        file_type = get_file_type(file)
-                                        shutil.copy(origin+file, target)
-                                        os.rename(target+file, target+"file"+file_type)
-
-                                button_clicked = True
-                                btn_placeholder.empty()
+                    # at least 1 page
+                    if (totalpages > 0):
                         
-                    tables = check_tables_single_PDF(file_path)
-                    extraction_container = st.empty()
-                    with extraction_container.container():
-                        extract_tables(tables)
-                
-                # multi page pdf
-                else:
-                    # user input is successful on page 3
-                    if (status == True and pg_input != ''):
-                        # try aws button 
+                        st.subheader('Basic Form Data')
+                        col1, col2 = st.columns(2)
+                        
+                        # with col1:
+                            # currency
+                            # currency_list = get_currency_list()
+                            # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
+                            # if option != "Not Selected":
+                            #     currency = option
+                            # else:
+                            #     st.warning("Currency is a required field", icon="⭐")
+                        
+                        # fiscal month ddl
+                        with col2:
+                            month_list = list(range(len(month)))
+                            selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth"+str(num))
+                            if selected != 0:
+                                fiscal_month = selected
+                            else:
+                                st.warning("Fiscal Start Month is a required field.", icon="⭐")
+
+                    # single page pdf
+                    if (totalpages == 1):
+
+                        # try aws button
                         button_clicked = False
                         btn_placeholder = st.empty()
                         with btn_placeholder.container():
-                            if session_state["status"]:
-                                if (st.button("Try AWS", key="aws_multipg_pdf")):
+                            # if session_state["status"]:
+                                if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                                    origin = './temp_files/'
+                                    target = './selected_files/'
+                                    files = os.listdir(origin)
+                                    files_target = os.listdir(target)
+                                    for file in files_target:
+                                        if file=="file.pdf":
+                                            os.remove(target+file)
+                                    for file in files:
+                                        if file!="test.txt" and file.endswith(".pdf"):
+                                            file_type = get_file_type(file)
+                                            shutil.copy(origin+file, target)
+                                            os.rename(target+file, target+"file"+file_type)
+
                                     button_clicked = True
                                     btn_placeholder.empty()
-
-                        tables = check_tables_multi_PDF(file_path, str(pg_input))
+                            
+                        tables = check_tables_single_PDF(file_path)
                         extraction_container = st.empty()
                         with extraction_container.container():
                             extract_tables(tables)
-                        
+                    
+                    # multi page pdf
                     else:
-                        if (session_state['upload_file_status'] == True):
-                            st.error("Please specify the pages you want to extract.", icon="🚨")
-                
-                if button_clicked:
-                    extraction_container.empty()
-                    next_extraction = st.empty()
-                    with next_extraction.container():
-                        dfs = convert_file()
-                        for i in range(len(dfs[0])):
-                            statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
+                        # user input is successful on page 3
+                        if (status == True and pg_input != ''):
+                            # try aws button 
+                            button_clicked = False
+                            btn_placeholder = st.empty()
+                            with btn_placeholder.container():
+                                if session_state["status"]:
+                                    if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
+                                        button_clicked = True
+                                        btn_placeholder.empty()
 
-            #file is image
-            elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
-                file_path = glob.glob("./temp_files/*" + file_type)[0]
-                file_name = get_file_name(file_path)
-        
-                dataframes = image_extraction(file_path)
-                # check if dataframe is empty
-                if len(dataframes) < 1:
-                    st.error('Please upload an image with a table.', icon="🚨")
+                            tables = check_tables_multi_PDF(file_path, str(pg_input))
+                            extraction_container = st.empty()
+                            with extraction_container.container():
+                                extract_tables(tables)
+                            
+                        else:
+                            if (session_state['upload_file_status'] == True):
+                                st.error("Please specify the pages you want to extract.", icon="🚨")
+                    
+                    if button_clicked:
+                        extraction_container.empty()
+                        next_extraction = st.empty()
+                        with next_extraction.container():
+                            dfs = convert_file()
+                            for i in range(len(dfs[0])):
+                                statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
+                    num+=1
+                #file is image
+                elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
+                    file_path = glob.glob("./temp_files/*" + file_type)[0]
+                    file_name = get_file_name(file_path)
+            
+                    dataframes = image_extraction(file_path)
+                    # check if dataframe is empty
+                    if len(dataframes) < 1:
+                        st.error('Please upload an image with a table.', icon="🚨")
 
-                else:
-                    extraction_container = st.empty()
-                    with extraction_container.container():
-                        for i in range(len(dataframes)):
-                            # if dataframe is not empty (manage to extract some things out)        
-                            statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+                    else:
+                        extraction_container = st.empty()
+                        with extraction_container.container():
+                            for i in range(len(dataframes)):
+                                # if dataframe is not empty (manage to extract some things out)        
+                                statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
