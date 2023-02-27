@@ -447,6 +447,12 @@ def merge_row_cells(confirm_row_table, table):
     big_row = concat_lists(new_row_list)
     return big_row
 
+def remove_space_caps_next_letter(key):
+    new_key = "".join(word.capitalize() for word in key.split())
+    first_letter = key[0].lower()
+    new_key = first_letter + new_key[1:]
+    return new_key
+
 def save_file (ID, uploaded_file, com_name):
     now = datetime.now()
     date_time = str(now.strftime("%d%m%Y%H%M%S"))
@@ -616,8 +622,16 @@ if session_state['upload_file_status'] == True:
                     save_status = False
                     st.error("Please check the required fields.", icon="🚨")
 
+                # error message
                 unnamed_error = []
                 nothing_error = []
+
+                # financial statement
+                income_statement_json = []
+                balance_statement_json = []
+                cash_flow_statement_json = []
+
+                # loop through each tables in the dataframe list
                 for table in range(total_num_tables):
                     big_col = []
                     big_row = []
@@ -748,10 +762,12 @@ if session_state['upload_file_status'] == True:
                             if "unnamed" not in date and date in list(dataframe_list[table].columns):                     
                                 cell = dataframe_list[table].loc[row_id][str(date)]
                                 if key in result_dict[year_quarter]:
-                                    result_dict[year_quarter][key].append(cell)
+                                    # check if space -> get the index and capitalise the next letter
+                                    new_key = remove_space_caps_next_letter(key)
+                                    result_dict[year_quarter][new_key].append(cell)
                                 else:
-                                    result_dict[year_quarter][key] = [cell]                               
-
+                                    new_key = remove_space_caps_next_letter(key)
+                                    result_dict[year_quarter][new_key] = [cell]                               
 
  
                     # saving data in json when there is extracted header values e.g. year/ quarter
@@ -773,35 +789,33 @@ if session_state['upload_file_status'] == True:
                                 
                                 # for each year/ qtr
                                 # result_dict
-                                for date in result_dict[yr_qtr]:
+                                for keyword in result_dict[yr_qtr]:
+                                    
                                     financial_statement_format = get_json_financial_format(financial_statement)
-                                    # check if space -> get the index and capitalise the next letter
-                                    for text in fin_words:
-                                        word = "".join(word.capitalize() for word in text.split())
-                                        first_letter = word[0].lower()
-                                        new_word = first_letter + word[1:]
-
+                                    
+                                    # loop through the list of financial words retrieved from table and append it to json format
                                     for format_words in financial_statement_format:
-                                        if format_words == new_word:
-                                            financial_statement_format[format_words] = fin_words
-                                        
-                                financial_statement_format
+                                        if format_words == "year":
+                                            financial_statement_format[format_words] = yr_qtr
 
-                                # for statement in financial_statement_format:
-                                #     if statement == financial_statement:
-                                #         for key in financial_statement[statement]:
-                                #             financial_statement[statement][key] 
+                                        elif format_words == "numberFormat":
+                                            financial_statement_format[format_words] = number_format[table]
+
+                                        elif keyword == format_words:
+                                            financial_statement_format[keyword] = fin_words[keyword][0]
+                                
+                                income_statement_json.append(financial_statement_format)
                             
                             else:
                                 extracted_nothing = True
                                 nothing_error.append(True)
-                        
-                        # fiscal_month
-                        # currency
-                        # for basic in basic_format:
-                            # if basic == "currency":
+
+                                                        
+                income_statement_json
 
                 # append json and check if exist (if same sheet) or not
+
+                basic_format
 
                 # display error msg outside of table loop
                 # unnamed_error
