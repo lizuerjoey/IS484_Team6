@@ -4,6 +4,7 @@ from st_pages import Page, show_pages, add_page_title
 import json
 import re
 from datetime import date, datetime
+import os
 from request import(
     get_all_companies,
     get_currencies,
@@ -31,6 +32,15 @@ if (len(get_options) == 0):
     st.header("No company available..")
     st.write("Please add a company and upload reports.")
 else:
+    format_df = {
+        "company":[],
+        "base_currency":[],
+        "currency_to_convert":[],
+        "start":[],
+        "end":[],
+        "fiscal_month":[],
+        "datetime":[]
+    }
     company_col, base_currency_col, currency_col = st.columns(3)
     with company_col:
         options = list(range(len(get_options)))
@@ -42,6 +52,7 @@ else:
         selected_comID = get_options[option][0]
         selected_comName = get_options[option][1]
 
+        format_df["company"].append(selected_comName)
 
         # Retrieve data
         get_data = retrieve_data(selected_comID)
@@ -55,6 +66,7 @@ else:
                     <span style='font-size: 14px;'>Base Currency</span>
                 """, unsafe_allow_html=True)
         st.write(base_code + " ("  + symbols[base_code] + ")")
+        format_df["base_currency"].append(base_code)
 
     # CURRENCY
     with currency_col:
@@ -65,7 +77,8 @@ else:
         option = st.selectbox(
             'Currency to convert',
             code)
-        
+        format_df["currency_to_convert"].append(option)
+
         if option!= "Remain Unchange":
             symbol_to_covert = option[:option.find("(")]
             currencies = get_currencies(base_code)
@@ -103,12 +116,16 @@ else:
         fiscal_start_mnth = result["fiscal_start_month"]
      
         st.write(get_months(fiscal_start_mnth))
+        format_df["fiscal_month"].append(get_months(fiscal_start_mnth))
 
     with start_col:
         start_year = st.selectbox(
             'Start Year',
             year)
     endYear = []
+    
+    format_df["start"].append(start_year)
+
     if year.index(start_year) != len(year)-1:
         for y in year[year.index(start_year)+1:]:
             if len(start_year) == len(y) :
@@ -118,6 +135,7 @@ else:
         end_year = st.selectbox(
             'End Year',
             endYear)
+        format_df["end"].append(end_year)
     if endYear == []:
         st.error("End year must not be empty", icon="🚨")
     elif int(end_year[:4]) > date.today().year:
@@ -384,3 +402,33 @@ else:
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
                 st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
+    
+    
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    format_df["datetime"].append(str(date.today()) + " " + current_time)
+    df = pd.DataFrame(data=format_df)
+    df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
+
+    # CONVERT TO EXCEL SHEET
+    with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
+        df.to_excel(writer, sheet_name='Main')
+        if not df_bs.empty:
+            bs=df_bs.merge(df_assets, how="right")
+            bs=df_bs.merge(df_liabilities, how="right")
+            bs.to_excel(writer, sheet_name='Balance Sheet')
+        if not df_is.empty:
+            df_is.to_excel(writer, sheet_name='Income Statement')
+        if not df_cf.empty:
+            df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+        if not df_om.empty:
+            df_om.to_excel(writer, sheet_name='Other Metrics')
+    
+    # DOWNLOAD EXCEL SHEET
+    with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
+        btn = st.download_button(
+                label="Download Excel",
+                data=file,
+                file_name="Download.xlsx",
+                mime="text/xlsx"
+            )
