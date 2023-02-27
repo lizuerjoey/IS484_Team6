@@ -337,11 +337,12 @@ def viewer_func(df, num, id):
         gridOptions = gd.build()
         grid_table = AgGrid(dataframe, 
                     gridOptions = gridOptions, 
+                    key = None,
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
                     update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
-                    height= 450,
+                    height = 450,
                     allow_unsafe_jscode=True)    
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
@@ -630,10 +631,9 @@ if session_state['upload_file_status'] == True:
                 unnamed_error = []
                 nothing_error = []
 
-                # financial statement
-                income_statement_json = []
-                balance_statement_json = []
-                cash_flow_statement_json = []
+                # saving to db
+                table_json_list = []
+                all_tables_json_list = []
 
                 # loop through each tables in the dataframe list
                 for table in range(total_num_tables):
@@ -783,11 +783,6 @@ if session_state['upload_file_status'] == True:
                             # saving data in json when there is extracted cell values
                             if len(result_dict[yr_qtr]) > 0:
 
-                                # save basic format
-                                basic_format = get_json_format()
-                                basic_format["currency"] = currency[0:3]
-                                basic_format["fiscal_start_month"] = fiscal_month
-
                                 # save per financial statement
                                 financial_statement = financial_format[table].lower().replace(" ", "_")
                                 
@@ -808,18 +803,32 @@ if session_state['upload_file_status'] == True:
                                         elif keyword == format_words:
                                             financial_statement_format[keyword] = fin_words[keyword][0]
                                 
-                                income_statement_json.append(financial_statement_format)
+
+                                table_json_list.append(financial_statement_format)
+
+                                # save basic format
+                                basic_format = get_json_format()
+                                for format_words in basic_format:
+                                    if format_words == "currency":
+                                        basic_format[format_words] = currency[0:3]
+
+                                    elif format_words == "fiscal_start_month":
+                                        basic_format[format_words] = fiscal_month
+
+                                    # check which financial statement this table belongs to
+                                    elif format_words == financial_statement:
+                                        basic_format[format_words] = table_json_list
                             
                             else:
                                 extracted_nothing = True
                                 nothing_error.append(True)
 
-                                                        
-                income_statement_json
-
                 # append json and check if exist (if same sheet) or not
+                all_tables_json_list.append(basic_format)
 
-                basic_format
+                all_tables_json_list
+
+                # basic_format
 
                 # display error msg outside of table loop
                 # unnamed_error
