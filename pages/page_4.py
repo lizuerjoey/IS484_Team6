@@ -35,11 +35,11 @@ if 'uploaded_file' not in session_state:
     session_state['uploaded_file'] = ''
 
 currency = ""
+fiscal_month = ""
 confirm_headers_list = []
 confirm_rows_list = []
 financial_format =[]
 number_format = []
-fiscal_month = []
 dataframe_list = []
 is_df_empty_list = []
 button_clicked = False
@@ -211,26 +211,20 @@ def viewer_func(df, num, id):
         is_df_empty = False
         is_df_empty_list.append(False)
         
-        # with c2:
-        #     delete_table = st.button("🗑", key="trash -" + str(num))
-
-        # if delete_table:
-        #     st.success("Table successfully deleted")
-        
-        # financial statement ddl
-        option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
-        
-        if option != "Not Selected":
-            financial_format.append(option)
-        else:
-            st.warning("Financial Statement is a required field", icon="⭐")
-
-        num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
-
         col1, col2 = st.columns(2)
 
-        # number format ddl
+        # financial statement ddl
         with col1:
+            option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
+            
+            if option != "Not Selected":
+                financial_format.append(option)
+            else:
+                st.warning("Financial Statement is a required field", icon="⭐")
+        
+        # number format ddl
+        with col2:
+            num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
             new_num_list = sort_num_list(num_format)
             options = list(range(len(new_num_list)))
             i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
@@ -238,14 +232,6 @@ def viewer_func(df, num, id):
                 number_format.append(new_num_list[i])
             else:
                 st.warning("Number Format is a required field.", icon="⭐")
-
-        # fiscal month ddl
-        with col2:
-            selected = st.selectbox("Fiscal Start Month:", month, key="fiscalmnth -" + id + str(num))
-            if selected != "Not Selected":
-                fiscal_month.append(selected)
-            else:
-                st.warning("Fiscal Start Month is a required field.", icon="⭐")
         
         st.subheader("Edit Headers")
 
@@ -276,7 +262,6 @@ def viewer_func(df, num, id):
 
         # get column headers
         column_headers = list(dataframe.columns)
-        column_headers #idk why only when i add this then the header change :(
         confirm_headers_tooltip = "Select the columns with all rows consisting of financial keywords in your word dictionary e.g. Revenue, Liabilities, Operating Net Cash Flow etc."
         confirm_headers = st.multiselect(
         'Select the Column(s) with Financial Statement Keywords:',
@@ -357,8 +342,7 @@ def viewer_func(df, num, id):
                     update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
                     height= 450,
-                    allow_unsafe_jscode=True,
-                    key="aggrid -" + id + str(num))    
+                    allow_unsafe_jscode=True)    
         
         # st.info("Total Rows :" + str(len(grid_table['data']))) 
         # print("Selected row: " + str(grid_table["selected_rows"]))
@@ -389,7 +373,6 @@ def extract_tables (tables):
     accuracy = []
     financial_format = []
     number_format = []
-    fiscal_month = []
     confirm_headers_list = []
     confirm_rows_list = []
     if len(tables) == 0:
@@ -509,18 +492,33 @@ if session_state['upload_file_status'] == True:
                 file_name = get_file_name(file_path)
                 totalpages = get_total_pgs_PDF(file_path)
 
+                # at least 1 page
+                if (totalpages > 0):
+                    
+                    st.subheader('Basic Form Data')
+                    col1, col2 = st.columns(2)
+                    
+                    # with col1:
+                        # currency
+                        # currency_list = get_currency_list()
+                        # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
+                        # if option != "Not Selected":
+                        #     currency = option
+                        # else:
+                        #     st.warning("Currency is a required field", icon="⭐")
+                    
+                    # fiscal month ddl
+                    with col2:
+                        month_list = list(range(len(month)))
+                        selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth")
+                        if selected != 0:
+                            fiscal_month = selected
+                        else:
+                            st.warning("Fiscal Start Month is a required field.", icon="⭐")
+
                 # single page pdf
                 if (totalpages == 1):
 
-                    # currency
-                    # st.subheader('Currency')
-                    # currency_list = get_currency_list()
-                    # option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                    # if option != "Not Selected":
-                    #     currency = option
-                    # else:
-                    #     st.warning("Currency is a required field", icon="⭐")
-                    
                     # try aws button
                     button_clicked = False
                     btn_placeholder = st.empty()
@@ -552,15 +550,6 @@ if session_state['upload_file_status'] == True:
                 else:
                     # user input is successful on page 3
                     if (status == True and pg_input != ''):
-                        # currency
-                        # st.subheader('Currency')
-                        # currency_list = get_currency_list()
-                        # option = st.selectbox('Select a Currency:', currency_list, key="currency_multipg_pdf")
-                        # if option != "Not Selected":
-                        #     currency = option
-                        # else:
-                        #     st.warning("Currency is a required field", icon="⭐")
-
                         # try aws button 
                         button_clicked = False
                         btn_placeholder = st.empty()
@@ -621,14 +610,14 @@ if session_state['upload_file_status'] == True:
                 matched_dict_col = {}
 
                 # below are required fields; if at least one field is not correct -> cannot save to json
-                if ((currency == 'Not Selected') or 
+                if ((currency == 'Not Selected') or (fiscal_month == 0) or
                     ('Not Selected' in financial_format or len(financial_format) == 0) or 
-                    ('Unable to Determine' in number_format or len(number_format) == 0) or 
-                    ('Not Selected' in fiscal_month or len(fiscal_month) == 0)):
+                    ('Unable to Determine' in number_format or len(number_format) == 0)):
                     save_status = False
                     st.error("Please check the required fields.", icon="🚨")
 
-                count2 = 0
+                unnamed_error = []
+                nothing_error = []
                 for table in range(total_num_tables):
                     big_col = []
                     big_row = []
@@ -639,7 +628,6 @@ if session_state['upload_file_status'] == True:
                     matched_column_headers = []
                     matched_list_row = []
                     matched_dict_col = {}
-                    count = 0
                     # multiple selected headers
                     if len(confirm_headers_list[table]) > 1:
                         for colname in dataframe_list[table]:                                                           
@@ -686,12 +674,12 @@ if session_state['upload_file_status'] == True:
 
                         # search through (row) for financial word
                         row_words = get_financial_words_row(financial_format[table])
-                        for item in list_all_lower(big_row):
+                        for item in big_row:
                             for key, synonyms in row_words.items(): 
-                                if key in item:
+                                if key in item.lower():
                                     matched_list_row.append(item)
                                 for x in synonyms:
-                                    if x.lower() in item:
+                                    if x.lower() in item.lower():
                                         matched_list_row.append(item)
                 
                     # check if matched list row length more than 0
@@ -702,16 +690,16 @@ if session_state['upload_file_status'] == True:
                         
                         # check whether yearly or quarterly format
                         is_quarterly = False
-                        for item in list_all_lower(list(dataframe_list[table].columns)):
-                            if 'q' in item:
+                        for item in list(dataframe_list[table].columns):
+                            if 'q' in item.lower():
                                 is_quarterly = True
 
                         if is_quarterly == False:
-                            for i in range(len(matched_list_row[table])):
+                            for i in range(len(matched_list_row)):
                                 matched_column_headers.append(matched_list_row[i][0])
                         else:
-                            for i in range(len(matched_list_row[table])):
-                                join_year_qtr = str(matched_list_row[i][0]) + " " + str(matched_list_row[i][1])
+                            for i in range(len(matched_list_row)):
+                                join_year_qtr = str(matched_list_row[i][0]) + " " + (str(matched_list_row[i][1]))
                                 matched_column_headers.append(join_year_qtr)
                         
                     else:
@@ -731,11 +719,15 @@ if session_state['upload_file_status'] == True:
                     # using col headers and row id -> identify the cell and append to the col financial keyword
                     # if len of each keyword has more than 1 result -> take the first result
                     result_dict = {}
-
+                    is_unnamed = False
                     for date in matched_column_headers:
                         if "_" in date:
                             year_quarter, parts = date.split("_")
                         else:
+                            # check if it is unnamed
+                            # unnamed cannot be used as a column header, because even if retrieved the value what year/ month am I going to store it by
+                            if "unnamed" in date:
+                                is_unnamed = True
                             year_quarter = date
                         
                         if year_quarter not in result_dict:
@@ -752,44 +744,70 @@ if session_state['upload_file_status'] == True:
                             if row_id.isnumeric() == False or len(row_id) > last_row_id:
                                 row_id = int(row_id.split()[0])
                             
-                            # unnamed cannot be used as a column header, because even if retrieved the value what year/ month am I going to store it by
-                            if "unnamed" not in date:
-                                date = str(date.upper())                     
+                            # save only financial key to dictionary and make sure the date exist in the column headers before extracting
+                            if "unnamed" not in date and date in list(dataframe_list[table].columns):                     
                                 cell = dataframe_list[table].loc[row_id][str(date)]
                                 if key in result_dict[year_quarter]:
                                     result_dict[year_quarter][key].append(cell)
                                 else:
-                                    result_dict[year_quarter][key] = [cell]
-                            
-                            else:
-                                # DO HERE AS A LIST TMR
-                                if count == 0:
-                                    st.info("You might want to rename the unnamed columns to either a year or quarter for it to be saved.", icon="ℹ️")
-                                    count = 1
+                                    result_dict[year_quarter][key] = [cell]                               
+
 
  
                     # saving data in json when there is extracted header values e.g. year/ quarter
-                    result_dict
+                    unnamed_error.append(is_unnamed)
+                    extracted_nothing = False
+                    # result_dict
                     if len(result_dict) > 0:
-                        for i in result_dict:
+                        for yr_qtr, fin_words in result_dict.items():
                             # saving data in json when there is extracted cell values
-                            if len(result_dict[i]) > 0:
+                            if len(result_dict[yr_qtr]) > 0:
+
+                                # save basic format
                                 basic_format = get_json_format()
-                                financial_statement_format = get_json_financial_format()
+                                basic_format["currency"] = currency[0:3]
+                                basic_format["fiscal_start_month"] = fiscal_month
+
+                                # save per financial statement
+                                financial_statement = financial_format[table].lower().replace(" ", "_")
+                                
+                                # for each year/ qtr
+                                # result_dict
+                                for date in result_dict[yr_qtr]:
+                                    financial_statement_format = get_json_financial_format(financial_statement)
+                                    # check if space -> get the index and capitalise the next letter
+                                    for text in fin_words:
+                                        word = "".join(word.capitalize() for word in text.split())
+                                        first_letter = word[0].lower()
+                                        new_word = first_letter + word[1:]
+
+                                    for format_words in financial_statement_format:
+                                        if format_words == new_word:
+                                            financial_statement_format[format_words] = fin_words
+                                        
+                                financial_statement_format
+
+                                # for statement in financial_statement_format:
+                                #     if statement == financial_statement:
+                                #         for key in financial_statement[statement]:
+                                #             financial_statement[statement][key] 
                             
                             else:
-                                # DO HERE AS A LIST TMR
-                                if count2 == 0:
-                                    st.error("Nothing was extracted. Please check financial words dictionary or your table values and try again.", icon="🚨")
-                                    count2 = 1
+                                extracted_nothing = True
+                                nothing_error.append(True)
                         
                         # fiscal_month
                         # currency
                         # for basic in basic_format:
                             # if basic == "currency":
 
+                # append json and check if exist (if same sheet) or not
 
-
+                # display error msg outside of table loop
+                # unnamed_error
+                # nothing_error
+                # st.info("You might want to rename the unnamed columns to either a year or quarter for it to be saved.", icon="ℹ️")
+                # st.error("Nothing was extracted. Please check financial words dictionary or your table values and try again.", icon="🚨")
 
                             
                     

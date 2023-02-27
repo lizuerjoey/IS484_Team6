@@ -162,7 +162,7 @@ def get_financial_words_row(sheet):
 def get_json_format():
     format = {
         "currency": "",
-        "fiscal_start_month": "",
+        "fiscal_start_month": [],
         "income_statement": [],
         "balance_sheet": [],
         "cash_flow": [],
@@ -180,7 +180,7 @@ def get_json_format():
     }
     return format
 
-def get_json_financial_format():
+def get_json_financial_format(sheet):
     sheets = {
         "income_statement": {
             "year": "",
@@ -216,4 +216,4 @@ def get_json_financial_format():
             "financingNetCashFlow": ""
         }
     }
-    return sheets
+    return sheets[sheet]
