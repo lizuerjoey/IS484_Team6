@@ -39,6 +39,7 @@ if 'og_uploaded_file' not in session_state:
 
 currency = ""
 fiscal_month = ""
+totalpages = 0
 confirm_headers_list = []
 confirm_rows_list = []
 financial_format =[]
@@ -563,11 +564,12 @@ if session_state['upload_file_status'] == True:
         num = 0 
         file_paths = glob.glob("./temp_files/*")
         count = 0
+
        
         for path in (file_paths):
-            print("PATH: "  + path)
-            print("PATH: "  + str(path == "./temp_files\selected_pages.pdf"))
-            if path!="./temp_files\selected_pages.pdf":
+            # print("PATH: "  + path)
+            # print("PATH: "  + str(path == "./temp_files\selected_pages.pdf"))
+            # if path!="./temp_files\selected_pages.pdf":
                 file_type = get_file_type(path)
 
                 # file is pdf
@@ -577,88 +579,6 @@ if session_state['upload_file_status'] == True:
                     file_name = get_file_name(file_path)
                     totalpages = get_total_pgs_PDF(file_path)
 
-                # at least 1 page
-                if (totalpages > 0):
-                    
-                    st.subheader('Basic Form Data')
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        currency_list = get_currency_list()
-                        option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
-                        if option != "Not Selected":
-                            currency = option
-                        else:
-                            st.warning("Currency is a required field", icon="⭐")
-                    
-                    # fiscal month ddl
-                    with col2:
-                        month_list = list(range(len(month)))
-                        selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth")
-                        if selected != 0:
-                            fiscal_month = selected
-                        else:
-                            st.warning("Fiscal Start Month is a required field.", icon="⭐")
-
-                    # single page pdf
-                    if (totalpages == 1):
-
-                        # try aws button
-                        button_clicked = False
-                        btn_placeholder = st.empty()
-                        with btn_placeholder.container():
-                            # if session_state["status"]:
-                                if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                                    origin = './temp_files/'
-                                    target = './selected_files/'
-                                    files = os.listdir(origin)
-                                    files_target = os.listdir(target)
-                                    for file in files_target:
-                                        if file=="file.pdf":
-                                            os.remove(target+file)
-                                    for file in files:
-                                        if file!="test.txt" and file.endswith(".pdf"):
-                                            file_type = get_file_type(file)
-                                            shutil.copy(origin+file, target)
-                                            os.rename(target+file, target+"file"+file_type)
-
-                                    button_clicked = True
-                                    btn_placeholder.empty()
-                            
-                        tables = check_tables_single_PDF(file_path)
-                        extraction_container = st.empty()
-                        with extraction_container.container():
-                            extract_tables(tables)
-                    
-                    # multi page pdf
-                    else:
-                        # user input is successful on page 3
-                        if (status == True and pg_input != ''):
-                            # try aws button 
-                            button_clicked = False
-                            btn_placeholder = st.empty()
-                            with btn_placeholder.container():
-                                if session_state["status"]:
-                                    if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
-                                        button_clicked = True
-                                        btn_placeholder.empty()
-
-                            tables = check_tables_multi_PDF(file_path, str(pg_input))
-                            extraction_container = st.empty()
-                            with extraction_container.container():
-                                extract_tables(tables)
-                            
-                        else:
-                            if (session_state['upload_file_status'] == True):
-                                st.error("Please specify the pages you want to extract.", icon="🚨")
-                    
-                    if button_clicked:
-                        extraction_container.empty()
-                        next_extraction = st.empty()
-                        with next_extraction.container():
-                            dfs = convert_file()
-                            for i in range(len(dfs[0])):
-                                statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
                     num+=1
                 #file is image
                 elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
@@ -676,6 +596,89 @@ if session_state['upload_file_status'] == True:
                             for i in range(len(dataframes)):
                                 # if dataframe is not empty (manage to extract some things out)        
                                 statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+
+        # at least 1 page
+        if (totalpages > 0):
+            
+            st.subheader('Basic Form Data')
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                currency_list = get_currency_list()
+                option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
+                if option != "Not Selected":
+                    currency = option
+                else:
+                    st.warning("Currency is a required field", icon="⭐")
+            
+            # fiscal month ddl
+            with col2:
+                month_list = list(range(len(month)))
+                selected = st.selectbox("Fiscal Start Month:", month_list, format_func=lambda x: month[int(x)], key="fiscalmnth")
+                if selected != 0:
+                    fiscal_month = selected
+                else:
+                    st.warning("Fiscal Start Month is a required field.", icon="⭐")
+
+            # single page pdf
+            if (totalpages == 1):
+
+                # try aws button
+                button_clicked = False
+                btn_placeholder = st.empty()
+                with btn_placeholder.container():
+                    # if session_state["status"]:
+                        if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                            origin = './temp_files/'
+                            target = './selected_files/'
+                            files = os.listdir(origin)
+                            files_target = os.listdir(target)
+                            for file in files_target:
+                                if file=="file.pdf":
+                                    os.remove(target+file)
+                            for file in files:
+                                if file!="test.txt" and file.endswith(".pdf"):
+                                    file_type = get_file_type(file)
+                                    shutil.copy(origin+file, target)
+                                    os.rename(target+file, target+"file"+file_type)
+
+                            button_clicked = True
+                            btn_placeholder.empty()
+                    
+                tables = check_tables_single_PDF(file_path)
+                extraction_container = st.empty()
+                with extraction_container.container():
+                    extract_tables(tables)
+            
+            # multi page pdf
+            else:
+                # user input is successful on page 3
+                if (status == True and pg_input != ''):
+                    # try aws button 
+                    button_clicked = False
+                    btn_placeholder = st.empty()
+                    with btn_placeholder.container():
+                        if session_state["status"]:
+                            if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
+                                button_clicked = True
+                                btn_placeholder.empty()
+
+                    tables = check_tables_multi_PDF(file_path, str(pg_input))
+                    extraction_container = st.empty()
+                    with extraction_container.container():
+                        extract_tables(tables)
+                    
+                else:
+                    if (session_state['upload_file_status'] == True):
+                        st.error("Please specify the pages you want to extract.", icon="🚨")
+            
+            if button_clicked:
+                extraction_container.empty()
+                next_extraction = st.empty()
+                with next_extraction.container():
+                    dfs = convert_file()
+                    for i in range(len(dfs[0])):
+                        statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
@@ -885,6 +888,7 @@ if session_state['upload_file_status'] == True:
 
                                         elif keyword == format_words:
                                             financial_statement_format[keyword] = float(fin_words[keyword][0])
+                                        
                                 
                                 # append all the data extracted for each dates
                                 table_json_list.append(financial_statement_format)
@@ -962,31 +966,31 @@ if session_state['upload_file_status'] == True:
                     basic_format["income_statement"] = income_statement_json
                 else:
                     # only have length 0
-                    fs_dict = get_json_financial_format("income_statement")
-                    new_fs_dict = {
-                        0: fs_dict
-                    }
-                    basic_format["income_statement"] = new_fs_dict
+                    # fs_dict = get_json_financial_format("income_statement")
+                    # new_fs_dict = {
+                    #     0: fs_dict
+                    # }
+                    basic_format["income_statement"] = []
                 
                 if len(balance_sheet_json) > 0: 
                     basic_format["balance_sheet"] = balance_sheet_json
                 else:
                     # only have length 0
-                    bs_dict = get_json_financial_format("balance_sheet")
-                    new_bs_dict = {
-                        0: bs_dict
-                    }
-                    basic_format["balance_sheet"] = new_bs_dict
+                    # bs_dict = get_json_financial_format("balance_sheet")
+                    # new_bs_dict = {
+                    #     0: bs_dict
+                    # }
+                    basic_format["balance_sheet"] = []
 
                 if len(cash_flow_json) > 0:
                     basic_format["cash_flow"] = cash_flow_json
                 else:
                     # only have length 0
-                    cf_dict = get_json_financial_format("cash_flow")
-                    new_cf_dict = {
-                        0: cf_dict
-                    }
-                    basic_format["cash_flow"] = new_cf_dict               
+                    # cf_dict = get_json_financial_format("cash_flow")
+                    # new_cf_dict = {
+                    #     0: cf_dict
+                    # }
+                    basic_format["cash_flow"] = []               
 
                 # if all required fields are filled
                 if save_status == True:
@@ -1001,6 +1005,8 @@ if session_state['upload_file_status'] == True:
                             table_num = table + 1
                             st.error("Table " + str(table_num) + " could not extract any data. Please check your table values, headers or the financial words dictionary and try again later.", icon="🚨")
                             no_extraction += 1
+
+                    basic_format
 
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):

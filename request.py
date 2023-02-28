@@ -166,15 +166,15 @@ def get_json_format():
         "balance_sheet": [],
         "cash_flow": [],
         "other_metrics": [
-            {
-                "year": "",
-                "numberFormat": "", 
-                "returnOnAsset": "",
-                "netInterestMargin": "",
-                "netInterestIncomeRatio": "",
-                "costIncomeRatio": "",
-                "ebidta": ""
-            }
+            # {
+            #     "year": "",
+            #     "numberFormat": "", 
+            #     "returnOnAsset": 0,
+            #     "netInterestMargin": 0,
+            #     "netInterestIncomeRatio": 0,
+            #     "costIncomeRatio": 0,
+            #     "ebidta": 0
+            # }
         ]
     }
     return format
@@ -184,35 +184,35 @@ def get_json_financial_format(sheet):
         "income_statement": {
             "year": "",
             "numberFormat": "", 
-            "revenue": "",
-            "cost": "",
-            "grossProfit": "",
-            "grossLoss": "",
-            "netProfit": "",
-            "netLoss": "",
-            "incomeTax": "",
-            "interest": "",
-            "depreciation": "",
+            "revenue": 0,
+            "cost": 0,
+            "grossProfit": 0,
+            "grossLoss": 0,
+            "netProfit": 0,
+            "netLoss": 0,
+            "incomeTax": 0,
+            "interest": 0,
+            "depreciation": 0,
         },
         "balance_sheet": {
             "year": "",
             "numberFormat": "", 
-            "totalEquities": "",
-            "totalLiabilities": "",
-            "totalCurrentLiabilties": "",
-            "totalNonCurrentLiabitilies": "",
-            "totalAssets": "",
-            "totalCurrentAssets": "",
-            "totalNonCurrentAssets": "",
-            "debt": "",
-            "cash": ""
+            "totalEquities": 0,
+            "totalLiabilities": 0,
+            "totalCurrentLiabilties": 0,
+            "totalNonCurrentLiabitilies": 0,
+            "totalAssets": 0,
+            "totalCurrentAssets": 0,
+            "totalNonCurrentAssets": 0,
+            "debt": 0,
+            "cash": 0
         },
         "cash_flow": {
             "year": "",
             "numberFormat": "", 
-            "operatingNetCashFlow": "",
-            "investingNetCashFlow": "",
-            "financingNetCashFlow": ""
+            "operatingNetCashFlow": 0,
+            "investingNetCashFlow": 0,
+            "financingNetCashFlow": 0
         }
     }
     return sheets[sheet]
