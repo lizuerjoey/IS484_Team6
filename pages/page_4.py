@@ -9,6 +9,7 @@ from datetime import datetime
 from streamlit import session_state
 from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
+import re
 import glob
 import pandas as pd
 from openpyxl import load_workbook
@@ -787,7 +788,7 @@ if session_state['upload_file_status'] == True:
                                 for x in synonyms:
                                     if x.lower() in item.lower():
                                         matched_list_row.append(item)
-                
+
                     # check if matched list row length more than 0
                     if len(matched_list_row) > 0:
                         # found something in row
@@ -799,7 +800,7 @@ if session_state['upload_file_status'] == True:
                         for item in list(dataframe_list[table].columns):
                             if 'q' in item.lower():
                                 is_quarterly = True
-
+                        
                         if is_quarterly == False:
                             for i in range(len(matched_list_row)):
                                 matched_column_headers.append(matched_list_row[i][0])
@@ -810,21 +811,23 @@ if session_state['upload_file_status'] == True:
                         
                     else:
                         # no keywords found, will take the values of year and quarter e.g. 2020 or 2020 Q1
-                        # st.info("Unable to locate keywords (e.g. Total) in the headers or rows selected", icon="ℹ️")
+                        table_num = table + 1
+                        st.info("Unable to locate keywords (e.g. Total) in the rows selected for Table " + str(table_num) + ".", icon="ℹ️")
                         # get the years/ quarters in the statement
-                        for colname in dataframe_list[table]:
-                            if colname not in confirm_headers_list[table]:
-                                # year
-                                if ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 4):
-                                    yr_qtr.append(colname)
-                                # quarter; assuming there are only 4 quarters so len will always be 7 e.g. 2020 Q1 never 2020 Q11
-                                if ('q' in colname.lower()) and ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 7):
-                                    yr_qtr.append(colname)
-                        matched_column_headers = yr_qtr
+                        # for colname in dataframe_list[table]:
+                        #     if colname not in confirm_headers_list[table]:
+                        #         # year
+                        #         if ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 4):
+                        #             yr_qtr.append(colname)
+                        #         # quarter; assuming there are only 4 quarters so len will always be 7 e.g. 2020 Q1 never 2020 Q11
+                        #         if ('q' in colname.lower()) and ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 7):
+                        #             yr_qtr.append(colname)
+                        # matched_column_headers = yr_qtr
 
                     # using col headers and row id -> identify the cell and append to the col financial keyword
                     # if len of each keyword has more than 1 result -> take the first result (first few rows usually contains total)
                     result_dict = {}
+                    # change this to regular expression
                     is_unnamed = False
                     is_nothing = False
                     for date in matched_column_headers:
@@ -842,6 +845,7 @@ if session_state['upload_file_status'] == True:
 
                         for key, values in matched_dict_col.items():
                             # always take the first result in for the each financial keyword (first few rows usually contains total)
+                            # identified the same financial keyword more than once
                             row_id = values[0]
 
                             # last row id of the table
@@ -852,7 +856,7 @@ if session_state['upload_file_status'] == True:
                                 row_id = int(row_id.split()[0])
                             
                             # save only financial key to dictionary and make sure the date exist in the column headers before extracting
-                            if "unnamed" not in date and date in list(dataframe_list[table].columns):                     
+                            if "Unnamed" not in date and date in list(dataframe_list[table].columns):                     
                                 cell = dataframe_list[table].loc[row_id][str(date)]
                                 if key in result_dict[year_quarter]:
                                     # check if space -> get the index and capitalise the next letter
@@ -861,64 +865,73 @@ if session_state['upload_file_status'] == True:
                                 else:
                                     new_key = remove_space_caps_next_letter(key)
                                     result_dict[year_quarter][new_key] = [cell]                               
-
  
                     # saving data in json when there is extracted header values e.g. year/ quarter
                     unnamed_error.append(is_unnamed)
                     if len(result_dict) > 0:
+                        basic_format = get_json_format()
                         for yr_qtr, fin_words in result_dict.items():
-                            # saving data in json when there is extracted cell values
-                            if len(result_dict[yr_qtr]) > 0:
-                                is_nothing = False
 
-                                # save per financial statement
-                                financial_statement = financial_format[table].lower().replace(" ", "_")
-                                
-                                # for each year/ qtr
-                                financial_statement_format = get_json_financial_format(financial_statement)
-                                for keyword in result_dict[yr_qtr]:
+                            # define the regular expression pattern
+                            pattern = r'^\d{4}( Q[1-4])?$'
+
+                            # match the format of year or year quarter
+                            if re.match(pattern, yr_qtr):
+
+                                # saving data in json when there is extracted cell values
+                                if len(result_dict[yr_qtr]) > 0:
+                                    is_nothing = False
+
+                                    # save per financial statement
+                                    financial_statement = financial_format[table].lower().replace(" ", "_")
                                     
-                                    # loop through the list of financial words retrieved from table and append it to json format
-                                    for format_words in financial_statement_format:
-                                        if format_words == "year":
-                                            financial_statement_format[format_words] = yr_qtr
+                                    # for each year/ qtr
+                                    financial_statement_format = get_json_financial_format(financial_statement)
+                                    for keyword in result_dict[yr_qtr]:
+                                        # loop through the list of financial words retrieved from table and append it to json format
+                                        for format_words in financial_statement_format:
+                                            if format_words == "year":
+                                                financial_statement_format[format_words] = yr_qtr
 
-                                        elif format_words == "numberFormat":
-                                            financial_statement_format[format_words] = number_format[table].lower()
+                                            elif format_words == "numberFormat":
+                                                financial_statement_format[format_words] = number_format[table].lower()
 
-                                        elif keyword == format_words:
-                                            financial_statement_format[keyword] = float(fin_words[keyword][0])
-                                        
-                                
-                                # append all the data extracted for each dates
-                                table_json_list.append(financial_statement_format)
-                                
+                                            elif keyword == format_words:
+                                                financial_statement_format[keyword] = float(fin_words[keyword][0])
+                                            
+                                    # append all the data extracted for each dates
+                                    table_json_list.append(financial_statement_format)
+                                    
 
-                                # save basic format
-                                basic_format = get_json_format()
-                                for format_words in basic_format:
-                                    if format_words == "currency":
-                                        basic_format[format_words] = currency[0:3]
+                                    # save basic format
+                                    basic_format = get_json_format()
+                                    for format_words in basic_format:
+                                        if format_words == "currency":
+                                            basic_format[format_words] = currency[0:3]
 
-                                    elif format_words == "fiscal_start_month":
-                                        basic_format[format_words] = fiscal_month
+                                        elif format_words == "fiscal_start_month":
+                                            basic_format[format_words] = fiscal_month
 
-                                    # check which financial statement this table belongs to
-                                    elif format_words == financial_statement:
-                                        basic_format[format_words] = table_json_list
-                            
-                            # no extracted cell values
+                                        # check which financial statement this table belongs to
+                                        elif format_words == financial_statement:
+                                            basic_format[format_words] = table_json_list
+
+                                # no extracted cell values
+                                else:
+                                    basic_format = get_json_format()
+                                    for format_words in basic_format:
+                                        if format_words == "currency":
+                                            basic_format[format_words] = currency[0:3]
+
+                                        elif format_words == "fiscal_start_month":
+                                            basic_format[format_words] = fiscal_month
+
+                                    is_nothing = True
+
+                            # for column header that is not in the correct format e.g. unnamed
                             else:
-                                basic_format = get_json_format()
-                                for format_words in basic_format:
-                                    if format_words == "currency":
-                                        basic_format[format_words] = currency[0:3]
-
-                                    elif format_words == "fiscal_start_month":
-                                        basic_format[format_words] = fiscal_month
-
                                 is_nothing = True
-
+                            
                         # append basic format for each table
                         all_tables_json_list.append(basic_format)
                     
@@ -928,6 +941,7 @@ if session_state['upload_file_status'] == True:
                     
                     # append nothing extracted error for each table
                     nothing_error.append(is_nothing)
+            
 
                 # for each financial statements
                 income_statement_list = []
@@ -955,12 +969,11 @@ if session_state['upload_file_status'] == True:
                 else:
                     balance_sheet_json = balance_sheet_list
 
-
                 if len(cash_flow_list) > 0:
                     cash_flow_json = merge_sheets(cash_flow_list)
                 else:
                     cash_flow_json = cash_flow_list
-    
+                    
                 # check if there is result saved in the json variable, if no data was extracted -> extract empty json from api
                 if len(income_statement_json) > 0: 
                     basic_format["income_statement"] = income_statement_json
@@ -997,7 +1010,7 @@ if session_state['upload_file_status'] == True:
                     for table in range(len(unnamed_error)):
                         if unnamed_error[table] == True:
                             table_num = table + 1
-                            st.info("Data was detected but the column header is not a year or year and quarter. You might want to rename the unnamed columns in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
+                            st.info("Data was detected but the column header is not a year or year and quarter. You might want to rename it in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
                         
                     no_extraction = 0
                     for table in range(len(nothing_error)):
@@ -1005,8 +1018,6 @@ if session_state['upload_file_status'] == True:
                             table_num = table + 1
                             st.error("Table " + str(table_num) + " could not extract any data. Please check your table values, headers or the financial words dictionary and try again later.", icon="🚨")
                             no_extraction += 1
-
-                    basic_format
 
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):
@@ -1024,6 +1035,8 @@ if session_state['upload_file_status'] == True:
                                 st.error("Please enter a company name in Upload Report Page", icon="🚨")
                         else:
                             save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                    else:
+                        st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                
 
 
