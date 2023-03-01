@@ -138,7 +138,7 @@ def get_financial_words_col(sheet):
         "Cash Flow": {
             "operating net cash flow": [],
             "investing net cash flow": [],
-            "financing net cashFlow": [],
+            "financing net cash flow": [],
         },
     }
     return words[sheet]
