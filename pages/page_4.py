@@ -10,6 +10,7 @@ from streamlit import session_state
 from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import re
+import math
 import glob
 import pandas as pd
 from openpyxl import load_workbook
@@ -41,7 +42,7 @@ if 'og_uploaded_file' not in session_state:
 currency = ""
 fiscal_month = ""
 duplicate_num_format = []
-totalpages = 0
+is_image = False
 confirm_headers_list = []
 confirm_rows_list = []
 financial_format =[]
@@ -71,7 +72,7 @@ if ("com_name" and "selected_comName" and "com_id" and "selected_comID") not in 
     st.session_state['selected_comName'] = ""
     session_state['selected_comID'] = ""
     session_state['upload_file_status'] = False
-    st.error("No file was uploaded", icon="🚨")
+    st.error("Please upload a file for extraction.", icon="🚨")
 
 if "text_option" not in st.session_state:
     session_state['text_option'] = False
@@ -188,6 +189,19 @@ def get_currency_list():
         currency_acronyms.append(key + " (" + symbols[key] + ")")
     currency_acronyms.insert(0, "Not Selected")        
     return currency_acronyms
+
+def image_viewer(dataframes):
+    # check if dataframe is empty
+    if len(dataframes) < 1:
+        st.error('Please upload an image with a table.', icon="🚨")
+
+    else:
+        extraction_container = st.empty()
+        with extraction_container.container():
+            for i in range(len(dataframes)):
+                # if dataframe is not empty (manage to extract some things out)        
+                statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+
 
 def viewer_func(df, num, id):
 
@@ -349,7 +363,7 @@ def viewer_func(df, num, id):
         gd.configure_grid_options(onRowSelected = delete_row, pre_selected_rows=[])
 
         gridOptions = gd.build()
-        grid_table = AgGrid(dataframe, key=None, 
+        grid_table = AgGrid(dataframe, 
                     gridOptions = gridOptions, 
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
@@ -567,6 +581,8 @@ if session_state['upload_file_status'] == True:
         num = 0 
         file_paths = glob.glob("./temp_files/*")
         count = 0
+        totalpages = 0
+        dataframes = []
 
        
         for path in (file_paths):
@@ -587,18 +603,9 @@ if session_state['upload_file_status'] == True:
                 elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
                     file_path = glob.glob("./temp_files/*" + file_type)[0]
                     file_name = get_file_name(file_path)
+                    is_image = True
             
                     dataframes = image_extraction(file_path)
-                    # check if dataframe is empty
-                    if len(dataframes) < 1:
-                        st.error('Please upload an image with a table.', icon="🚨")
-
-                    else:
-                        extraction_container = st.empty()
-                        with extraction_container.container():
-                            for i in range(len(dataframes)):
-                                # if dataframe is not empty (manage to extract some things out)        
-                                statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
 
         # at least 1 page
         if (totalpages > 0):
@@ -623,65 +630,70 @@ if session_state['upload_file_status'] == True:
                 else:
                     st.warning("Fiscal Start Month is a required field.", icon="⭐")
 
+            if (is_image == True):
+                image_viewer(dataframes)
+
             # single page pdf
-            if (totalpages == 1):
+            if (is_image == False):
+                if (totalpages == 1):
 
-                # try aws button
-                button_clicked = False
-                btn_placeholder = st.empty()
-                with btn_placeholder.container():
-                    # if session_state["status"]:
-                        if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                            origin = './temp_files/'
-                            target = './selected_files/'
-                            files = os.listdir(origin)
-                            files_target = os.listdir(target)
-                            for file in files_target:
-                                if file=="file.pdf":
-                                    os.remove(target+file)
-                            for file in files:
-                                if file!="test.txt" and file.endswith(".pdf"):
-                                    file_type = get_file_type(file)
-                                    shutil.copy(origin+file, target)
-                                    os.rename(target+file, target+"file"+file_type)
-
-                            button_clicked = True
-                            btn_placeholder.empty()
-                    
-                tables = check_tables_single_PDF(file_path)
-                extraction_container = st.empty()
-                with extraction_container.container():
-                    extract_tables(tables)
-            
-            # multi page pdf
-            else:
-                # user input is successful on page 3
-                if (status == True and pg_input != ''):
-                    # try aws button 
+                    # try aws button
                     button_clicked = False
                     btn_placeholder = st.empty()
                     with btn_placeholder.container():
-                        if session_state["status"]:
-                            if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
+                        # if session_state["status"]:
+                            if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                                origin = './temp_files/'
+                                target = './selected_files/'
+                                files = os.listdir(origin)
+                                files_target = os.listdir(target)
+                                for file in files_target:
+                                    if file=="file.pdf":
+                                        os.remove(target+file)
+                                for file in files:
+                                    if file!="test.txt" and file.endswith(".pdf"):
+                                        file_type = get_file_type(file)
+                                        shutil.copy(origin+file, target)
+                                        os.rename(target+file, target+"file"+file_type)
+
                                 button_clicked = True
                                 btn_placeholder.empty()
-
-                    tables = check_tables_multi_PDF(file_path, str(pg_input))
+                        
+                    tables = check_tables_single_PDF(file_path)
                     extraction_container = st.empty()
                     with extraction_container.container():
                         extract_tables(tables)
-                    
+                
+                # multi page pdf
                 else:
-                    if (session_state['upload_file_status'] == True):
-                        st.error("Please specify the pages you want to extract.", icon="🚨")
+                    # user input is successful on page 3
+                    if (status == True and pg_input != ''):
+                        # try aws button 
+                        button_clicked = False
+                        btn_placeholder = st.empty()
+                        with btn_placeholder.container():
+                            if session_state["status"]:
+                                if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
+                                    button_clicked = True
+                                    btn_placeholder.empty()
+
+                        tables = check_tables_multi_PDF(file_path, str(pg_input))
+                        extraction_container = st.empty()
+                        with extraction_container.container():
+                            extract_tables(tables)
+                        
+                    else:
+                        if (session_state['upload_file_status'] == True):
+                            st.error("Please specify the pages you want to extract.", icon="🚨")
             
             if button_clicked:
                 extraction_container.empty()
                 next_extraction = st.empty()
                 with next_extraction.container():
                     dfs = convert_file()
-                    for i in range(len(dfs[0])):
-                        statement, format, is_df_empty = viewer_func(dfs[0][i], i, "btnclicked")
+                    for i in range(len(dfs)):
+                        # fixed from dfs[0][i] for multi page pdf
+                        statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
@@ -822,14 +834,20 @@ if session_state['upload_file_status'] == True:
                             table_num = table + 1
                             st.info("Unable to locate keywords (e.g. Total) in the rows selected for Table " + str(table_num) + ".", icon="ℹ️")
                             # get the years/ quarters in the statement
+
+                            # assuming that the format is 2020, 2020_1, 2020 Q1 or 2020 Q1_1
+                            # pattern = r'^\d{4}(?:_[1-9])?(?:\sQ[1-4](?:_[1-9])?)?$'
+
                             # for colname in dataframe_list[table]:
                             #     if colname not in confirm_headers_list[table]:
-                            #         # year
-                            #         if ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 4):
+                            #         if re.match(pattern, colname):
                             #             yr_qtr.append(colname)
-                            #         # quarter; assuming there are only 4 quarters so len will always be 7 e.g. 2020 Q1 never 2020 Q11
-                            #         if ('q' in colname.lower()) and ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 7):
-                            #             yr_qtr.append(colname)
+                                    # # year
+                                    # if ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 4):
+                                    #     yr_qtr.append(colname)
+                                    # # quarter; assuming there are only 4 quarters so len will always be 7 e.g. 2020 Q1 never 2020 Q11
+                                    # if ('q' in colname.lower()) and ("_" not in colname) and ("Unnamed:" not in colname) and (len(colname) == 7):
+                                    #     yr_qtr.append(colname)
                             # matched_column_headers = yr_qtr
 
                         # using col headers and row id -> identify the cell and append to the col financial keyword
@@ -910,8 +928,18 @@ if session_state['upload_file_status'] == True:
                                                     financial_statement_format[format_words] = number_format[table].lower()
 
                                                 elif keyword == format_words:
-                                                    financial_statement_format[keyword] = float(fin_words[keyword][0])
-                                                
+                                                    none_count = 0
+                                                    for i in range(len(fin_words[keyword])):
+                                                        
+                                                        if fin_words[keyword][i] == None or fin_words[keyword][i] is None or fin_words[keyword][i] == 'None' or fin_words[keyword][i] == "":
+                                                            none_count += 1
+                                                            continue
+                                                        else:
+                                                            if none_count != len(fin_words[keyword]):
+                                                                financial_statement_format[keyword] = float(fin_words[keyword][i])
+                                                            # else:
+                                                            #     none_count
+                                                                                                            
                                         # append all the data extracted for each dates
                                         table_json_list.append(financial_statement_format)
                                         
@@ -1040,24 +1068,24 @@ if session_state['upload_file_status'] == True:
                             st.error("Table " + str(table_num) + " could not extract any data. Please check your table values, headers or the financial words dictionary and try again later.", icon="🚨")
                             no_extraction += 1
                     
-                    basic_format
                     # no_extraction
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):
                         # Save into DB
+                        # basic_format
                         if session_state["text_option"] == True:
                             if com_name:
                                 add_com = add_company(com_id, com_name)
                                 if (add_com["message"] == "Added"):
                                     st.success("Company Added", icon="✅")
-                                    # save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
                                 else:
                                     st.error('Error adding company. Please try again later', icon="🚨")
                             else:
                                 # If company name not entered
                                 st.error("Please enter a company name in Upload Report Page", icon="🚨")
-                        # else:
-                            # save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                        else:
+                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
                     else:
                         st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                
