@@ -7,7 +7,6 @@ openpyxl==3.0.10
 pandas==1.4.3
 Pillow==9.4.0
 psycopg2_binary==2.9.3
-psycopg2==2.9.5
 PyMuPDF==1.21.1
 PyPDF2==2.12.1
 python-dotenv==0.21.1
