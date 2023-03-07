@@ -142,13 +142,13 @@ def get_synonym():
 def add_synonym():
     data = request.get_json()
     did = data["did"]
-    syonym = data["syonym"]    
+    synonym = data["synonym"]    
     sql = (
         "UPDATE dictionary SET synonym = %s WHERE did=%s;"
     )
     with connection:
         with connection.cursor() as cursor:
-            cursor.execute(sql, (syonym, did))
+            cursor.execute(sql, (synonym, did))
     return {"message": "Updated", "code": 200}, 200
 
 if __name__ == '__main__':

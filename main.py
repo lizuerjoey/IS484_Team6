@@ -21,7 +21,8 @@ show_pages(
         Page("pages/page_1.py", "Upload Reports", ":open_file_folder:"),
         Page("pages/page_3.py", "Select Pages (PDF)", ":page_facing_up:"),
         Page("pages/page_4.py", "Preview Extracted Data", ":pencil2:"),
-        Page("pages/page_2.py", "Search Files", ":eye:")
+        Page("pages/page_2.py", "Search Files", ":eye:"),
+        Page("pages/page_5.py", "Dictionary", ":eye:")
     ]
 )
 
