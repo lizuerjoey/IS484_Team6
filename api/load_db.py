@@ -12,6 +12,7 @@ from database import (
     Companies,
     Companies_Files,
     Extracted_Data,
+    Dictionary,
     convert_df_to_lst_of_table_objects
 )
 
@@ -26,6 +27,7 @@ table_objects = [
     Companies.__table__,
     Companies_Files.__table__,
     Extracted_Data.__table__,
+    Dictionary.__table__,
 ]
 
 # Drop All Tables
