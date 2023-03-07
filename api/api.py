@@ -137,6 +137,19 @@ def get_synonym():
             
     return response, 200
 
+# INSERT SYNONYM 
+@app.post("/add_synonym")
+def add_synonym():
+    data = request.get_json()
+    did = data["did"]
+    syonym = data["syonym"]    
+    sql = (
+        "UPDATE dictionary SET synonym = %s WHERE did=%s;"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (syonym, did))
+    return {"message": "Updated", "code": 200}, 200
 
 if __name__ == '__main__':
     app.run(debug=True)
