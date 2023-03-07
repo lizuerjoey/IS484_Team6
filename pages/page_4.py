@@ -1104,14 +1104,14 @@ if session_state['upload_file_status'] == True:
                                 add_com = add_company(com_id, com_name)
                                 if (add_com["message"] == "Added"):
                                     st.success("Company Added", icon="✅")
-                                    # save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
                                 else:
                                     st.error('Error adding company. Please try again later.', icon="🚨")
                             else:
                                 # If company name not entered
                                 st.error("Please enter a company name in Upload Report Page.", icon="🚨")
-                        # else:
-                            # save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                        else:
+                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
                     else:
                         st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                

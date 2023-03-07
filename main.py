@@ -445,12 +445,39 @@ else:
         if not df_bs.empty:
             bs=df_bs.merge(df_assets, how="right")
             bs=df_bs.merge(df_liabilities, how="right")
+            bs = df_bs.transpose()
+            new_header = df_bs.iloc[0] #grab the first row for the header
+            df_bs = df_bs[1:] #take the data less the header row
+            df_bs.columns = new_header #set the header row as the df header
+            st.subheader("Balance Sheet (in " + bs_numForm + ")")
+            df_bs
             bs.to_excel(writer, sheet_name='Balance Sheet')
+
         if not df_is.empty:
+            df_is = df_is.transpose()
+            new_header = df_is.iloc[0] #grab the first row for the header
+            df_is = df_is[1:] #take the data less the header row
+            df_is.columns = new_header #set the header row as the df header
+            st.subheader("Income Statement (in " + is_numForm + ")")
+            df_is
             df_is.to_excel(writer, sheet_name='Income Statement')
+
         if not df_cf.empty:
+            df_cf = df_cf.transpose()
+            new_header = df_cf.iloc[0] #grab the first row for the header
+            df_cf = df_cf[1:] #take the data less the header row
+            df_cf.columns = new_header #set the header row as the df header
+            st.subheader("Cash Flow (in " + cf_numForm + ")")
+            df_cf
             df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+
         if not df_om.empty:
+            df_om = df_om.transpose()
+            new_header = df_om.iloc[0] #grab the first row for the header
+            df_om = df_om[1:] #take the data less the header row
+            df_om.columns = new_header #set the header row as the df header
+            st.subheader("Other Metrics (in " + is_numForm + ")")
+            df_om
             df_om.to_excel(writer, sheet_name='Other Metrics')
     
     # DOWNLOAD EXCEL SHEET
@@ -461,3 +488,4 @@ else:
                 file_name="Download.xlsx",
                 mime="text/xlsx"
             )
+    
