@@ -200,11 +200,14 @@ else:
                     netPL = income_stat["netProfit"] - income_stat["netLoss"]
                     if str(income_stat["year"]) in income_statement["Year"]:
                         position = income_statement["Year"].index(str(income_stat["year"]))
-                        income_statement["Revenue"][position] = (income_statement["Revenue"][position] + income_stat["revenue"]*exchange_rate)/2
-                        income_statement["Cost"][position] = (income_statement["Cost"][position] + income_stat["cost"]*exchange_rate)/2
-                        income_statement["GrossProfitLoss"][position] = (income_statement["GrossProfitLoss"][position] + grossPL*exchange_rate)/2
-                        income_statement["NetProfitLoss"][position] = (income_statement["NetProfitLoss"][position] + netPL*exchange_rate)/2
-
+                        if ((income_statement["Revenue"][position] + income_stat["revenue"]*exchange_rate)!=0):
+                            income_statement["Revenue"][position] = (income_statement["Revenue"][position] + income_stat["revenue"]*exchange_rate)/2
+                        if((income_statement["Cost"][position] + income_stat["cost"]*exchange_rate)):
+                            income_statement["Cost"][position] = (income_statement["Cost"][position] + income_stat["cost"]*exchange_rate)/2
+                        if ((income_statement["GrossProfitLoss"][position] + grossPL*exchange_rate)!=0):
+                            income_statement["GrossProfitLoss"][position] = (income_statement["GrossProfitLoss"][position] + grossPL*exchange_rate)/2
+                        if ((income_statement["NetProfitLoss"][position] + netPL*exchange_rate)):
+                            income_statement["NetProfitLoss"][position] = (income_statement["NetProfitLoss"][position] + netPL*exchange_rate)/2
                     else:
                         income_statement["Year"].append(str(income_stat["year"]))
                         income_statement["Revenue"].append(income_stat["revenue"]*exchange_rate)
@@ -223,15 +226,24 @@ else:
 
                     if balance_sheet_result["year"] in balance_sheet["year"]:
                         position = balance_sheet["year"].index(str(balance_sheet_result["year"]))
-                        balance_sheet["totalEquities"][position] = (balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])/2
-                        balance_sheet["totalLiabilities"][position] = (balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])/2
-                        balance_sheet["totalAssets"][position] = (balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])/2
-                        assets["totalCurrentAssets"][position] = (assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])/2
-                        assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
-                        liabilities["totalCurrentLiabilties"][position] = (liabilities["totalCurrentLiabilties"][position]+balance_sheet_result["totalCurrentLiabilties"])/2
-                        liabilities["totalNonCurrentLiabitilies"][position] = (liabilities["totalNonCurrentLiabitilies"][position]+balance_sheet_result["totalNonCurrentLiabitilies"])/2
-                        balance_sheet_metric["debt"][position] = (balance_sheet_metric["debt"][position]+balance_sheet_result["debt"])/2
-                        balance_sheet_metric["cash"][position] = (balance_sheet_metric["cash"][position]+balance_sheet_result["cash"])/2
+                        if ((balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])!=0):
+                            balance_sheet["totalEquities"][position] = (balance_sheet["totalEquities"][position] + balance_sheet_result["totalEquities"])/2
+                        if ((balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])!=0):
+                            balance_sheet["totalLiabilities"][position] = (balance_sheet["totalLiabilities"][position] + balance_sheet_result["totalLiabilities"])/2
+                        if ((balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])!=0):
+                            balance_sheet["totalAssets"][position] = (balance_sheet["totalAssets"][position] + balance_sheet_result["totalAssets"])/2
+                        if ((assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])!=0):
+                            assets["totalCurrentAssets"][position] = (assets["totalCurrentAssets"][position]+balance_sheet_result["totalCurrentAssets"])/2
+                        if ((assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])!=0):
+                            assets["totalNonCurrentAssets"][position] = (assets["totalNonCurrentAssets"][position]+balance_sheet_result["totalNonCurrentAssets"])/2
+                        if ((liabilities["totalCurrentLiabilties"][position]+balance_sheet_result["totalCurrentLiabilties"])!=0):
+                            liabilities["totalCurrentLiabilties"][position] = (liabilities["totalCurrentLiabilties"][position]+balance_sheet_result["totalCurrentLiabilties"])/2
+                        if ((liabilities["totalNonCurrentLiabitilies"][position]+balance_sheet_result["totalNonCurrentLiabitilies"])!=0):
+                            liabilities["totalNonCurrentLiabitilies"][position] = (liabilities["totalNonCurrentLiabitilies"][position]+balance_sheet_result["totalNonCurrentLiabitilies"])/2
+                        if ((balance_sheet_metric["debt"][position]+balance_sheet_result["debt"])!=0):
+                            balance_sheet_metric["debt"][position] = (balance_sheet_metric["debt"][position]+balance_sheet_result["debt"])/2
+                        if ((balance_sheet_metric["cash"][position]+balance_sheet_result["cash"])!=0):
+                            balance_sheet_metric["cash"][position] = (balance_sheet_metric["cash"][position]+balance_sheet_result["cash"])/2
                     else:
                         balance_sheet["year"].append(str(balance_sheet_result["year"]))
                         balance_sheet["totalEquities"].append(balance_sheet_result["totalEquities"]*exchange_rate)
@@ -266,9 +278,12 @@ else:
                 if cashflow_result["year"]>=start_year and cashflow_result["year"]<=end_year  and len(cashflow_result["year"]) == len(start_year):
                     if cashflow_result["year"] in cashflow["year"]:
                         position = cashflow["year"].index(str(cashflow_result["year"]))
-                        cashflow["operatingNetCashFlow"][position] = (cashflow["operatingNetCashFlow"][position] + cashflow_result["operatingNetCashFlow"])/2
-                        cashflow["investingNetCashFlow"][position] = (cashflow["investingNetCashFlow"][position] + cashflow_result["investingNetCashFlow"])/2
-                        cashflow["financingNetCashFlow"][position] = (cashflow["financingNetCashFlow"][position] + cashflow_result["financingNetCashFlow"])/2
+                        if ((cashflow["operatingNetCashFlow"][position] + cashflow_result["operatingNetCashFlow"])!=0):
+                            cashflow["operatingNetCashFlow"][position] = (cashflow["operatingNetCashFlow"][position] + cashflow_result["operatingNetCashFlow"])/2
+                        if ((cashflow["investingNetCashFlow"][position] + cashflow_result["investingNetCashFlow"])!=0):
+                            cashflow["investingNetCashFlow"][position] = (cashflow["investingNetCashFlow"][position] + cashflow_result["investingNetCashFlow"])/2
+                        if ((cashflow["financingNetCashFlow"][position] + cashflow_result["financingNetCashFlow"])):
+                            cashflow["financingNetCashFlow"][position] = (cashflow["financingNetCashFlow"][position] + cashflow_result["financingNetCashFlow"])/2
                     else:
                         cashflow["year"].append(str(cashflow_result["year"]))
                         cashflow["operatingNetCashFlow"].append(cashflow_result["operatingNetCashFlow"]*exchange_rate)
