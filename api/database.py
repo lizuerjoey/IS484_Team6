@@ -67,4 +67,5 @@ class Dictionary(Base):
     did = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String)
     sheet = Column(String)
-    financial_words = Column(String)
+    financial_word = Column(String)
+    synonym = Column(String)

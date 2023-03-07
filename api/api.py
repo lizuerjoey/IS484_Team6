@@ -100,6 +100,39 @@ def retrieve_data():
             results = cursor.fetchall()
     return {"message": "Added", "code": 200, "data": results}, 200
 
+# RETREIVE EVERYTHING IN DICTIONARY DB
+@app.get("/get_dict")
+def get_dict():
+    with connection:
+        with connection.cursor() as cursor:
+            dict = (
+                """SELECT * FROM dictionary;"""
+            )
+            cursor.execute(dict)
+            results = cursor.fetchall()
+            response = {
+                "data": results,
+                "code": 200
+            }
+            if (len(results)==0):
+                response["status"] = "No data available"
+            
+    return response
+
+
+# RETRIEVE SYNONYM PER TYPE AND WORD
+@app.post("/get_synonym")
+def get_synonym():
+    data = request.get_json()
+    type = data["type"]
+    word = data["word"]
+    sql = ("""SELECT * FROM dictionary WHERE type=%s and financial_words = %s;""")
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [type, word])
+            results = cursor.fetchall()
+    return {"message": "Added", "code": 200, "data": results}, 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)
