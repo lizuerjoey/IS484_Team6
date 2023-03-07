@@ -61,3 +61,10 @@ class Extracted_Data(Base):
     fid = Column(Integer, ForeignKey("companies_files.fid"))
     cid = Column(String, ForeignKey("companies.cid"))
     data = Column(String)
+
+class Dictionary(Base):
+    __tablename__ = "dictionary"
+    did = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String)
+    sheet = Column(String)
+    financial_words = Column(String)
