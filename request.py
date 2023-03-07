@@ -216,3 +216,20 @@ def get_json_financial_format(sheet):
         }
     }
     return sheets[sheet]
+
+# GET DICTIONARY
+def get_dict():
+    session = requests.Session()
+    data = fetch(session, f"http://127.0.0.1:5000/get_dict")
+    return data
+
+# INSERT SYNONYM
+def add_synonym(did, synonym):
+    session = requests.Session()
+    body = {
+        "did": did,
+        "synonym": json.dumps(synonym)
+    }
+    
+    data = post(session, f"http://127.0.0.1:5000/add_synonym", body)
+    return data
