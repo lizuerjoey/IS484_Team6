@@ -32,10 +32,13 @@ if sheet is not None:
             if option[2] == sheet and option[3] == words.lower():
                 if option[4]!="":
                     synonyms = json.loads(option[4])
-                    list_of_synonyms = "Existing Synonym for '" + words + "':"
+                    st.markdown("""
+                            <span style='font-size: 14px;'>Existing Synonym for '""" + words+"""':</span>
+                    """, unsafe_allow_html=True)
+                    list_of_synonyms = ""
                     for i in synonyms:
                         i = i.lower()
-                        list_of_synonyms = list_of_synonyms + "\n - " + i.capitalize()
+                        list_of_synonyms = list_of_synonyms + "- " + i.capitalize() + "\n"
                     stx.scrollableTextbox(list_of_synonyms,height = 150)
                 id = option[0]
         synonym = st.text_input(label='Synonym')
