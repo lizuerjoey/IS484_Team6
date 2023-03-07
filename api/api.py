@@ -131,7 +131,11 @@ def get_synonym():
         with connection.cursor() as cursor:
             cursor.execute(sql, [type, word])
             results = cursor.fetchall()
-    return {"message": "Added", "code": 200, "data": results}, 200
+    response = {"code": 200, "data": results}
+    if (len(results)==0):
+            response["status"] = "No data available"
+            
+    return response, 200
 
 
 if __name__ == '__main__':
