@@ -44,7 +44,9 @@ fiscal_month = ""
 duplicate_num_format = []
 is_image = False
 confirm_headers_list = []
-confirm_rows_list = []
+# confirm_rows_list = []
+confirm_search_col_list = []
+search_col_list_check = []
 financial_format =[]
 number_format = []
 dataframe_list = []
@@ -283,7 +285,7 @@ def viewer_func(df, num, id):
                 st.session_state['column_input'] = True
                 
                 if column_name in (dataframe.columns) and old_name !=column_name:
-                    st.error("Header name already exisit. Try a different name")
+                    st.error("Header name already exisit. Try a different name.")
                 else:
                     dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
 
@@ -299,7 +301,7 @@ def viewer_func(df, num, id):
         confirm_headers_list.append(confirm_headers)
         
         if len(confirm_headers_list[num]) < 1:
-            st.error("You need to select at least 1 column headers", icon="🚨")
+            st.error("You need to select at least 1 column header.", icon="🚨")
 
         delete_row = JsCode("""
             function(e) {
@@ -367,6 +369,7 @@ def viewer_func(df, num, id):
                     gridOptions = gridOptions, 
                     enable_enterprise_modules = True,
                     fit_columns_on_grid_load = True,
+                    # update_mode= GridUpdateMode.MANUAL,
                     update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
                     editable = True,
                     height= 450,
@@ -383,12 +386,28 @@ def viewer_func(df, num, id):
         # st.success("Table saved successfully")
 
         # get updated row id
-        row_list = list(new_df.index)
-        confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. Total"
-        confirm_rows = st.multiselect(
-        'Select the Row(s) with Keywords:',
-            row_list, help=confirm_rows_tooltip, key="confirm_rows -" + id + str(num))
-        confirm_rows_list.append(confirm_rows)
+        # row_list = list(new_df.index)
+        # confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. Total"
+        # confirm_rows = st.multiselect(
+        # 'Select the Row(s) with Keywords:',
+        #     row_list, help=confirm_rows_tooltip, key="confirm_rows -" + id + str(num))
+        # confirm_rows_list.append(confirm_rows)
+
+        # get columns headers of where cell is located
+        # col_list = 
+        search_col_list = list(dataframe.columns)
+        for item in confirm_headers:
+            search_col_list.remove(item)
+
+        search_headers = st.multiselect(
+        'Select the Column(s) to Search Through:',
+            search_col_list, key="search_cols -" + id + str(num))
+        confirm_search_col_list.append(search_headers)
+
+        if len(search_headers) <= 0:
+            st.error("You need to select at least 1 column to locate cell value.", icon="🚨")
+        else:
+            search_col_list_check.append(True)
 
     return (option, selected, is_df_empty)
 
@@ -402,7 +421,9 @@ def extract_tables (tables):
     financial_format = []
     number_format = []
     confirm_headers_list = []
-    confirm_rows_list = []
+    # confirm_rows_list = []
+    confirm_search_col_list = []
+    search_col_list_check = []
     if len(tables) == 0:
         st.error('Please upload a pdf with a table.', icon="🚨")
     else:
@@ -565,10 +586,10 @@ def save_file (ID, uploaded_file, com_name, json):
             st.experimental_rerun()
 
         else:
-            st.error('Error inserting extraction into database. Please try again later', icon="🚨")
+            st.error('Error inserting extraction into database. Please try again later.', icon="🚨")
 
     else:
-        st.error('Error adding file. Please try again later', icon="🚨")
+        st.error('Error adding file. Please try again later.', icon="🚨")
 
 
 # make sure a file was being uploaded first
@@ -703,17 +724,21 @@ if session_state['upload_file_status'] == True:
                 total_num_tables = total_num_tables(dataframe_list)
                 big_col = []
                 big_row = []
+                no_search_col_error = []
                 header_big_row = []
                 new_col_list = []
                 new_row_list = []
                 yr_qtr = []
-                matched_column_headers = []
+                searched_col = []
+                # matched_column_headers = []
                 matched_list_row = []
                 matched_dict_col = {}
 
                 # below are required fields; if at least one field is not correct -> cannot save to json
                 # (currency == 'Not Selected') or
-                if ((str(fiscal_month) == " ") or
+                
+                if (len(search_col_list_check) == 0 or 
+                    (currency == 'Not Selected') or (str(fiscal_month) == " ") or
                     ('Not Selected' in financial_format) or 
                     ('Unable to Determine' in number_format) or
                     (True in duplicate_num_format)):
@@ -774,13 +799,14 @@ if session_state['upload_file_status'] == True:
                         else:
                             save_status = False
 
-                        # more than 1 selected rows
-                        if len(confirm_rows_list[table]) > 0:
-                            big_row = merge_row_cells(confirm_rows_list[table], table)
-                        
-                        # no rows selected -> search through headers
+                        # more than 1 searched col
+                        if len(confirm_search_col_list[table]) > 0:
+                            # big_row = merge_row_cells(confirm_search_col_list[table], table)
+                            searched_col = confirm_search_col_list[table]
+
+                        # no col to search selected -> save table id
                         else:
-                            big_row = list(dataframe_list[table].columns)
+                            no_search_col_error.append(table)
                         
                         # search through (col) for financial word
                         if financial_format[table] != "Not Selected":
@@ -798,41 +824,41 @@ if session_state['upload_file_status'] == True:
                                             matched_dict_col[key].append(item)
 
                             # search through (row) for financial word for more than 1 selected row
-                            row_words = get_financial_words_row(financial_format[table])
-                            if len(confirm_rows_list[table]) > 0:
-                                for item in big_row:
-                                    for key, synonyms in row_words.items(): 
-                                        if key in item.lower():
-                                            matched_list_row.append(item)
-                                        for x in synonyms:
-                                            if x.lower() in item.lower():
-                                                matched_list_row.append(item)
+                            # row_words = get_financial_words_row(financial_format[table])
+                            # if len(confirm_rows_list[table]) > 0:
+                            #     for item in big_row:
+                            #         for key, synonyms in row_words.items(): 
+                            #             if key in item.lower():
+                            #                 matched_list_row.append(item)
+                            #             for x in synonyms:
+                            #                 if x.lower() in item.lower():
+                            #                     matched_list_row.append(item)
 
 
                         # check if matched list row length more than 0
-                        if len(matched_list_row) > 0:
-                            # found something in row
-                            for i in range(len(matched_list_row)):
-                                matched_list_row[i] = str(matched_list_row[i]).split()
+                        # if len(matched_list_row) > 0:
+                        #     # found something in row
+                        #     for i in range(len(matched_list_row)):
+                        #         matched_list_row[i] = str(matched_list_row[i]).split()
                             
-                            # check whether yearly or quarterly format
-                            is_quarterly = False
-                            for item in list(dataframe_list[table].columns):
-                                if 'q' in item.lower():
-                                    is_quarterly = True
+                        #     # check whether yearly or quarterly format
+                        #     is_quarterly = False
+                        #     for item in list(dataframe_list[table].columns):
+                        #         if 'q' in item.lower():
+                        #             is_quarterly = True
                             
-                            if is_quarterly == False:
-                                for i in range(len(matched_list_row)):
-                                    matched_column_headers.append(matched_list_row[i][0])
-                            else:
-                                for i in range(len(matched_list_row)):
-                                    join_year_qtr = str(matched_list_row[i][0]) + " " + (str(matched_list_row[i][1]))
-                                    matched_column_headers.append(join_year_qtr)
+                        #     if is_quarterly == False:
+                        #         for i in range(len(matched_list_row)):
+                        #             matched_column_headers.append(matched_list_row[i][0])
+                        #     else:
+                        #         for i in range(len(matched_list_row)):
+                        #             join_year_qtr = str(matched_list_row[i][0]) + " " + (str(matched_list_row[i][1]))
+                        #             matched_column_headers.append(join_year_qtr)
                             
-                        else:
-                            # no keywords found, will take the values of year and quarter e.g. 2020 or 2020 Q1
-                            table_num = table + 1
-                            st.info("Unable to locate keywords (e.g. Total) in the rows selected for Table " + str(table_num) + ".", icon="ℹ️")
+                        # else:
+                        #     # no keywords found, will take the values of year and quarter e.g. 2020 or 2020 Q1
+                        #     table_num = table + 1
+                        #     st.info("Unable to locate keywords (e.g. Total) in the rows selected for Table " + str(table_num) + ".", icon="ℹ️")
                             # get the years/ quarters in the statement
 
                             # assuming that the format is 2020, 2020_1, 2020 Q1 or 2020 Q1_1
@@ -859,7 +885,7 @@ if session_state['upload_file_status'] == True:
                         is_nothing = False
                         is_incorrect = False
                         year_quarter = ""
-                        for date in matched_column_headers:
+                        for date in searched_col:
                             if "_" in date:
                                 year_quarter, parts = date.split("_")
                             else:
@@ -895,7 +921,7 @@ if session_state['upload_file_status'] == True:
                                         result_dict[year_quarter][new_key].append(cell)
                                     else:
                                         new_key = remove_space_caps_next_letter(key)
-                                        result_dict[year_quarter][new_key] = [cell]                               
+                                        result_dict[year_quarter][new_key] = [cell]   
 
                         # saving data in json when there is extracted header values e.g. year/ quarter
                         if len(result_dict) > 0:
@@ -995,7 +1021,7 @@ if session_state['upload_file_status'] == True:
                     # for each financial statements
                     income_statement_list = []
                     balance_sheet_list = []
-                    cash_flow_list = []                
+                    cash_flow_list = []             
 
                     # for each table json
                     for json in all_tables_json_list:
@@ -1072,20 +1098,20 @@ if session_state['upload_file_status'] == True:
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):
                         # Save into DB
-                        # basic_format
+                        basic_format
                         if session_state["text_option"] == True:
                             if com_name:
                                 add_com = add_company(com_id, com_name)
                                 if (add_com["message"] == "Added"):
                                     st.success("Company Added", icon="✅")
-                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                                    # save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
                                 else:
-                                    st.error('Error adding company. Please try again later', icon="🚨")
+                                    st.error('Error adding company. Please try again later.', icon="🚨")
                             else:
                                 # If company name not entered
-                                st.error("Please enter a company name in Upload Report Page", icon="🚨")
-                        else:
-                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                                st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                        # else:
+                            # save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
                     else:
                         st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                
