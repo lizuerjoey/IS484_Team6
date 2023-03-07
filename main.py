@@ -341,28 +341,28 @@ else:
             ###### REVENUE
             with col1:
                 revenue_ratio=0
-                if ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])!=0):
+                if (income_statement["Revenue"][base_year_position]!=0):
                     revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
                 st.metric(label="Revenue", value=income_statement["Revenue"][current_year_position], delta=str(revenue_ratio)+"%")
 
             ###### COST
             with col2:
                 cost_ratio = 0 
-                if ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])!=0):
+                if (income_statement["Cost"][base_year_position]!=0):
                     cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
                 st.metric(label="Cost", value=income_statement["Cost"][current_year_position], delta=str(cost_ratio)+"%", delta_color="inverse")
 
             ###### GROSS PROFIT/LOSS
             with col3:
                 gross_ratio = 0
-                if ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])!=0):
+                if (income_statement["GrossProfitLoss"][base_year_position]!=0):
                     gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
                 st.metric(label="Gross Profit/Loss", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(gross_ratio)+"%")
 
             ###### NET PROFIT/LOSS
             with col4:
                 net_ratio = 0
-                if ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])!=0):
+                if (income_statement["NetProfitLoss"][base_year_position]!=0):
                     net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
                 st.metric(label="Net Profit/Loss", value=income_statement["NetProfitLoss"][current_year_position], delta=str(net_ratio)+"%")
         
