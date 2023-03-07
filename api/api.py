@@ -126,7 +126,7 @@ def get_synonym():
     data = request.get_json()
     type = data["type"]
     word = data["word"]
-    sql = ("""SELECT * FROM dictionary WHERE type=%s and financial_words = %s;""")
+    sql = ("""SELECT * FROM dictionary WHERE type=%s and financial_word = %s;""")
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(sql, [type, word])
