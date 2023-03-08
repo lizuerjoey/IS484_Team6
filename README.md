@@ -2,7 +2,7 @@
 
 ## Pre-Requisites
 <ul>
-<li>Python 3.7 - 3.10 </li>
+<li>Python 3.10 </li>
 <li>Pip</li>
 </ul>
 
