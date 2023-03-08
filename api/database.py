@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker
 
 import os
 import pandas as pd
-import numpy as np
 
 
 ########## DB Utility Functions ##########
@@ -29,13 +28,7 @@ def session_engine_from_connection_string(conn_string):
     return DBSession(), engine
 
 
-# Convert DF into Table Objects
-def convert_df_to_lst_of_table_objects(df, Table):
-    '''
-    Takes in a dataframe (each column name aligned to a DB table's column name)
-    and convert it into a list of Table objects
-    '''
-    return [Table(**{k: v for k, v in row.items() if not np.array(pd.isnull(v)).any()}) for row in df.to_dict("records")]
+
 
 
 ########## DB Tables ##########

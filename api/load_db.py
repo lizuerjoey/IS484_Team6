@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import os
 import psycopg2
 
@@ -14,7 +13,6 @@ from database import (
     Companies_Files,
     Extracted_Data,
     Dictionary,
-    convert_df_to_lst_of_table_objects
 )
 
 ######### CREATE DB TABLES #########
