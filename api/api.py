@@ -152,4 +152,4 @@ def add_synonym():
     return {"message": "Updated", "code": 200}, 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
