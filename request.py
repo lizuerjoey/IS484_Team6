@@ -26,7 +26,7 @@ def post(session, url, body):
 # GET ALL COMPNIES NAMES
 def get_all_companies():
     session = requests.Session()
-    data = fetch(session, f"http://is484testing.pythonanywhere.com/get_companies")
+    data = fetch(session, f"http://127.0.0.1:5000/get_companies")
     return data
 
 # INSERT NEW COMPANY
@@ -37,7 +37,7 @@ def add_company(cid, com_name):
         "com_name": com_name,
     }
     
-    data = post(session, f"http://is484testing.pythonanywhere.com/add_company", body)
+    data = post(session, f"http://127.0.0.1:5000/add_company", body)
     return data
 
 # INSERT NEW FILE
@@ -48,13 +48,13 @@ def add_file(cid, file, type):
         "file": file,
         "type": type,
     }
-    data = post(session, f"http://is484testing.pythonanywhere.com/insert_file", body)
+    data = post(session, f"http://127.0.0.1:5000/insert_file", body)
     return data
 
 # GET ALL COMPNIES FILES
 def get_allFiles():
     session = requests.Session()
-    data = fetch(session, f"http://is484testing.pythonanywhere.com/get_allFiles")
+    data = fetch(session, f"http://127.0.0.1:5000/get_allFiles")
     return data
 
 # INSERT EXTRACTED DATA
@@ -66,7 +66,7 @@ def insert_data(fid, cid, data):
         "data": json.dumps(data)
     }
     
-    data = post(session, f"http://is484testing.pythonanywhere.com/insert_data", body)
+    data = post(session, f"http://127.0.0.1:5000/insert_data", body)
     return data
 
 # RETRIEVE EXTRACTED DATA
@@ -75,7 +75,7 @@ def retrieve_data(cid):
     body = {
         "cid": cid,
     }
-    data = post(session, f"http://is484testing.pythonanywhere.com/retrieve_data", body)
+    data = post(session, f"http://127.0.0.1:5000/retrieve_data", body)
     return data
 
 # GET SYMBOLS
@@ -220,7 +220,7 @@ def get_json_financial_format(sheet):
 # GET DICTIONARY
 def get_dict():
     session = requests.Session()
-    data = fetch(session, f"http://is484testing.pythonanywhere.com/get_dict")
+    data = fetch(session, f"http://127.0.0.1:5000/get_dict")
     return data
 
 # INSERT SYNONYM
@@ -231,5 +231,5 @@ def add_synonym(did, synonym):
         "synonym": json.dumps(synonym)
     }
     
-    data = post(session, f"http://is484testing.pythonanywhere.com/add_synonym", body)
+    data = post(session, f"http://127.0.0.1:5000/add_synonym", body)
     return data
