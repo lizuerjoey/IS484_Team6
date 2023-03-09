@@ -1,10 +1,10 @@
 # IS484 T06
 
 ## Pre-Requisites
-<ul>
-<li>Python 3.10 </li>
-<li>Pip</li>
-</ul>
+
+* Python 3.10
+* Pip
+
 
 ## Environment Setup
 To install dependencies, run:
@@ -23,7 +23,7 @@ Store API Key as ``` EXCHANGE_RATE_API_KEY = "<Your API Key>" ```<br>
 
 ### AWS
 Website: https://aws.amazon.com/textract/ <br>
-Store AWS Access Key as ``` AWS_ACCESS_KEY = "<Your Access Key" ``` <br>
+Store AWS Access Key as ``` AWS_ACCESS_KEY = "<Your Access Key>" ``` <br>
 Store AWS Secret Key as ``` AWS_SECRET_KEY = "<Your Secret Key>" ``` <br>
 
 ### PDF COMPRESSOR
