@@ -12,10 +12,10 @@ To install dependencies, run:
 
 ## Database Configuration
 This project uses PostgreSQL (https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) <br>
-To use PostgreSQL database, you will need to create an ```.env``` file and add ```POSTGRESQL_CONNECTION_STRING = "postgresql://<Username>:<Password>@<Servername>:<Port>/<DB>"``` into your .env file 
+To use PostgreSQL database, you will need to create an ```.env``` file and add ```POSTGRESQL_CONNECTION_STRING = "postgresql://<Username>:<Password>@<Servername>:<Port>/<DB>"``` into your ```.env``` file 
 
 ## API Keys
-You will need to create your APIs and store the API key in  ```.env``` file. 
+You will need to create your APIs and store the API keys in your ```.env``` file. 
 
 ### EXCHANGE RATE
 Website: https://www.exchangerate-api.com/ <br>
