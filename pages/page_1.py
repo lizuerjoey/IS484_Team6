@@ -164,28 +164,6 @@ if uploaded_file is not None:
 
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
-    # Check file size
-    elif (uploaded_file.size>limit):
-        # public key
-        public_key = 'project_public_b5a2a9fddbb963dfd1455d6cbf2d7ecf_-FoyGb98ae8a31053af3a1c015ff594c4395e'
-
-        # creating a ILovePdf object
-        ilovepdf = ILovePdf(public_key, verify_ssl=True)
-
-        # assigning a new compress task
-        task = ilovepdf.new_task('compress')
-        # adding the pdf file to the task
-        task.add_file('/content/google_cloud_adoption_framework_whitepaper.pdf')
-        # setting the output folder directory
-        # if no folder exist it will create one
-        task.set_output_folder('output_folder')
-        # execute the task
-        task.execute()
-        # download the task
-        task.download()
-        # delete the task
-        task.delete_current_task()
-        st.error("File Size more than 200MB", icon="🚨")
     
     else:
         if len(dir) > 0:
@@ -201,6 +179,7 @@ if uploaded_file is not None:
         totalpages = len(pdfReader.pages)
         
         if (uploaded_file.size>limit):
+            st.info('File Size is more than 2MB. This will take awhile to load.', icon="ℹ️")
             print("File Size more than 2MB")
             file_path = "./temp_files/" + uploaded_file.name
             # no need error -> compress file here
@@ -238,11 +217,13 @@ if uploaded_file is not None:
                         os.remove(os.path.join(temp_path, f))
                         
                 for f in os.listdir(temp_path):
-                    print(f)
                     if (f.endswith(".pdf")):
-                       old_path = os.path.join("temp_files",f)
-                       new_path = os.path.join("temp_files",new_file_name)
-                       os.rename(old_path, new_path)
+                        old_path = os.path.join("temp_files",f)
+                        new_path = os.path.join("temp_files",new_file_name)
+                        os.rename(old_path, new_path)
+                        if (os.stat(new_path).st_size>limit): 
+                            st.warning('File size is more than 2 MB after compressing. Please note that you might not be able to view the file in the PDF viewer. You may proceed with the extraction.', icon="⚠️")
+                        print(os.stat(new_path).st_size)
                         
 
         if totalpages > 1:
