@@ -565,7 +565,6 @@ def save_file (ID, uploaded_file, com_name, json):
     add_com = add_file(ID, new_file_name, file_type)
 
     if (add_com["message"] == "Added"):
-        st.success("Saved File!", icon="✅")
 
         # call API to retrieve all files -> last file should be the most updated
         all_files = get_allFiles()
@@ -577,6 +576,7 @@ def save_file (ID, uploaded_file, com_name, json):
 
         if (result["message"] == "Added"):
             st.success("Successful Extraction!", icon="✅")
+            st.success("Saved File!", icon="✅")
 
             # delete everything except test.txt from temp folder
             if len(dir) > 0:

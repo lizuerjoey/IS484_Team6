@@ -146,8 +146,8 @@ def save_file_to_temp (uploaded_file):
         f.write(uploaded_file.getbuffer())   
 
 if uploaded_file is not None:
-    # File Size limit
-    limit = 2*(10**9)
+    # File Size limit 2mb in bytes
+    limit = 2*1000000
     # Check file type
     position = uploaded_file.type.find("/")
     file_type = uploaded_file.type[position+1: ]
@@ -162,7 +162,9 @@ if uploaded_file is not None:
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
     elif (uploaded_file.size>limit):
-        st.error("File Size more than 200MB", icon="🚨")
+        st.write("File Size more than 2MB")
+        # no need error -> compress file here
+        # save back into the original file name
     else:
         if len(dir) > 0:
             for f in os.listdir(temp_path):
