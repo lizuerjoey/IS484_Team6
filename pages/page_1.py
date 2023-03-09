@@ -6,11 +6,13 @@ import random
 import PyPDF2
 import glob
 from streamlit_extras.switch_page_button import switch_page
+from dotenv import load_dotenv
 from request import(
     get_all_companies,
 ) 
 from pylovepdf.ilovepdf import ILovePdf
-
+load_dotenv()
+COMPRESSED_PDF_KEY = os.getenv("COMPRESSED_PDF_KEY")
 # Get file type
 def get_file_type (file):
     filetype = os.path.splitext(file)[1]
@@ -161,16 +163,6 @@ if uploaded_file is not None:
 
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
-    # Check file size
-    # elif (uploaded_file.size>limit):
-    #     st.write("File Size more than 2MB")
-    #     file_path = "./temp_files/" + uploaded_file.name
-    #     # no need error -> compress file here
-    #     # save back into the original file name
-    #     # importing the ilovepdf api
-    #     # public key
-        
-
     else:
         if len(dir) > 0:
             for f in os.listdir(temp_path):
@@ -185,13 +177,13 @@ if uploaded_file is not None:
         totalpages = len(pdfReader.pages)
         
         if (uploaded_file.size>limit):
-            st.write("File Size more than 2MB")
+            print("File Size more than 2MB")
             file_path = "./temp_files/" + uploaded_file.name
             # no need error -> compress file here
             # save back into the original file name
             # importing the ilovepdf api
             # public key
-            public_key = 'project_public_b5a2a9fddbb963dfd1455d6cbf2d7ecf_-FoyGb98ae8a31053af3a1c015ff594c4395e'
+            public_key = COMPRESSED_PDF_KEY
 
             # creating a ILovePdf object
             ilovepdf = ILovePdf(public_key, verify_ssl=True)

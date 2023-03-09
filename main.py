@@ -484,7 +484,7 @@ else:
     # DOWNLOAD EXCEL SHEET
     with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
         btn = st.download_button(
-                label="Download Excel",
+                label="Download Excel 📥",
                 data=file,
                 file_name="Download.xlsx",
                 mime="text/xlsx"
