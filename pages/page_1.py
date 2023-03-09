@@ -9,6 +9,7 @@ from streamlit_extras.switch_page_button import switch_page
 from request import(
     get_all_companies,
 ) 
+from pylovepdf.ilovepdf import ILovePdf
 
 # Get file type
 def get_file_type (file):
@@ -161,10 +162,15 @@ if uploaded_file is not None:
     if (file_type not in supported_file_type):
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
-    elif (uploaded_file.size>limit):
-        st.write("File Size more than 2MB")
-        # no need error -> compress file here
-        # save back into the original file name
+    # elif (uploaded_file.size>limit):
+    #     st.write("File Size more than 2MB")
+    #     file_path = "./temp_files/" + uploaded_file.name
+    #     # no need error -> compress file here
+    #     # save back into the original file name
+    #     # importing the ilovepdf api
+    #     # public key
+        
+
     else:
         if len(dir) > 0:
             for f in os.listdir(temp_path):
@@ -177,6 +183,51 @@ if uploaded_file is not None:
         file_path = "./temp_files/" + uploaded_file.name
         pdfReader = PyPDF2.PdfReader(file_path)
         totalpages = len(pdfReader.pages)
+        
+        if (uploaded_file.size>limit):
+            st.write("File Size more than 2MB")
+            file_path = "./temp_files/" + uploaded_file.name
+            # no need error -> compress file here
+            # save back into the original file name
+            # importing the ilovepdf api
+            # public key
+            public_key = 'project_public_b5a2a9fddbb963dfd1455d6cbf2d7ecf_-FoyGb98ae8a31053af3a1c015ff594c4395e'
+
+            # creating a ILovePdf object
+            ilovepdf = ILovePdf(public_key, verify_ssl=True)
+
+            # assigning a new compress task
+            task = ilovepdf.new_task('compress')
+
+            # adding the pdf file to the task
+            task.add_file(file_path)
+
+            # setting the output folder directory
+            # if no folder exist it will create one
+            task.set_output_folder('temp_files')
+
+            # execute the task
+            task.execute()
+
+            # download the task
+            task.download()
+
+            # delete the task
+            task.delete_current_task()
+            new_file_name = uploaded_file.name
+            
+            if len(dir) > 0:
+                for f in os.listdir(temp_path):
+                    if (f == uploaded_file.name):
+                        os.remove(os.path.join(temp_path, f))
+                        
+                for f in os.listdir(temp_path):
+                    print(f)
+                    if (f.endswith(".pdf")):
+                       old_path = os.path.join("temp_files",f)
+                       new_path = os.path.join("temp_files",new_file_name)
+                       os.rename(old_path, new_path)
+                        
 
         if totalpages > 1:
             # uploaded file is multi pdf -> select
