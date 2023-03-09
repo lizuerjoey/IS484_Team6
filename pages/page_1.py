@@ -6,6 +6,7 @@ import random
 import PyPDF2
 import glob
 from streamlit_extras.switch_page_button import switch_page
+from pylovepdf.ilovepdf import ILovePdf
 from request import(
     get_all_companies,
 ) 
@@ -162,7 +163,27 @@ if uploaded_file is not None:
         st.error("Unsupported File Type", icon="🚨")
     # Check file size
     elif (uploaded_file.size>limit):
+        # public key
+        public_key = 'project_public_b5a2a9fddbb963dfd1455d6cbf2d7ecf_-FoyGb98ae8a31053af3a1c015ff594c4395e'
+
+        # creating a ILovePdf object
+        ilovepdf = ILovePdf(public_key, verify_ssl=True)
+
+        # assigning a new compress task
+        task = ilovepdf.new_task('compress')
+        # adding the pdf file to the task
+        task.add_file('/content/google_cloud_adoption_framework_whitepaper.pdf')
+        # setting the output folder directory
+        # if no folder exist it will create one
+        task.set_output_folder('output_folder')
+        # execute the task
+        task.execute()
+        # download the task
+        task.download()
+        # delete the task
+        task.delete_current_task()
         st.error("File Size more than 200MB", icon="🚨")
+    
     else:
         if len(dir) > 0:
             for f in os.listdir(temp_path):
@@ -190,6 +211,11 @@ if uploaded_file is not None:
     # check if uploade file is png/ jpg/ jpeg
     elif uploaded_file.name.endswith('.png') or uploaded_file.name.endswith('.jpg') or uploaded_file.name.endswith('.jpeg'):
         previewimg = st.button("Preview Extracted Data", key="previewimg")
+        st.write("Does the uploaded image have more than one table?")
+        result_yes= st.button("Yes")
+        result_no= st.button("No")
+        if result_yes:
+            switch_page("image cropper")
         if previewimg:
             switch_page("preview extracted data")           
 
