@@ -28,6 +28,7 @@ from request import (
     )
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
+from streamlit_extras.switch_page_button import switch_page
 
 # Initialization
 if 'pg_input' not in session_state:
@@ -564,7 +565,6 @@ def save_file (ID, uploaded_file, com_name, json):
     add_com = add_file(ID, new_file_name, file_type)
 
     if (add_com["message"] == "Added"):
-        st.success("Saved File!", icon="✅")
 
         # call API to retrieve all files -> last file should be the most updated
         all_files = get_allFiles()
@@ -576,6 +576,7 @@ def save_file (ID, uploaded_file, com_name, json):
 
         if (result["message"] == "Added"):
             st.success("Successful Extraction!", icon="✅")
+            st.success("Saved File!", icon="✅")
 
             # delete everything except test.txt from temp folder
             if len(dir) > 0:
@@ -630,6 +631,10 @@ if session_state['upload_file_status'] == True:
 
         # at least 1 page
         if (totalpages > 0):
+
+            try_aws_btn = st.button("Try AWS (Switch Page)")
+            if try_aws_btn:
+                switch_page("try aws") 
             
             st.subheader('Basic Form Data')
             col1, col2 = st.columns(2)
