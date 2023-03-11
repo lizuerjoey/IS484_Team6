@@ -43,7 +43,6 @@ if 'og_uploaded_file' not in session_state:
 currency = ""
 fiscal_month = ""
 duplicate_num_format = []
-is_image = False
 confirm_headers_list = []
 # confirm_rows_list = []
 confirm_search_col_list = []
@@ -203,7 +202,7 @@ def image_viewer(dataframes):
         with extraction_container.container():
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out)        
-                statement, format, is_df_empty = viewer_func(dataframes[i], i, 'img') 
+                statement, format, is_df_empty = viewer_func(dataframes[i][0], i, 'img') 
 
 
 def viewer_func(df, num, id):
@@ -605,6 +604,7 @@ if session_state['upload_file_status'] == True:
         count = 0
         totalpages = 0
         dataframes = []
+        is_image = False
 
        
         for path in (file_paths):
@@ -619,18 +619,19 @@ if session_state['upload_file_status'] == True:
                     session_state["uploaded_file"] = file_path
                     file_name = get_file_name(file_path)
                     totalpages = get_total_pgs_PDF(file_path)
-
                     num+=1
+
                 #file is image
                 elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
                     file_path = glob.glob("./temp_files/*" + file_type)[0]
                     file_name = get_file_name(file_path)
+                    # is_image.append(True)
                     is_image = True
-            
-                    dataframes = image_extraction(file_path)
+
+                    dataframes.append(image_extraction(file_path))
 
         # at least 1 page
-        if (totalpages > 0):
+        if (totalpages > 0 or is_image == True):
             # Check file type
             # try_aws_btn = st.button("Try AWS (Switch Page)")
             # if try_aws_btn and file_path.endswith(".pdf"):
@@ -1110,13 +1111,13 @@ if session_state['upload_file_status'] == True:
                                 if (add_com["message"] == "Added"):
                                     st.success("Company Added", icon="✅")
                                     save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
-                                else:
-                                    st.error('Error adding company. Please try again later.', icon="🚨")
+                                # else:
+                                #     st.error('Error adding company. Please try again later.', icon="🚨")
                             else:
                                 # If company name not entered
                                 st.error("Please enter a company name in Upload Report Page.", icon="🚨")
-                        else:
-                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                        # else:
+                        #     save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
                     else:
                         st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                
