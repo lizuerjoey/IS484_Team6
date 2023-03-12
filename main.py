@@ -447,11 +447,11 @@ else:
             bs=df_bs.merge(df_assets, how="right")
             bs=df_bs.merge(df_liabilities, how="right")
             bs = df_bs.transpose()
-            new_header = df_bs.iloc[0] #grab the first row for the header
-            df_bs = df_bs[1:] #take the data less the header row
-            df_bs.columns = new_header #set the header row as the df header
+            new_header = bs.iloc[0] #grab the first row for the header
+            bs = bs[1:] #take the data less the header row
+            bs.columns = new_header #set the header row as the df header
             st.subheader("Balance Sheet (in " + bs_numForm + ")")
-            df_bs
+            bs
             bs.to_excel(writer, sheet_name='Balance Sheet')
 
         if not df_is.empty:
