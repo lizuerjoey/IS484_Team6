@@ -44,7 +44,7 @@ for f in os.listdir(selected_path):
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
-st.subheader("Select Pages (PDF)")
+st.header("Select Pages (PDF)")
 
 # Check if user uploaded a file into temp files
 if len(dir) > 1:
