@@ -111,37 +111,71 @@ def get_months(mnth):
     return month[mnth]
 
 # GET FINANCIAL WORDS
-def get_financial_words_col(sheet):
-    words = {
-        "Income Statement": {
-            "revenue": ["total revenue"],
-            "cost": ["total cost"],
-            "gross profit": ["earnings", "gross income"],
-            "gross loss": [],
-            "net profit": ["net income", "net earnings"],
-            "net loss": [],
-            "income tax": [],
-            "interest": ["interest expense"],
-            "depreciation": ["amortization", "depletion"],
-        },
-        "Balance Sheet": {
-            "total equities": [],
-            "total liabilities": [],
-            "total current liabilties": [],
-            "total non current liabitilies": [],
-            "total assets": [],
-            "total current assets": [],
-            "total non current assets": [],
-            "debt": [],
-            "cash": [],
-        },
-        "Cash Flow": {
-            "operating net cash flow": [],
-            "investing net cash flow": [],
-            "financing net cash flow": [],
-        },
-    }
-    return words[sheet]
+def get_financial_words_col(financial_sheet):
+    words = {}
+
+    session = requests.Session()
+    result = fetch(session, f"http://127.0.0.1:5000/get_dict")
+    for item in result["data"]:
+        type = item[1]
+        sheet = item[2]
+        word = item[3]
+        synonyms = item[4]
+
+        if type == "col":
+            if sheet == "Income Statement":
+                if sheet not in words:
+                    words[sheet] = {}
+                if word not in words[sheet]:
+                    words[sheet][word] = []
+                if synonyms:
+                    words[sheet][word].extend(eval(synonyms))
+            elif sheet == "Balance Sheet":
+                if sheet not in words:
+                    words[sheet] = {}
+                if word not in words[sheet]:
+                    words[sheet][word] = []
+                if synonyms:
+                    words[sheet][word].extend(eval(synonyms))
+            elif sheet == "Cash Flow":
+                if sheet not in words:
+                    words[sheet] = {}
+                if word not in words[sheet]:
+                    words[sheet][word] = []
+                if synonyms:
+                    words[sheet][word].extend(eval(synonyms))
+    return words[financial_sheet]
+
+    # words = {
+    #     "Income Statement": {
+    #         "revenue": ["total revenue"],
+    #         "cost": ["total cost"],
+    #         "gross profit": ["earnings", "gross income"],
+    #         "gross loss": [],
+    #         "net profit": ["net income", "net earnings"],
+    #         "net loss": [],
+    #         "income tax": [],
+    #         "interest": ["interest expense"],
+    #         "depreciation": ["amortization", "depletion"],
+    #     },
+    #     "Balance Sheet": {
+    #         "total equities": [],
+    #         "total liabilities": [],
+    #         "total current liabilties": [],
+    #         "total non current liabitilies": [],
+    #         "total assets": [],
+    #         "total current assets": [],
+    #         "total non current assets": [],
+    #         "debt": [],
+    #         "cash": [],
+    #     },
+    #     "Cash Flow": {
+    #         "operating net cash flow": [],
+    #         "investing net cash flow": [],
+    #         "financing net cash flow": [],
+    #     },
+    # }
+    # return words[sheet]
 
 def get_financial_words_row(sheet):
     words = {

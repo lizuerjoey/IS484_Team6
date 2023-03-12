@@ -129,8 +129,8 @@ def get_file_type (file):
 
 def get_total_pgs_PDF (file):
     file = open(file, 'rb')
-    pdf = PyPDF2.PdfFileReader(file)
-    pages = pdf.numPages
+    pdf = PyPDF2.PdfReader(file)
+    pages = len(pdf.pages)
     return pages
 
 def check_tables_single_PDF (file):
