@@ -222,6 +222,11 @@ def viewer_func(df, num, id):
     c1,c2 = st.columns([3,1])
     with c1:
         st.subheader('Extracted Table ' + str(num+1))
+        # checkbox to delete table
+        del_table = st.checkbox("Delete Table", key="del -" + str(num))
+
+    if del_table == True:
+        st.success("Successfully deleted. This table will not be extrcated.", icon="✅")
 
     # check if an empty dataframe is extracted
     if dataframe.empty:
@@ -239,9 +244,11 @@ def viewer_func(df, num, id):
         with col1:
             option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
             
-            financial_format.append(option)
-            if option == "Not Selected":
-                st.warning("Financial Statement is a required field", icon="⭐")
+            # if table not deleted
+            if del_table == False:
+                financial_format.append(option)
+                if option == "Not Selected":
+                    st.warning("Financial Statement is a required field", icon="⭐")
         
         # number format ddl
         with col2:
@@ -249,19 +256,22 @@ def viewer_func(df, num, id):
             new_num_list = sort_num_list(num_format)
             options = list(range(len(new_num_list)))
             i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
-            number_format.append(new_num_list[i])
-            if new_num_list[i] == "Unable to Determine":
-                st.warning("Number Format is a required field.", icon="⭐")
             
-            # each financial statement should have a consistent number format
-            different = 0
-            for saved_num in number_format:
-                if new_num_list[i] != saved_num:
-                    different += 1
+            # if table not deleted
+            if del_table == False:
+                number_format.append(new_num_list[i])
+                if new_num_list[i] == "Unable to Determine":
+                    st.warning("Number Format is a required field.", icon="⭐")
+            
+                # each financial statement should have a consistent number format
+                different = 0
+                for saved_num in number_format:
+                    if new_num_list[i] != saved_num:
+                        different += 1
 
-            if different > 0:
-                st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
-                duplicate_num_format.append(True)
+                if different > 0:
+                    st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
+                    duplicate_num_format.append(True)
 
         st.subheader("Edit Headers")
 
@@ -298,10 +308,15 @@ def viewer_func(df, num, id):
         column_headers,
         column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
 
-        confirm_headers_list.append(confirm_headers)
+        # confirm_headers_list.append(confirm_headers)
         
-        if len(confirm_headers_list[num]) < 1:
-            st.error("You need to select at least 1 column header.", icon="🚨")
+        # if len(confirm_headers_list[num]) < 1:
+        #     st.error("You need to select at least 1 column header.", icon="🚨")
+
+        if del_table == False:
+            confirm_headers_list.append(confirm_headers)
+            if len(confirm_headers) < 1:
+                st.error("You need to select at least 1 column header.", icon="🚨")
 
         delete_row = JsCode("""
             function(e) {
@@ -402,12 +417,14 @@ def viewer_func(df, num, id):
         search_headers = st.multiselect(
         'Select the Column(s) to Search Through:',
             search_col_list, key="search_cols -" + id + str(num))
-        confirm_search_col_list.append(search_headers)
+        # confirm_search_col_list.append(search_headers)
 
-        if len(search_headers) <= 0:
-            st.error("You need to select at least 1 column to locate cell value.", icon="🚨")
-        else:
-            search_col_list_check.append(True)
+        if del_table == False:
+            confirm_search_col_list.append(search_headers)
+            if len(search_headers) <= 0:
+                st.error("You need to select at least 1 column to locate cell value.", icon="🚨")
+            else:
+                search_col_list_check.append(True)
 
     return (option, selected, is_df_empty)
 
