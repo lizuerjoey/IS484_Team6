@@ -7,9 +7,8 @@ import io
 from streamlit_cropper import st_cropper
 from PIL import Image
 from streamlit_extras.switch_page_button import switch_page
-#st.set_option('deprecation.showfileUploaderEncoding', False)
 st.subheader("Image Cropper")
-#update_immediately = st.sidebar.checkbox(label="Update Image", value= True)
+
 
 def get_file_type (file):
     filetype = os.path.splitext(file)[1]
@@ -27,7 +26,6 @@ if len(dir) > 1:
         if file_type == '.jpeg': 
             file_path = glob.glob("./temp_files/*.jpeg")[0]
             img= Image.open(file_path)
-            
            # st.image(img)
         elif file_type =='.jpg':
             file_path = glob.glob("./temp_files/*.jpg")[0]
@@ -37,9 +35,6 @@ if len(dir) > 1:
             img= Image.open(file_path)
 
 
-
-#if not update_immediately:
-#    st.write("Double click to save cropped image")
 #show on screem
 cropped_image= st_cropper(img)
 st.write("Preview")
@@ -59,20 +54,7 @@ if crop_yes:
 st.write("Are you done with cropping?")
 fin_crop= st.button("Preview Extracted Data", key="previewimg")
 if fin_crop:
+    os.remove(file_path)
     switch_page("preview extracted data")  
 
 
-
-#must i del temp file image?
-
-#invoke aws, ADD TO PAGE 4
-
-#
-                #file is image
-#                if file_type == '.jpeg' and file_type != '.txt':
-#                    file_path = glob.glob("./cropped_images/*" + file_type)[0]
-#                    for images in file_path:
-#                        file_name = get_file_name(file_path)
-#                        is_image = True
-#                        dataframes = image_extraction(file_path)
-#reset cropped images file
