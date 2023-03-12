@@ -605,6 +605,7 @@ if session_state['upload_file_status'] == True:
         totalpages = 0
         dataframes = []
         is_image = False
+        path_list=[]
 
        
         for path in (file_paths):
@@ -623,12 +624,17 @@ if session_state['upload_file_status'] == True:
 
                 #file is image
                 elif file_type == '.png' or file_type == '.jpg' or file_type == '.jpeg' and file_type != '.txt':
-                    file_path = glob.glob("./temp_files/*" + file_type)[0]
-                    file_name = get_file_name(file_path)
+                    file_path = glob.glob("./temp_files/*" + file_type)
+                    file_name = get_file_name(file_path[0])
                     # is_image.append(True)
                     is_image = True
+                    if file_path not in path_list:
+                        for file in file_path:
+                            path_list.append(file_path)
+                            dataframes.append(image_extraction(file))
 
-                    dataframes.append(image_extraction(file_path))
+
+
 
         # at least 1 page
         if (totalpages > 0 or is_image == True):
