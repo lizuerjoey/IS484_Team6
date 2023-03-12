@@ -239,13 +239,16 @@ if uploaded_file is not None:
 
     # check if uploade file is png/ jpg/ jpeg
     elif uploaded_file.name.endswith('.png') or uploaded_file.name.endswith('.jpg') or uploaded_file.name.endswith('.jpeg'):
-        previewimg = st.button("Preview Extracted Data", key="previewimg")
         st.write("Does the uploaded image have more than one table?")
-        result_yes= st.button("Yes")
-        result_no= st.button("No")
+    col3, col4 = st.columns([2,22])
+    with col3:
+        result_yes = st.button("Yes")
+    with col4:
+        result_no = st.button("No")
+        
         if result_yes:
             switch_page("image cropper")
-        if previewimg:
+        if result_no:
             switch_page("preview extracted data")           
 
 ############## CSS
