@@ -217,11 +217,8 @@ def viewer_func(df, num, id):
     option = ""
     selected = ""
 
-    col1, col2 = st.columns(2)
-                       
-    c1,c2 = st.columns([3,1])
-    with c1:
-        st.subheader('Extracted Table ' + str(num+1))
+    st.subheader('Extracted Table ' + str(num+1))
+    delete = st.checkbox("Don't extract Table " + str(num+1) + "? (Clicking this will refresh the entire page and changes made might be lost.)")
 
     # check if an empty dataframe is extracted
     if dataframe.empty:
@@ -237,177 +234,185 @@ def viewer_func(df, num, id):
 
         # financial statement ddl
         with col1:
-            option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
-            
-            financial_format.append(option)
-            if option == "Not Selected":
-                st.warning("Financial Statement is a required field", icon="⭐")
+            if not delete:
+                option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num))
+                financial_format.append(option)
+                if option == "Not Selected":
+                    st.warning("Financial Statement is a required field", icon="⭐")
+            else:
+                option = st.selectbox('Select a Financial Statement:', ('Not Selected', 'Income Statement', 'Balance Sheet', 'Cash Flow'), key=id+str(num), disabled=True)
         
         # number format ddl
         with col2:
             num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
             new_num_list = sort_num_list(num_format)
             options = list(range(len(new_num_list)))
-            i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
-            number_format.append(new_num_list[i])
-            if new_num_list[i] == "Unable to Determine":
-                st.warning("Number Format is a required field.", icon="⭐")
             
-            # each financial statement should have a consistent number format
-            different = 0
-            for saved_num in number_format:
-                if new_num_list[i] != saved_num:
-                    different += 1
+            if not delete:
+                i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
+                number_format.append(new_num_list[i])
+                if new_num_list[i] == "Unable to Determine":
+                    st.warning("Number Format is a required field.", icon="⭐")
+                
+                # each financial statement should have a consistent number format
+                different = 0
+                for saved_num in number_format:
+                    if new_num_list[i] != saved_num:
+                        different += 1
 
-            if different > 0:
-                st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
-                duplicate_num_format.append(True)
+                if different > 0:
+                    st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
+                    duplicate_num_format.append(True)
+            else:
+                i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num), disabled=True)
 
         st.subheader("Edit Headers")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num))
-            st.session_state['column_del'] = True
-                
-            for col_option in options:
-                dataframe.drop(col_option, axis=1, inplace=True)
+            if not delete:
+                options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num))
+                st.session_state['column_del'] = True
+                    
+                for col_option in options:
+                    dataframe.drop(col_option, axis=1, inplace=True)
+            else:
+                options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num), disabled=True)
 
                 
         with col2:
             renamecol_tooltip = "Column headers must be unique and strictly years or years+quarters. For yearly statements, you can rename columns which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
-            options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
-            
-            for i in range(len(options)):
-                old_name = options[i]
-                column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
-                st.session_state['column_input'] = True
+            if not delete:
+                options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
                 
-                if column_name in (dataframe.columns) and old_name !=column_name:
-                    st.error("Header name already exisit. Try a different name.")
-                else:
-                    dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
+                for i in range(len(options)):
+                    old_name = options[i]
+                    column_name = st.text_input("Enter New Header Name for "+ str(options[i]), value=options[i], key="table -" + str(num) + str(i))
+                    st.session_state['column_input'] = True
+                    
+                    if column_name in (dataframe.columns) and old_name !=column_name:
+                        st.error("Header name already exisit. Try a different name.")
+                    else:
+                        dataframe.rename(columns = {options[i]: column_name}, inplace = True) 
+            else:
+                options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num), disabled=True)
 
-
-        # get column headers
+        # get the columns to search financial keywords
         column_headers = list(dataframe.columns)
         confirm_headers_tooltip = "Select the columns with all rows consisting of financial keywords in your word dictionary e.g. Revenue, Liabilities, Operating Net Cash Flow etc."
-        confirm_headers = st.multiselect(
-        'Select the Column(s) with Financial Statement Keywords:',
-        column_headers,
-        column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
+        if not delete:
+            confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
+        else:
+            confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num), disabled=True)
 
         confirm_headers_list.append(confirm_headers)
-        
+            
         if len(confirm_headers_list[num]) < 1:
-            st.error("You need to select at least 1 column header.", icon="🚨")
+            if not delete:
+                st.error("You need to select at least 1 column header.", icon="🚨")
 
-        delete_row = JsCode("""
-            function(e) {
-                let api = e.api;
-                let sel = api.getSelectedRows();
-                api.applyTransaction({remove: sel})    
-            };
-            """)  
+        # display aggrid
+        if not delete:
+            delete_row = JsCode("""
+                function(e) {
+                    let api = e.api;
+                    let sel = api.getSelectedRows();
+                    api.applyTransaction({remove: sel})    
+                };
+                """)  
 
-        string_to_add_row = "\n\n function(e) { \n \
-        let api = e.api; \n \
-        let rowIndex = e.rowIndex + 1; \n \
-        api.applyTransaction({addIndex: rowIndex, add: [{}]}); \n \
-            }; \n \n"
-        
-        cell_button_add = JsCode('''
-            class BtnAddCellRenderer {
-                init(params) {
-                    this.params = params;
-                    this.eGui = document.createElement('div');
-                    this.eGui.innerHTML = `
-                    <span>
-                        <style>
-                        .btn_add {
-                        border: none;
-                        color: black;
-                        text-align: center;
-                        text-decoration: none;
-                        display: inline-block;
-                        font-size: 10px;
-                        font-weight: bold;
-                        height: 2.5em;
-                        width: 8em;
-                        cursor: pointer;
-                        }
+            string_to_add_row = "\n\n function(e) { \n \
+            let api = e.api; \n \
+            let rowIndex = e.rowIndex + 1; \n \
+            api.applyTransaction({addIndex: rowIndex, add: [{}]}); \n \
+                }; \n \n"
+            
+            cell_button_add = JsCode('''
+                class BtnAddCellRenderer {
+                    init(params) {
+                        this.params = params;
+                        this.eGui = document.createElement('div');
+                        this.eGui.innerHTML = `
+                        <span>
+                            <style>
+                            .btn_add {
+                            border: none;
+                            color: black;
+                            text-align: center;
+                            text-decoration: none;
+                            display: inline-block;
+                            font-size: 10px;
+                            font-weight: bold;
+                            height: 2.5em;
+                            width: 8em;
+                            cursor: pointer;
+                            }
 
-                        .btn_add :hover {
-                        background-color: #05d588;
-                        }
-                        </style>
-                        <button id='click-button' 
-                            class="btn_add" 
-                            >Add Row Below</button>
-                    </span>
-                `;
-                }
+                            .btn_add :hover {
+                            background-color: #05d588;
+                            }
+                            </style>
+                            <button id='click-button' 
+                                class="btn_add" 
+                                >Add Row Below</button>
+                        </span>
+                    `;
+                    }
 
-                getGui() {
-                    return this.eGui;
-                }
+                    getGui() {
+                        return this.eGui;
+                    }
 
-            };
-            ''')
-        
-        st.info('To Delete Row(s): Click the checkbox', icon="ℹ️")
+                };
+                ''')
+            
+            st.info('To Delete Row(s): Click the checkbox', icon="ℹ️")
 
-        gd = GridOptionsBuilder.from_dataframe(dataframe)
-        gd.configure_default_column(editable=True,groupable=True)
-        gd.configure_column("", onCellClicked=JsCode(string_to_add_row), cellRenderer=cell_button_add, editable=False, autoHeight=True,lockPosition='left')
-        gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
-        gd.configure_grid_options(onRowSelected = delete_row, pre_selected_rows=[])
+            gd = GridOptionsBuilder.from_dataframe(dataframe)
+            gd.configure_default_column(editable=True,groupable=True)
+            gd.configure_column("", onCellClicked=JsCode(string_to_add_row), cellRenderer=cell_button_add, editable=False, autoHeight=True,lockPosition='left')
+            gd.configure_selection(selection_mode= 'multiple', use_checkbox=True)
+            gd.configure_grid_options(onRowSelected = delete_row, pre_selected_rows=[])
 
-        gridOptions = gd.build()
-        grid_table = AgGrid(dataframe, 
-                    gridOptions = gridOptions, 
-                    enable_enterprise_modules = True,
-                    fit_columns_on_grid_load = True,
-                    # update_mode= GridUpdateMode.MANUAL,
-                    update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
-                    editable = True,
-                    height= 450,
-                    allow_unsafe_jscode=True)    
-        
-        # st.info("Total Rows :" + str(len(grid_table['data']))) 
-        # print("Selected row: " + str(grid_table["selected_rows"]))
+            gridOptions = gd.build()
+            grid_table = AgGrid(dataframe, 
+                        gridOptions = gridOptions, 
+                        enable_enterprise_modules = True,
+                        fit_columns_on_grid_load = True,
+                        # update_mode= GridUpdateMode.MANUAL,
+                        update_mode = GridUpdateMode.VALUE_CHANGED | GridUpdateMode.SELECTION_CHANGED,
+                        editable = True,
+                        height= 450,
+                        allow_unsafe_jscode=True)    
 
-        # ----- SAVE EDIT BUTTON HERE -----
-        # done_button = st.button("Save Edit", key="done -" + str(num))
-        # if done_button:
-        new_df = grid_table['data']
-        dataframe_list.append(new_df)
-        # st.success("Table saved successfully")
+            # retrieve edited table & append
+            new_df = grid_table['data']
+            dataframe_list.append(new_df)
 
-        # get updated row id
-        # row_list = list(new_df.index)
-        # confirm_rows_tooltip = "Select the rows if there are rows below column headers which consist of text e.g. Total"
-        # confirm_rows = st.multiselect(
-        # 'Select the Row(s) with Keywords:',
-        #     row_list, help=confirm_rows_tooltip, key="confirm_rows -" + id + str(num))
-        # confirm_rows_list.append(confirm_rows)
+        else:
+            AgGrid(dataframe,
+                   enable_enterprise_modules = True,
+                   fit_columns_on_grid_load = True,
+                   editable = False,
+                   height= 450) 
 
         # get columns headers of where cell is located
-        # col_list = 
         search_col_list = list(dataframe.columns)
         for item in confirm_headers:
             search_col_list.remove(item)
+            
+        if not delete:
+            search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num))
+            confirm_search_col_list.append(search_headers)
 
-        search_headers = st.multiselect(
-        'Select the Column(s) to Search Through:',
-            search_col_list, key="search_cols -" + id + str(num))
-        confirm_search_col_list.append(search_headers)
-
-        if len(search_headers) <= 0:
-            st.error("You need to select at least 1 column to locate cell value.", icon="🚨")
+            if len(search_headers) <= 0:
+                st.warning("You need to select at least 1 column to locate cell value.", icon="⭐")
+            else:
+                search_col_list_check.append(True)
+        
         else:
-            search_col_list_check.append(True)
+            search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
 
     return (option, selected, is_df_empty)
 
@@ -474,7 +479,7 @@ def merge_col_cells(confirm_headers_table, table):
 
             # check if cell below keyword is another keyword
             elif keyword > 0 and empty == 0:
-                # another keyword or edited and became empty string or None                             
+                # another keyword or edited and became empty string or None               dataframe_list              
                 if pd.isnull(cell) == False and str(cell) != "None" and str(cell) != " " and str(cell) != "":
                     keyword += 1
                     replace_keyword = str(cell)
@@ -1108,47 +1113,46 @@ if session_state['upload_file_status'] == True:
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):
                         # Save into DB
-                        # basic_format
+                        basic_format
 
                         with st.form("Preview Value", clear_on_submit=False):
                             for data in basic_format:
                                 if data != "currency" and data != "fiscal_start_month":
                                     sheet_json = basic_format[data]
                                     sheet = data
-                                    data = data.title().replace("_", " ")
-                                    st.markdown('**' + data + '**')
+                                    new_sheet = data.title().replace("_", " ")
+                                    st.markdown('**' + new_sheet + '**')
 
+                                    if len(sheet_json) <= 0:
+                                        st.info("This financial sheet was not selected for the extracted table(s) above.", icon="ℹ️")
                                     
+                                    new_dict = {}
                                     for i in range(len(sheet_json)):
                                         st.write(sheet_json[i]["year"] + ":")
                                         date = sheet_json[i]["year"]
-
-                                        # if sheet_json[i] != "year" and sheet_json[i] != "numberFormat":
-                                        #     cols = st.columns(3)
-                                        #     for x in range(len(sheet_json[i])):
-                                        #         col = cols[len(sheet_json[i])%3]
-                                        #         col.selectbox(sheet_json[i], key=x)
-
                                         
+                                        # looping the columns for each metrics
                                         cols = st.columns(3)
                                         x = 0
+                                        json = {}
                                         for word in sheet_json[i]:
                                             if word != "year" and word != "numberFormat":
                                                 x += 1
-                                                # new_length = len(sheet_json[i]) - 2
                                                 col = cols[x % 3]
-                                                col.text_input(word, sheet_json[i][word], key=sheet + date + word)
-                                            
 
-                                        # for x in range(len(sheet_json[i])):
-                                        #     for word in sheet_json[i]:
-                                        #         word
-                                            # if sheet_json[i] == "year" or sheet_json[i] == "numberFormat":
-                                            #     continue
-                                            # x
-                                            # col = cols[x%3]
-                                            # col.text_input(str(sheet_json[i][x]), 'value', key=sheet + date + str(x))
+                                                new_string = word.capitalize()
+                                                for i in range(len(new_string)-1):
+                                                    if new_string[i].islower() and new_string[i+1].isupper():
+                                                        new_string = new_string[:i+1] + " " + new_string[i+1:]
+                                                        new_string
 
+                                                value = col.text_input(word, sheet_json[i][word], key=sheet + date + word)
+
+                                                if word not in json:
+                                                    json[word] = value
+                                        
+                                        
+                                        
                                 
                             
                             submitted = st.form_submit_button("Submit")
