@@ -630,11 +630,9 @@ if session_state['upload_file_status'] == True:
                     is_image = True
                     if file_path not in path_list:
                         for file in file_path:
-                            path_list.append(file_path)
                             dataframes.append(image_extraction(file))
-
-
-
+                            path_list.append(file_path)
+                            
 
         # at least 1 page
         if (totalpages > 0 or is_image == True):
