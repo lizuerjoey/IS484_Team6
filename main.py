@@ -400,9 +400,9 @@ else:
                     width=150)
             with bs_raw_data:
                 df_bs = df_bs.transpose()
-                new_header = df_bs.iloc[0] #grab the first row for the header
-                df_bs = df_bs[1:] #take the data less the header row
-                df_bs.columns = new_header #set the header row as the df header
+                new_header = df_bs.iloc[0] 
+                df_bs = df_bs[1:] 
+                df_bs.columns = new_header
                 df_bs = df_bs.reindex(sorted(df_bs.columns), axis=1)
                 df_bs
 
@@ -430,9 +430,9 @@ else:
                 
                 with assets_raw_data:
                     df_assets = df_assets.transpose()
-                    new_header = df_assets.iloc[0] #grab the first row for the header
-                    df_assets = df_assets[1:] #take the data less the header row
-                    df_assets.columns = new_header #set the header row as the df header
+                    new_header = df_assets.iloc[0] 
+                    df_assets = df_assets[1:] 
+                    df_assets.columns = new_header 
                     df_assets = df_assets.reindex(sorted(df_assets.columns), axis=1)
                     df_assets
 
@@ -457,9 +457,9 @@ else:
                 
                 with liabilities_raw_data:
                     df_liabilities = df_liabilities.transpose()
-                    new_header = df_liabilities.iloc[0] #grab the first row for the header
-                    df_liabilities = df_liabilities[1:] #take the data less the header row
-                    df_liabilities.columns = new_header #set the header row as the df header
+                    new_header = df_liabilities.iloc[0] 
+                    df_liabilities = df_liabilities[1:] 
+                    df_liabilities.columns = new_header
                     df_liabilities = df_liabilities.reindex(sorted(df_liabilities.columns), axis=1)
                     df_liabilities
                 
@@ -481,7 +481,19 @@ else:
         ### CASH FLOW
         if not df_cf.empty and len(cashflow["year"])>=2: 
             st.subheader("Cash Flow (in " + cf_numForm + ")")
-            st.bar_chart(df_cf, x="Year")
+            cf_line_chart, cf_bar_chart, cf_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+            
+            with cf_line_chart:
+                st.line_chart(df_cf, x="Year")
+            with cf_bar_chart:
+                st.bar_chart(df_cf, x="Year")
+            with cf_raw_data:
+                df_cf = df_cf.transpose()
+                new_header = df_cf.iloc[0] 
+                df_cf = df_cf[1:] 
+                df_cf.columns = new_header
+                df_cf
+
         ### OTHER METRICS
         if not df_om.empty and len(other_metrics["year"])>=2: 
             st.subheader("Other Metrics (in " + om_numForm + ")")
@@ -494,19 +506,19 @@ else:
 
             with roa_col:
                 returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
-                st.metric(label="Return on Asset", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
+                st.metric(label="Return on Asset (in " + is_numForm + ")", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
             with nim_col:
                 netInterestMargin_ratio = ((other_metrics["netInterestMargin"][current_year_position] - other_metrics["netInterestMargin"][base_year_position])/other_metrics["netInterestMargin"][base_year_position])*100
-                st.metric(label="Net Interest Margin", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
+                st.metric(label="Net Interest Margin (in " + is_numForm + ")", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
             with nii_col:
                 netInterestIncome_ratio = ((other_metrics["netInterestIncomeRatio"][current_year_position] - other_metrics["netInterestIncomeRatio"][base_year_position])/other_metrics["netInterestIncomeRatio"][base_year_position])*100
-                st.metric(label="Net Interest Income", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
+                st.metric(label="Net Interest Income (in " + is_numForm + ")", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
             with cir_col:
                 costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
-                st.metric(label="Cost Income", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
+                st.metric(label="Cost Income (in " + is_numForm + ")", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-                st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
+                st.metric(label="EBIDTA (in " + is_numForm + ")", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
     
     
     now = datetime.now()
@@ -518,33 +530,23 @@ else:
     # CONVERT TO EXCEL SHEET
     with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
         df.to_excel(writer, sheet_name='Main')
-        if not df_bs.empty:
-            st.subheader("Balance Sheet (in " + bs_numForm + ")")
+        if not df_bs.empty and len(df_bs)>1:
             df_bs = pd.concat([df_bs, df_assets, df_liabilities])
-            df_bs
             df_bs.to_excel(writer, sheet_name='Balance Sheet')
 
         if not df_is.empty:
-            st.subheader("Income Statement (in " + is_numForm + ")")
-            df_is
             df_is.to_excel(writer, sheet_name='Income Statement')
 
         if not df_cf.empty:
-            df_cf = df_cf.transpose()
-            new_header = df_cf.iloc[0] #grab the first row for the header
-            df_cf = df_cf[1:] #take the data less the header row
-            df_cf.columns = new_header #set the header row as the df header
-            st.subheader("Cash Flow (in " + cf_numForm + ")")
-            df_cf
             df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
 
         if not df_om.empty:
             df_om = df_om.transpose()
-            new_header = df_om.iloc[0] #grab the first row for the header
-            df_om = df_om[1:] #take the data less the header row
-            df_om.columns = new_header #set the header row as the df header
-            st.subheader("Other Metrics (in " + is_numForm + ")")
-            df_om
+            new_header = df_om.iloc[0] 
+            df_om = df_om[1:] 
+            df_om.columns = new_header
+            # st.subheader("Other Metrics (in " + is_numForm + ")")
+            # df_om
             df_om.to_excel(writer, sheet_name='Other Metrics')
     
     # DOWNLOAD EXCEL SHEET
