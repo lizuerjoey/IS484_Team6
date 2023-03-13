@@ -5,6 +5,7 @@ import json
 import re
 from datetime import date, datetime
 import os
+import plost
 from request import(
     get_all_companies,
     get_currencies,
@@ -321,7 +322,7 @@ else:
                         other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
             # Create Dataframe
             df_om = pd.DataFrame(data=other_metrics)
-            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cos tIncome Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
+            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cost Income Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
         
         if len(income_statement["Year"])<2 and len(balance_sheet["year"])<2 and len(cashflow["year"])<2 and len(other_metrics["year"])<2:
             st.error("Please upload more reports", icon="🚨")
@@ -330,7 +331,23 @@ else:
         if not df_is.empty and len(income_statement["Year"])>=2:  
             ### INCOME STATEMENT 
             st.subheader("Income Statement (in " + is_numForm + ")")
-            st.line_chart(df_is, x="Year")
+            is_line_chart, is_bar_chart, is_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+            with is_line_chart:
+                st.line_chart(df_is, x="Year")
+            with is_bar_chart:
+                # st.bar_chart(df_is, x="Year")
+                plost.bar_chart(data=df_is,
+                    bar = "Year",
+                    value=["Revenue", "Cost", "Gross Profit/Loss", "Net Profit/Loss"],
+                    group=True,
+                    width=150)
+            with is_raw_data:
+                df_is = df_is.transpose()
+                new_header = df_is.iloc[0]
+                df_is = df_is[1:] 
+                df_is.columns = new_header
+                df_is = df_is.reindex(sorted(df_is.columns), axis=1)
+                df_is
 
             #### METRICES
             ###### BASE AND CURRENT YEAR
@@ -345,33 +362,49 @@ else:
                 revenue_ratio=0
                 if (income_statement["Revenue"][base_year_position]!=0):
                     revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
-                st.metric(label="Revenue", value=income_statement["Revenue"][current_year_position], delta=str(revenue_ratio)+"%")
+                st.metric(label="Revenue (in " + is_numForm + ")", value=income_statement["Revenue"][current_year_position], delta=str(round(revenue_ratio, 2))+"%")
 
             ###### COST
             with col2:
                 cost_ratio = 0 
                 if (income_statement["Cost"][base_year_position]!=0):
                     cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
-                st.metric(label="Cost", value=income_statement["Cost"][current_year_position], delta=str(cost_ratio)+"%", delta_color="inverse")
+                st.metric(label="Cost (in " + is_numForm + ")", value=income_statement["Cost"][current_year_position], delta=str(round(cost_ratio, 2))+"%", delta_color="inverse")
 
             ###### GROSS PROFIT/LOSS
             with col3:
                 gross_ratio = 0
                 if (income_statement["GrossProfitLoss"][base_year_position]!=0):
                     gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
-                st.metric(label="Gross Profit/Loss", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(gross_ratio)+"%")
+                st.metric(label="Gross Profit/Loss (in " + is_numForm + ")", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(round(gross_ratio, 2))+"%")
 
             ###### NET PROFIT/LOSS
             with col4:
                 net_ratio = 0
                 if (income_statement["NetProfitLoss"][base_year_position]!=0):
                     net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
-                st.metric(label="Net Profit/Loss", value=income_statement["NetProfitLoss"][current_year_position], delta=str(net_ratio)+"%")
+                st.metric(label="Net Profit/Loss (in " + is_numForm + ")", value=income_statement["NetProfitLoss"][current_year_position], delta=str(round(net_ratio, 2))+"%")
         
         ### BALANCE SHEET
         if not df_bs.empty and len(balance_sheet["year"])>=2: 
             st.subheader("Balance Sheet (in " + bs_numForm + ")")
-            st.line_chart(df_bs, x="Year")
+            
+            bs_line_chart, bs_bar_chart, bs_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+            with bs_line_chart:
+                st.line_chart(df_bs, x="Year")
+            with bs_bar_chart:
+                 plost.bar_chart(data=df_bs,
+                    bar = "Year",
+                    value=["Total Assets", "Total Equities", "Total Liabilities"],
+                    group=True,
+                    width=150)
+            with bs_raw_data:
+                df_bs = df_bs.transpose()
+                new_header = df_bs.iloc[0] #grab the first row for the header
+                df_bs = df_bs[1:] #take the data less the header row
+                df_bs.columns = new_header #set the header row as the df header
+                df_bs = df_bs.reindex(sorted(df_bs.columns), axis=1)
+                df_bs
 
             assets_col, liabilities_col = st.columns(2)
 
@@ -380,13 +413,55 @@ else:
                 st.markdown("""
                     <span style='font-weight: 700;'>Total Assets</span>
                 """, unsafe_allow_html=True)
-                st.bar_chart(df_assets, x="Year")
+                assets_line_chart, assets_bar_chart, assets_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+                
+                with assets_line_chart:
+                    st.line_chart(df_assets, x="Year")
+
+                with assets_bar_chart:
+                    # st.bar_chart(df_assets, x="Year")
+
+                    plost.bar_chart(
+                        data=df_assets,
+                        bar='Year',
+                        value=['Current Assets', 'Non-Current Assets'],
+                        # width=500
+                        )
+                
+                with assets_raw_data:
+                    df_assets = df_assets.transpose()
+                    new_header = df_assets.iloc[0] #grab the first row for the header
+                    df_assets = df_assets[1:] #take the data less the header row
+                    df_assets.columns = new_header #set the header row as the df header
+                    df_assets = df_assets.reindex(sorted(df_assets.columns), axis=1)
+                    df_assets
+
             with liabilities_col:
                 ###### LIABILITIES
                 st.markdown("""
                     <span style='font-weight: 700;'>Total Liabilities</span>
                 """, unsafe_allow_html=True)
-                st.bar_chart(df_liabilities, x="Year")
+
+                liabilities_line_chart, liabilities_bar_chart, liabilities_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+                
+                with liabilities_line_chart:
+                    st.line_chart(df_liabilities, x="Year")
+
+                with liabilities_bar_chart:
+                    # st.bar_chart(df_liabilities, x="Year")
+                    plost.bar_chart(
+                        data=df_liabilities,
+                        bar='Year',
+                        value=['Current Liabilities', 'Non-Current Liabilities'],
+                        )
+                
+                with liabilities_raw_data:
+                    df_liabilities = df_liabilities.transpose()
+                    new_header = df_liabilities.iloc[0] #grab the first row for the header
+                    df_liabilities = df_liabilities[1:] #take the data less the header row
+                    df_liabilities.columns = new_header #set the header row as the df header
+                    df_liabilities = df_liabilities.reindex(sorted(df_liabilities.columns), axis=1)
+                    df_liabilities
                 
             # DEBT/CASH
             debt_col, cash_col = st.columns(2)
@@ -397,10 +472,10 @@ else:
             
             with debt_col:
                 debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
-                st.metric(label="Debt", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
+                st.metric(label="Debt (in " + bs_numForm + ")", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
             with cash_col:
                 cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
-                st.metric(label="Cash", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
+                st.metric(label="Cash (in " + bs_numForm + ")", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
 
 
         ### CASH FLOW
@@ -419,19 +494,19 @@ else:
 
             with roa_col:
                 returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
-                st.metric(label="Return on Asset", value=other_metrics["returnOnAsset"][current_year_position], delta=str(returnOnAsset_ratio)+"%")
+                st.metric(label="Return on Asset", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
             with nim_col:
                 netInterestMargin_ratio = ((other_metrics["netInterestMargin"][current_year_position] - other_metrics["netInterestMargin"][base_year_position])/other_metrics["netInterestMargin"][base_year_position])*100
-                st.metric(label="Net Interest Margin", value=other_metrics["netInterestMargin"][current_year_position], delta=str(netInterestMargin_ratio)+"%")
+                st.metric(label="Net Interest Margin", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
             with nii_col:
                 netInterestIncome_ratio = ((other_metrics["netInterestIncomeRatio"][current_year_position] - other_metrics["netInterestIncomeRatio"][base_year_position])/other_metrics["netInterestIncomeRatio"][base_year_position])*100
-                st.metric(label="Net Interest Income", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(netInterestIncome_ratio)+"%")
+                st.metric(label="Net Interest Income", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
             with cir_col:
                 costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
-                st.metric(label="Cost Income", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(costIncome_ratio)+"%")
+                st.metric(label="Cost Income", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-                st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(ebidta_ratio)+"%")
+                st.metric(label="EBIDTA", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
     
     
     now = datetime.now()
@@ -444,21 +519,12 @@ else:
     with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
         df.to_excel(writer, sheet_name='Main')
         if not df_bs.empty:
-            bs=df_bs.merge(df_assets, how="right")
-            bs=df_bs.merge(df_liabilities, how="right")
-            bs = df_bs.transpose()
-            new_header = bs.iloc[0] #grab the first row for the header
-            bs = bs[1:] #take the data less the header row
-            bs.columns = new_header #set the header row as the df header
             st.subheader("Balance Sheet (in " + bs_numForm + ")")
-            bs
-            bs.to_excel(writer, sheet_name='Balance Sheet')
+            df_bs = pd.concat([df_bs, df_assets, df_liabilities])
+            df_bs
+            df_bs.to_excel(writer, sheet_name='Balance Sheet')
 
         if not df_is.empty:
-            df_is = df_is.transpose()
-            new_header = df_is.iloc[0] #grab the first row for the header
-            df_is = df_is[1:] #take the data less the header row
-            df_is.columns = new_header #set the header row as the df header
             st.subheader("Income Statement (in " + is_numForm + ")")
             df_is
             df_is.to_excel(writer, sheet_name='Income Statement')
