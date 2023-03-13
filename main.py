@@ -419,14 +419,14 @@ else:
                     st.line_chart(df_assets, x="Year")
 
                 with assets_bar_chart:
-                    # st.bar_chart(df_assets, x="Year")
+                    st.bar_chart(df_assets, x="Year")
 
-                    plost.bar_chart(
-                        data=df_assets,
-                        bar='Year',
-                        value=['Current Assets', 'Non-Current Assets'],
-                        # width=500
-                        )
+                    # plost.bar_chart(
+                    #     data=df_assets,
+                    #     bar='Year',
+                    #     value=['Current Assets', 'Non-Current Assets'],
+                    #     # width=500
+                    #     )
                 
                 with assets_raw_data:
                     df_assets = df_assets.transpose()
@@ -448,12 +448,12 @@ else:
                     st.line_chart(df_liabilities, x="Year")
 
                 with liabilities_bar_chart:
-                    # st.bar_chart(df_liabilities, x="Year")
-                    plost.bar_chart(
-                        data=df_liabilities,
-                        bar='Year',
-                        value=['Current Liabilities', 'Non-Current Liabilities'],
-                        )
+                    st.bar_chart(df_liabilities, x="Year")
+                    # plost.bar_chart(
+                    #     data=df_liabilities,
+                    #     bar='Year',
+                    #     value=['Current Liabilities', 'Non-Current Liabilities'],
+                    #     )
                 
                 with liabilities_raw_data:
                     df_liabilities = df_liabilities.transpose()
