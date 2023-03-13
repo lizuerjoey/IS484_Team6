@@ -170,6 +170,11 @@ if uploaded_file is not None:
             for f in os.listdir(temp_path):
                 if (f != "test.txt"):
                     os.remove(os.path.join(temp_path, f))
+
+            for f in os.listdir("./selected_files/"):
+                if (f != "test.txt"):
+                    os.remove(os.path.join("./selected_files/", f))
+
         save_file_to_temp(uploaded_file)
 
     # check if uploaded file is pdf
