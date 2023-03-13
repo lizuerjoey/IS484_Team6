@@ -30,6 +30,15 @@ show_pages(
 
 get_options = get_all_companies()["data"]
 
+def metrics_component(words, numbers, percentage, format, inverse):
+    num = str(numbers)
+    if (percentage>=0) and inverse == False:
+        percentage = str(percentage) + "%"
+        st.markdown("<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px;'> <div style='display:flex; padding-left:20px; padding-top:15px;'><div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + words + "<br> (in "+format + ")</div><div style='color: rgb( 96, 149, 111 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 231, 243, 226); padding:6px; height:40px'>" + percentage + "</div></div>" + "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + num + " </div></div>",unsafe_allow_html=True)
+    else:
+        percentage = str(percentage) + "%"
+        st.markdown("<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px;'> <div style='display:flex; padding-left:20px; padding-top:15px;'><div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + words + "<br> (in "+format + ")</div><div style='color: rgb(  198, 45, 11 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 252, 233, 229 ); padding:6px; height:40px'>" + percentage + "</div></div>" + "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + num + " </div></div>",unsafe_allow_html=True)
+
 # COMPANY
 if (len(get_options) == 0):
     st.header("No company available..")
@@ -362,28 +371,32 @@ else:
                 revenue_ratio=0
                 if (income_statement["Revenue"][base_year_position]!=0):
                     revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
-                st.metric(label="Revenue (in " + is_numForm + ")", value=income_statement["Revenue"][current_year_position], delta=str(round(revenue_ratio, 2))+"%")
+                metrics_component("Revenue", income_statement["Revenue"][current_year_position], round(revenue_ratio, 2), is_numForm, False)
+                # st.metric(label="Revenue (in " + is_numForm + ")", value=income_statement["Revenue"][current_year_position], delta=str(round(revenue_ratio, 2))+"%")
 
             ###### COST
             with col2:
                 cost_ratio = 0 
                 if (income_statement["Cost"][base_year_position]!=0):
                     cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
-                st.metric(label="Cost (in " + is_numForm + ")", value=income_statement["Cost"][current_year_position], delta=str(round(cost_ratio, 2))+"%", delta_color="inverse")
+                metrics_component("Cost", income_statement["Cost"][current_year_position], round(cost_ratio, 2), is_numForm, True)
+                # st.metric(label="Cost (in " + is_numForm + ")", value=income_statement["Cost"][current_year_position], delta=str(round(cost_ratio, 2))+"%", delta_color="inverse")
 
             ###### GROSS PROFIT/LOSS
             with col3:
                 gross_ratio = 0
                 if (income_statement["GrossProfitLoss"][base_year_position]!=0):
                     gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
-                st.metric(label="Gross Profit/Loss (in " + is_numForm + ")", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(round(gross_ratio, 2))+"%")
+                metrics_component("Gross Profit/Loss", income_statement["GrossProfitLoss"][current_year_position], round(gross_ratio, 2), is_numForm, False)
+                # st.metric(label="Gross Profit/Loss (in " + is_numForm + ")", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(round(gross_ratio, 2))+"%")
 
             ###### NET PROFIT/LOSS
             with col4:
                 net_ratio = 0
                 if (income_statement["NetProfitLoss"][base_year_position]!=0):
                     net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
-                st.metric(label="Net Profit/Loss (in " + is_numForm + ")", value=income_statement["NetProfitLoss"][current_year_position], delta=str(round(net_ratio, 2))+"%")
+                metrics_component("Net Profit/Loss", income_statement["NetProfitLoss"][current_year_position], round(net_ratio, 2), is_numForm, False)
+                # st.metric(label="Net Profit/Loss (in " + is_numForm + ")", value=income_statement["NetProfitLoss"][current_year_position], delta=str(round(net_ratio, 2))+"%")
         
         ### BALANCE SHEET
         if not df_bs.empty and len(balance_sheet["year"])>=2: 
@@ -472,10 +485,12 @@ else:
             
             with debt_col:
                 debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
-                st.metric(label="Debt (in " + bs_numForm + ")", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
+                metrics_component("Debt", balance_sheet_metric["debt"][current_year_position], round(debt_ratio, 2), bs_numForm, True)
+                # st.metric(label="Debt (in " + bs_numForm + ")", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
             with cash_col:
                 cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
-                st.metric(label="Cash (in " + bs_numForm + ")", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
+                metrics_component("Cash", balance_sheet_metric["cash"][current_year_position], round(cash_ratio, 2), bs_numForm, False)
+                # st.metric(label="Cash (in " + bs_numForm + ")", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
 
 
         ### CASH FLOW
@@ -506,19 +521,24 @@ else:
 
             with roa_col:
                 returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
-                st.metric(label="Return on Asset (in " + is_numForm + ")", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
+                metrics_component("Return on Asset", other_metrics["returnOnAsset"][current_year_position], round(returnOnAsset_ratio, 2), is_numForm, False)
+                # st.metric(label="Return on Asset (in " + is_numForm + ")", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
             with nim_col:
                 netInterestMargin_ratio = ((other_metrics["netInterestMargin"][current_year_position] - other_metrics["netInterestMargin"][base_year_position])/other_metrics["netInterestMargin"][base_year_position])*100
-                st.metric(label="Net Interest Margin (in " + is_numForm + ")", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
+                metrics_component("Net Interest Margin", other_metrics["netInterestMargin"][current_year_position], round(netInterestMargin_ratio, 2), is_numForm, False)
+                # st.metric(label="Net Interest Margin (in " + is_numForm + ")", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
             with nii_col:
                 netInterestIncome_ratio = ((other_metrics["netInterestIncomeRatio"][current_year_position] - other_metrics["netInterestIncomeRatio"][base_year_position])/other_metrics["netInterestIncomeRatio"][base_year_position])*100
-                st.metric(label="Net Interest Income (in " + is_numForm + ")", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
+                metrics_component("Net Interest Income ", other_metrics["netInterestIncomeRatio"][current_year_position], round(netInterestIncome_ratio, 2), is_numForm, False)
+                # st.metric(label="Net Interest Income (in " + is_numForm + ")", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
             with cir_col:
                 costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
-                st.metric(label="Cost Income (in " + is_numForm + ")", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
+                metrics_component("Cost Income", other_metrics["costIncomeRatio"][current_year_position], round(costIncome_ratio, 2), is_numForm, False)
+                # st.metric(label="Cost Income (in " + is_numForm + ")", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-                st.metric(label="EBIDTA (in " + is_numForm + ")", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
+                metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), is_numForm, False)
+                # st.metric(label="EBIDTA (in " + is_numForm + ")", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
     
     
     now = datetime.now()
