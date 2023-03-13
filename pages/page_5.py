@@ -53,7 +53,7 @@ if sheet is not None:
 
                 synonyms = st_tags(
                     label='Edit Synonyms:',
-                    text='Press enter to add more',
+                    text='Press enter to confirm the addition of new word',
                     value=synonyms_list)
                     # stx.scrollableTextbox(list_of_synonyms,height = 150)
                 id = option[0]

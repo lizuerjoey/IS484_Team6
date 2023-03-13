@@ -408,6 +408,7 @@ def viewer_func(df, num, id):
 
             if len(search_headers) <= 0:
                 st.warning("You need to select at least 1 column to locate cell value.", icon="⭐")
+                search_col_list_check.append(False)
             else:
                 search_col_list_check.append(True)
         
@@ -749,10 +750,8 @@ if session_state['upload_file_status'] == True:
                 matched_list_row = []
                 matched_dict_col = {}
 
-                # below are required fields; if at least one field is not correct -> cannot save to json
-                # (currency == 'Not Selected') or
-                
-                if (len(search_col_list_check) == 0 or 
+                # below are required fields; if at least one field is not correct -> cannot save to json             
+                if ((False in search_col_list_check) or 
                     (currency == 'Not Selected') or (str(fiscal_month) == " ") or
                     ('Not Selected' in financial_format) or 
                     ('Unable to Determine' in number_format) or
@@ -769,9 +768,13 @@ if session_state['upload_file_status'] == True:
                 # saving to db
                 all_tables_json_list = []
                 table_count = 0
-                
-                # if all required fields are filled
-                if save_status == True:
+
+                # if all required fields are filled & total number of tables to extract is 0
+                if save_status == True and total_num_tables <= 0:
+                    st.error("There are no tables for extraction. Please check your tables.", icon="🚨")
+
+                # if all required fields are filled & total number of tables to extract is not 0
+                if save_status == True and total_num_tables > 0:
 
                     # loop through each tables in the dataframe list
                     for table in range(total_num_tables):
@@ -1113,7 +1116,7 @@ if session_state['upload_file_status'] == True:
                     # at least 1 table could extract something
                     if no_extraction < len(nothing_error):
                         # Save into DB
-                        basic_format
+                        # basic_format
 
                         with st.form("Preview Value", clear_on_submit=False):
                             for data in basic_format:
@@ -1140,20 +1143,16 @@ if session_state['upload_file_status'] == True:
                                                 x += 1
                                                 col = cols[x % 3]
 
-                                                new_string = word.capitalize()
-                                                for i in range(len(new_string)-1):
-                                                    if new_string[i].islower() and new_string[i+1].isupper():
-                                                        new_string = new_string[:i+1] + " " + new_string[i+1:]
-                                                        new_string
+                                                # new_string = word.capitalize()
+                                                # for i in range(len(new_string)-1):
+                                                #     if new_string[i].islower() and new_string[i+1].isupper():
+                                                #         new_string = new_string[:i+1] + " " + new_string[i+1:]
 
                                                 value = col.text_input(word, sheet_json[i][word], key=sheet + date + word)
 
                                                 if word not in json:
                                                     json[word] = value
                                         
-                                        
-                                        
-                                
                             
                             submitted = st.form_submit_button("Submit")
                             if submitted:
