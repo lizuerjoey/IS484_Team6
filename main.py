@@ -31,7 +31,7 @@ show_pages(
 get_options = get_all_companies()["data"]
 
 def metrics_component(words, numbers, percentage, format, inverse):
-    num = str(numbers)
+    num = str(round(numbers,2))
     if (percentage>=0) and inverse == False:
         percentage = str(percentage) + "%"
         st.markdown("<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px;'> <div style='display:flex; padding-left:20px; padding-top:15px;'><div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + words + "<br> (in "+format + ")</div><div style='color: rgb( 96, 149, 111 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 231, 243, 226); padding:6px; height:40px'>" + percentage + "</div></div>" + "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + num + " </div></div>",unsafe_allow_html=True)
@@ -339,7 +339,10 @@ else:
         # Show Graph
         if not df_is.empty and len(income_statement["Year"])>=2:  
             ### INCOME STATEMENT 
-            st.subheader("Income Statement (in " + is_numForm + ")")
+            # st.subheader("Income Statement (in " + is_numForm + ")")
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Income Statement (in """ + is_numForm + """)</span>
+                """, unsafe_allow_html=True) 
             is_line_chart, is_bar_chart, is_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
             with is_line_chart:
                 st.line_chart(df_is, x="Year")
@@ -399,8 +402,12 @@ else:
                 # st.metric(label="Net Profit/Loss (in " + is_numForm + ")", value=income_statement["NetProfitLoss"][current_year_position], delta=str(round(net_ratio, 2))+"%")
         
         ### BALANCE SHEET
-        if not df_bs.empty and len(balance_sheet["year"])>=2: 
-            st.subheader("Balance Sheet (in " + bs_numForm + ")")
+        if not df_bs.empty and len(balance_sheet["year"])>=2:
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Balance Sheet (in """ + bs_numForm + """)</span>
+                """, unsafe_allow_html=True) 
+            
+            # st.subheader("Balance Sheet (in " + bs_numForm + ")")
             
             bs_line_chart, bs_bar_chart, bs_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
             with bs_line_chart:
@@ -424,7 +431,7 @@ else:
             with assets_col:
                 ###### ASSETS
                 st.markdown("""
-                    <span style='font-weight: 700;'>Total Assets</span>
+                    <span style='font-weight: 600; font-size: 1.7rem'>Total Assets</span>
                 """, unsafe_allow_html=True)
                 assets_line_chart, assets_bar_chart, assets_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
                 
@@ -452,7 +459,7 @@ else:
             with liabilities_col:
                 ###### LIABILITIES
                 st.markdown("""
-                    <span style='font-weight: 700;'>Total Liabilities</span>
+                    <span style='font-weight: 600; font-size: 1.7rem'>Total Liabilities</span>
                 """, unsafe_allow_html=True)
 
                 liabilities_line_chart, liabilities_bar_chart, liabilities_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
@@ -495,7 +502,10 @@ else:
 
         ### CASH FLOW
         if not df_cf.empty and len(cashflow["year"])>=2: 
-            st.subheader("Cash Flow (in " + cf_numForm + ")")
+            # st.subheader("Cash Flow (in " + cf_numForm + ")")
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Cash Flow (in """ + cf_numForm + """)</span>
+                """, unsafe_allow_html=True) 
             cf_line_chart, cf_bar_chart, cf_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
             
             with cf_line_chart:
@@ -511,7 +521,11 @@ else:
 
         ### OTHER METRICS
         if not df_om.empty and len(other_metrics["year"])>=2: 
-            st.subheader("Other Metrics (in " + om_numForm + ")")
+            # st.subheader("Other Metrics (in " + om_numForm + ")")
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Other Metrics (in """ + om_numForm + """)</span>
+                """, unsafe_allow_html=True) 
+            
             ###### BASE AND CURRENT YEAR
             res = [eval(i) for i in other_metrics["year"]]
             base_year_position = other_metrics["year"].index(str(min(res)))
