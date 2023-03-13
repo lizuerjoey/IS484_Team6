@@ -1109,21 +1109,67 @@ if session_state['upload_file_status'] == True:
                     if no_extraction < len(nothing_error):
                         # Save into DB
                         # basic_format
-                        if session_state["text_option"] == True:
-                            if com_name:
-                                add_com = add_company(com_id, com_name)
-                                if (add_com["message"] == "Added"):
-                                    st.success("Company Added", icon="✅")
-                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
-                                else:
-                                    st.error('Error adding company. Please try again later.', icon="🚨")
-                            else:
-                                # If company name not entered
-                                st.error("Please enter a company name in Upload Report Page.", icon="🚨")
-                        else:
-                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
-                    else:
-                        st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
+
+                        with st.form("Preview Value", clear_on_submit=False):
+                            for data in basic_format:
+                                if data != "currency" and data != "fiscal_start_month":
+                                    sheet_json = basic_format[data]
+                                    sheet = data
+                                    data = data.title().replace("_", " ")
+                                    st.markdown('**' + data + '**')
+
+                                    
+                                    for i in range(len(sheet_json)):
+                                        st.write(sheet_json[i]["year"] + ":")
+                                        date = sheet_json[i]["year"]
+
+                                        # if sheet_json[i] != "year" and sheet_json[i] != "numberFormat":
+                                        #     cols = st.columns(3)
+                                        #     for x in range(len(sheet_json[i])):
+                                        #         col = cols[len(sheet_json[i])%3]
+                                        #         col.selectbox(sheet_json[i], key=x)
+
+                                        
+                                        cols = st.columns(3)
+                                        x = 0
+                                        for word in sheet_json[i]:
+                                            if word != "year" and word != "numberFormat":
+                                                x += 1
+                                                # new_length = len(sheet_json[i]) - 2
+                                                col = cols[x % 3]
+                                                col.text_input(word, sheet_json[i][word], key=sheet + date + word)
+                                            
+
+                                        # for x in range(len(sheet_json[i])):
+                                        #     for word in sheet_json[i]:
+                                        #         word
+                                            # if sheet_json[i] == "year" or sheet_json[i] == "numberFormat":
+                                            #     continue
+                                            # x
+                                            # col = cols[x%3]
+                                            # col.text_input(str(sheet_json[i][x]), 'value', key=sheet + date + str(x))
+
+                                
+                            
+                            submitted = st.form_submit_button("Submit")
+                            if submitted:
+                                st.write("Submit")
+
+                    #     if session_state["text_option"] == True:
+                    #         if com_name:
+                    #             add_com = add_company(com_id, com_name)
+                    #             if (add_com["message"] == "Added"):
+                    #                 st.success("Company Added", icon="✅")
+                    #                 # save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                    #             else:
+                    #                 st.error('Error adding company. Please try again later.', icon="🚨")
+                    #         else:
+                    #             # If company name not entered
+                    #             st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                    #     # else:
+                    #     #     save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                    # else:
+                    #     st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")
                
 
 
