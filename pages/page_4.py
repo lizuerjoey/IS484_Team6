@@ -643,9 +643,9 @@ if session_state['upload_file_status'] == True:
         # at least 1 page
         if (totalpages > 0 or is_image == True):
             # Check file type
-            # try_aws_btn = st.button("Try AWS (Switch Page)")
-            # if try_aws_btn and file_path.endswith(".pdf"):
-            #     switch_page("try aws") 
+            try_aws_btn = st.button("Try AWS (Switch Page)")
+            if try_aws_btn and file_path.endswith(".pdf"):
+                switch_page("try aws") 
             
             st.subheader('Basic Form Data')
             col1, col2 = st.columns(2)
@@ -674,27 +674,27 @@ if session_state['upload_file_status'] == True:
             if (is_image == False):
                 if (totalpages == 1):
 
-                    # try aws button
-                    button_clicked = False
-                    btn_placeholder = st.empty()
-                    with btn_placeholder.container():
-                        # if session_state["status"]:
-                            if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                                origin = './temp_files/'
-                                target = './selected_files/'
-                                files = os.listdir(origin)
-                                files_target = os.listdir(target)
-                                for file in files_target:
-                                    if file=="file.pdf":
-                                        os.remove(target+file)
-                                for file in files:
-                                    if file!="test.txt" and file.endswith(".pdf"):
-                                        file_type = get_file_type(file)
-                                        shutil.copy(origin+file, target)
-                                        os.rename(target+file, target+"file"+file_type)
+                    # # try aws button
+                    # button_clicked = False
+                    # btn_placeholder = st.empty()
+                    # with btn_placeholder.container():
+                    #     # if session_state["status"]:
+                    #         if (st.button("Try AWS", key="aws_singlepg_pdf")):
+                    #             origin = './temp_files/'
+                    #             target = './selected_files/'
+                    #             files = os.listdir(origin)
+                    #             files_target = os.listdir(target)
+                    #             for file in files_target:
+                    #                 if file=="file.pdf":
+                    #                     os.remove(target+file)
+                    #             for file in files:
+                    #                 if file!="test.txt" and file.endswith(".pdf"):
+                    #                     file_type = get_file_type(file)
+                    #                     shutil.copy(origin+file, target)
+                    #                     os.rename(target+file, target+"file"+file_type)
 
-                                button_clicked = True
-                                btn_placeholder.empty()
+                    #             button_clicked = True
+                    #             btn_placeholder.empty()
                         
                     tables = check_tables_single_PDF(file_path)
                     extraction_container = st.empty()
@@ -706,13 +706,13 @@ if session_state['upload_file_status'] == True:
                     # user input is successful on page 3
                     if (status == True and pg_input != ''):
                         # try aws button 
-                        button_clicked = False
-                        btn_placeholder = st.empty()
-                        with btn_placeholder.container():
-                            if session_state["status"]:
-                                if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
-                                    button_clicked = True
-                                    btn_placeholder.empty()
+                        # button_clicked = False
+                        # btn_placeholder = st.empty()
+                        # with btn_placeholder.container():
+                        #     if session_state["status"]:
+                        #         if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
+                        #             button_clicked = True
+                        #             btn_placeholder.empty()
 
                         tables = check_tables_multi_PDF(file_path, str(pg_input))
                         extraction_container = st.empty()
@@ -723,14 +723,14 @@ if session_state['upload_file_status'] == True:
                         if (session_state['upload_file_status'] == True):
                             st.error("Please specify the pages you want to extract.", icon="🚨")
             
-            if button_clicked:
-                extraction_container.empty()
-                next_extraction = st.empty()
-                with next_extraction.container():
-                    dfs = convert_file()
-                    for i in range(len(dfs)):
-                        # fixed from dfs[0][i] for multi page pdf
-                        statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
+            # if button_clicked:
+            #     extraction_container.empty()
+            #     next_extraction = st.empty()
+            #     with next_extraction.container():
+            #         dfs = convert_file()
+            #         for i in range(len(dfs)):
+            #             # fixed from dfs[0][i] for multi page pdf
+            #             statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:

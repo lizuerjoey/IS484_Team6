@@ -24,7 +24,8 @@ show_pages(
         Page("pages/page_4.py", "Preview Extracted Data", ":pencil2:"),
         Page("pages/page_2.py", "Search Files", ":eye:"),
         Page("pages/page_5.py", "Dictionary", ":book:"),
-        Page("pages/page_6.py","Image Cropper", ":scissors:")
+        Page("pages/page_6.py","Image Cropper", ":scissors:"),
+        Page("pages/page_7.py","Try AWS")
     ]
 )
 
