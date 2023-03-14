@@ -190,10 +190,11 @@ else:
         }
         other_metrics = {
             "year":[],
+            "returnOnEquity":[],
             "returnOnAsset": [],
-            "netInterestMargin": [],
-            "netInterestIncomeRatio": [],
-            "costIncomeRatio": [],
+            "currentRatio": [],
+            "debtToEquityRatio": [],
+            "netProfitMargin": [],
             "ebidta":[],
         }
 
@@ -312,26 +313,29 @@ else:
                 if other_metrics_result["year"]>=start_year and other_metrics_result["year"]<=end_year  and len(other_metrics_result["year"]) == len(start_year):
                     if other_metrics_result["year"] in  other_metrics["year"]:
                         position = other_metrics["year"].index(str(other_metrics_result["year"]))
+                        if ((other_metrics["returnOnEquity"][position] + other_metrics_result["returnOnEquity"])!=0):
+                            other_metrics["returnOnEquity"][position] = (other_metrics["returnOnEquity"][position] + other_metrics_result["returnOnEquity"])/2
                         if ((other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])!=0):
                             other_metrics["returnOnAsset"][position] = (other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])/2
-                        if ((other_metrics["netInterestMargin"][position] + other_metrics_result["netInterestMargin"])!=0):
-                            other_metrics["netInterestMargin"][position] = (other_metrics["netInterestMargin"][position] + other_metrics_result["netInterestMargin"])/2
-                        if ((other_metrics["netInterestIncomeRatio"][position] + other_metrics_result["netInterestIncomeRatio"])):
-                            other_metrics["netInterestIncomeRatio"][position] = (other_metrics["netInterestIncomeRatio"][position] + other_metrics_result["netInterestIncomeRatio"])/2
-                        if ((other_metrics["costIncomeRatio"][position] + other_metrics_result["costIncomeRatio"])!=0):
-                            other_metrics["costIncomeRatio"][position] = (other_metrics["costIncomeRatio"][position] + other_metrics_result["costIncomeRatio"])/2
+                        if ((other_metrics["currentRatio"][position] + other_metrics_result["currentRatio"])!=0):
+                            other_metrics["currentRatio"][position] = (other_metrics["currentRatio"][position] + other_metrics_result["currentRatio"])/2
+                        if ((other_metrics["debtTodebtToEquityRatioEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])):
+                            other_metrics["debtToEquityRatio"][position] = (other_metrics["debtToEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])/2
+                        if ((other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])!=0):
+                            other_metrics["netProfitMargin"][position] = (other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])/2
                         if ((other_metrics["ebidta"][position] + other_metrics_result["ebidta"])!=0):
                             other_metrics["ebidta"][position] = (other_metrics["ebidta"][position] + other_metrics_result["ebidta"])/2
                     else:
                         other_metrics["year"].append(str(other_metrics_result["year"]))
+                        other_metrics["returnOnEquity"].append(other_metrics_result["returnOnEquity"]*exchange_rate)
                         other_metrics["returnOnAsset"].append(other_metrics_result["returnOnAsset"]*exchange_rate)
-                        other_metrics["netInterestMargin"].append(other_metrics_result["netInterestMargin"]*exchange_rate)
-                        other_metrics["netInterestIncomeRatio"].append(other_metrics_result["netInterestIncomeRatio"]*exchange_rate)
-                        other_metrics["costIncomeRatio"].append(other_metrics_result["costIncomeRatio"]*exchange_rate)
+                        other_metrics["currentRatio"].append(other_metrics_result["currentRatio"]*exchange_rate)
+                        other_metrics["debtToEquityRatio"].append(other_metrics_result["debtToEquityRatio"]*exchange_rate)
+                        other_metrics["netProfitMargin"].append(other_metrics_result["netProfitMargin"]*exchange_rate)
                         other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
             # Create Dataframe
             df_om = pd.DataFrame(data=other_metrics)
-            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'netInterestMargin': 'Net Interest Margin', 'netInterestIncomeRatio':'Net Interest Income Ratio', "costIncomeRatio":"Cost Income Ratio", "ebidta": "EBIDTA"}, axis=1, inplace=True)
+            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'currentRatio': 'Current Ratio', 'debtToEquityRatio':'Debt to Equity Ratio', "netProfitMargin":"Net Profit Margin", "ebidta": "EBIDTA", "returnOnEquity": "Return on Equity"}, axis=1, inplace=True)
         
         if len(income_statement["Year"])<2 and len(balance_sheet["year"])<2 and len(cashflow["year"])<2 and len(other_metrics["year"])<2:
             st.error("Please upload more reports", icon="🚨")
@@ -375,7 +379,6 @@ else:
                 if (income_statement["Revenue"][base_year_position]!=0):
                     revenue_ratio = ((income_statement["Revenue"][current_year_position] - income_statement["Revenue"][base_year_position])/income_statement["Revenue"][base_year_position])*100
                 metrics_component("Revenue", income_statement["Revenue"][current_year_position], round(revenue_ratio, 2), is_numForm, False)
-                # st.metric(label="Revenue (in " + is_numForm + ")", value=income_statement["Revenue"][current_year_position], delta=str(round(revenue_ratio, 2))+"%")
 
             ###### COST
             with col2:
@@ -383,7 +386,6 @@ else:
                 if (income_statement["Cost"][base_year_position]!=0):
                     cost_ratio = ((income_statement["Cost"][current_year_position] - income_statement["Cost"][base_year_position])/income_statement["Cost"][base_year_position])*100
                 metrics_component("Cost", income_statement["Cost"][current_year_position], round(cost_ratio, 2), is_numForm, True)
-                # st.metric(label="Cost (in " + is_numForm + ")", value=income_statement["Cost"][current_year_position], delta=str(round(cost_ratio, 2))+"%", delta_color="inverse")
 
             ###### GROSS PROFIT/LOSS
             with col3:
@@ -391,7 +393,6 @@ else:
                 if (income_statement["GrossProfitLoss"][base_year_position]!=0):
                     gross_ratio = ((income_statement["GrossProfitLoss"][current_year_position] - income_statement["GrossProfitLoss"][base_year_position])/income_statement["GrossProfitLoss"][base_year_position])*100
                 metrics_component("Gross Profit/Loss", income_statement["GrossProfitLoss"][current_year_position], round(gross_ratio, 2), is_numForm, False)
-                # st.metric(label="Gross Profit/Loss (in " + is_numForm + ")", value=income_statement["GrossProfitLoss"][current_year_position], delta=str(round(gross_ratio, 2))+"%")
 
             ###### NET PROFIT/LOSS
             with col4:
@@ -399,7 +400,6 @@ else:
                 if (income_statement["NetProfitLoss"][base_year_position]!=0):
                     net_ratio = ((income_statement["NetProfitLoss"][current_year_position] - income_statement["NetProfitLoss"][base_year_position])/income_statement["NetProfitLoss"][base_year_position])*100
                 metrics_component("Net Profit/Loss", income_statement["NetProfitLoss"][current_year_position], round(net_ratio, 2), is_numForm, False)
-                # st.metric(label="Net Profit/Loss (in " + is_numForm + ")", value=income_statement["NetProfitLoss"][current_year_position], delta=str(round(net_ratio, 2))+"%")
         
         ### BALANCE SHEET
         if not df_bs.empty and len(balance_sheet["year"])>=2:
@@ -407,7 +407,6 @@ else:
                     <span style='font-weight: 600; font-size: 2rem'>Balance Sheet (in """ + bs_numForm + """)</span>
                 """, unsafe_allow_html=True) 
             
-            # st.subheader("Balance Sheet (in " + bs_numForm + ")")
             
             bs_line_chart, bs_bar_chart, bs_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
             with bs_line_chart:
@@ -493,11 +492,9 @@ else:
             with debt_col:
                 debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
                 metrics_component("Debt", balance_sheet_metric["debt"][current_year_position], round(debt_ratio, 2), bs_numForm, True)
-                # st.metric(label="Debt (in " + bs_numForm + ")", value=balance_sheet_metric["debt"][current_year_position], delta=str(debt_ratio)+"%",  delta_color="inverse")
             with cash_col:
                 cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
                 metrics_component("Cash", balance_sheet_metric["cash"][current_year_position], round(cash_ratio, 2), bs_numForm, False)
-                # st.metric(label="Cash (in " + bs_numForm + ")", value=balance_sheet_metric["cash"][current_year_position], delta=str(cash_ratio)+"%")
 
 
         ### CASH FLOW
@@ -525,34 +522,51 @@ else:
             st.markdown("""
                     <span style='font-weight: 600; font-size: 2rem'>Other Metrics (in """ + om_numForm + """)</span>
                 """, unsafe_allow_html=True) 
+
+            ###### GRAPH
+            om_line_chart, om_bar_chart, om_raw_data = st.tabs(["Line Chart", "Bar Chart", "Raw Data"])
+
+            with om_line_chart:
+                st.line_chart(df_om, x="Year")
+            with om_bar_chart:
+                # st.bar_chart(df_is, x="Year")
+                plost.bar_chart(data=df_om,
+                    bar = "Year",
+                    value=["Current Ratio", "Debt to Equity Ratio", "EBIDTA", "Net Profit Margin", "Return On Asset", "Return on Equity"],
+                    group=True,
+                    width=150)
+            with om_raw_data:
+                df_om = df_om.transpose()
+                new_header = df_om.iloc[0] 
+                df_om = df_om[1:] 
+                df_om.columns = new_header
+                df_om
             
             ###### BASE AND CURRENT YEAR
             res = [eval(i) for i in other_metrics["year"]]
             base_year_position = other_metrics["year"].index(str(min(res)))
             current_year_position = other_metrics["year"].index(str(max(res)))
-            roa_col, nim_col = st.columns(2)
-            nii_col, cir_col, ebidta_col = st.columns(3)
+            roe_col, roa_col, cr_col = st.columns(3)
+            dte_col, npm_col, ebidta_col = st.columns(3)
 
+            with roe_col:
+                returnOnEquity_ratio = ((other_metrics["returnOnEquity"][current_year_position] - other_metrics["returnOnEquity"][base_year_position])/other_metrics["returnOnEquity"][base_year_position])*100
+                metrics_component("Return on Equity", other_metrics["returnOnEquity"][current_year_position], round(returnOnEquity_ratio, 2), om_numForm, False)
             with roa_col:
                 returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
-                metrics_component("Return on Asset", other_metrics["returnOnAsset"][current_year_position], round(returnOnAsset_ratio, 2), is_numForm, False)
-                # st.metric(label="Return on Asset (in " + is_numForm + ")", value=other_metrics["returnOnAsset"][current_year_position], delta=str(round(returnOnAsset_ratio, 2))+"%")
-            with nim_col:
-                netInterestMargin_ratio = ((other_metrics["netInterestMargin"][current_year_position] - other_metrics["netInterestMargin"][base_year_position])/other_metrics["netInterestMargin"][base_year_position])*100
-                metrics_component("Net Interest Margin", other_metrics["netInterestMargin"][current_year_position], round(netInterestMargin_ratio, 2), is_numForm, False)
-                # st.metric(label="Net Interest Margin (in " + is_numForm + ")", value=other_metrics["netInterestMargin"][current_year_position], delta=str(round(netInterestMargin_ratio, 2))+"%")
-            with nii_col:
-                netInterestIncome_ratio = ((other_metrics["netInterestIncomeRatio"][current_year_position] - other_metrics["netInterestIncomeRatio"][base_year_position])/other_metrics["netInterestIncomeRatio"][base_year_position])*100
-                metrics_component("Net Interest Income ", other_metrics["netInterestIncomeRatio"][current_year_position], round(netInterestIncome_ratio, 2), is_numForm, False)
-                # st.metric(label="Net Interest Income (in " + is_numForm + ")", value=other_metrics["netInterestIncomeRatio"][current_year_position], delta=str(round(netInterestIncome_ratio, 2))+"%")
-            with cir_col:
-                costIncome_ratio = ((other_metrics["costIncomeRatio"][current_year_position] - other_metrics["costIncomeRatio"][base_year_position])/other_metrics["costIncomeRatio"][base_year_position])*100
-                metrics_component("Cost Income", other_metrics["costIncomeRatio"][current_year_position], round(costIncome_ratio, 2), is_numForm, False)
-                # st.metric(label="Cost Income (in " + is_numForm + ")", value=other_metrics["costIncomeRatio"][current_year_position], delta=str(round(costIncome_ratio, 2))+"%")
+                metrics_component("Return on Asset", other_metrics["returnOnAsset"][current_year_position], round(returnOnAsset_ratio, 2), om_numForm, False)
+            with cr_col:
+                currentRatio_ratio = ((other_metrics["currentRatio"][current_year_position] - other_metrics["currentRatio"][base_year_position])/other_metrics["currentRatio"][base_year_position])*100
+                metrics_component("Current Ratio", other_metrics["currentRatio"][current_year_position], round(currentRatio_ratio, 2), om_numForm, False)
+            with dte_col:
+                debtToEquity_ratio = ((other_metrics["debtToEquityRatio"][current_year_position] - other_metrics["debtToEquityRatio"][base_year_position])/other_metrics["debtToEquityRatio"][base_year_position])*100
+                metrics_component("Debt to Equity Ratio ", other_metrics["debtToEquityRatio"][current_year_position], round(debtToEquity_ratio, 2), om_numForm, False)
+            with npm_col:
+                netProfitMargin_ratio = ((other_metrics["netProfitMargin"][current_year_position] - other_metrics["netProfitMargin"][base_year_position])/other_metrics["netProfitMargin"][base_year_position])*100
+                metrics_component("Cost Income", other_metrics["netProfitMargin"][current_year_position], round(netProfitMargin_ratio, 2), om_numForm, False)
             with ebidta_col:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-                metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), is_numForm, False)
-                # st.metric(label="EBIDTA (in " + is_numForm + ")", value=other_metrics["ebidta"][current_year_position], delta=str(round(ebidta_ratio, 2))+"%")
+                metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), om_numForm, False)
     
     
     now = datetime.now()
@@ -575,12 +589,6 @@ else:
             df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
 
         if not df_om.empty:
-            df_om = df_om.transpose()
-            new_header = df_om.iloc[0] 
-            df_om = df_om[1:] 
-            df_om.columns = new_header
-            # st.subheader("Other Metrics (in " + is_numForm + ")")
-            # df_om
             df_om.to_excel(writer, sheet_name='Other Metrics')
     
     # DOWNLOAD EXCEL SHEET
