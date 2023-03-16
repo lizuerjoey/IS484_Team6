@@ -20,7 +20,6 @@ def get_file_type (file):
     return filetype
 
 st.header("Upload Reports")
-
 ################## Company Name
 get_options = get_all_companies()["data"]
 
