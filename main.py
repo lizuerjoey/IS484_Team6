@@ -570,34 +570,34 @@ else:
                 metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), om_numForm, False)
     
     
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    format_df["datetime"].append(str(date.today()) + " " + current_time)
-    df = pd.DataFrame(data=format_df)
-    df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        format_df["datetime"].append(str(date.today()) + " " + current_time)
+        df = pd.DataFrame(data=format_df)
+        df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
 
-    # CONVERT TO EXCEL SHEET
-    with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
-        df.to_excel(writer, sheet_name='Main')
-        if not df_bs.empty and len(df_bs)>1:
-            df_bs = pd.concat([df_bs, df_assets, df_liabilities])
-            df_bs.to_excel(writer, sheet_name='Balance Sheet')
+        # CONVERT TO EXCEL SHEET
+        with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
+            df.to_excel(writer, sheet_name='Main')
+            if not df_bs.empty and len(df_bs)>1:
+                df_bs = pd.concat([df_bs, df_assets, df_liabilities])
+                df_bs.to_excel(writer, sheet_name='Balance Sheet')
 
-        if not df_is.empty:
-            df_is.to_excel(writer, sheet_name='Income Statement')
+            if not df_is.empty:
+                df_is.to_excel(writer, sheet_name='Income Statement')
 
-        if not df_cf.empty:
-            df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+            if not df_cf.empty:
+                df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
 
-        if not df_om.empty:
-            df_om.to_excel(writer, sheet_name='Other Metrics')
-    
-    # DOWNLOAD EXCEL SHEET
-    with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
-        btn = st.download_button(
-                label="Download Excel 📥",
-                data=file,
-                file_name="Download.xlsx",
-                mime="text/xlsx"
-            )
+            if not df_om.empty:
+                df_om.to_excel(writer, sheet_name='Other Metrics')
+        
+        # DOWNLOAD EXCEL SHEET
+        with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
+            btn = st.download_button(
+                    label="Download Excel 📥",
+                    data=file,
+                    file_name="Download.xlsx",
+                    mime="text/xlsx"
+                )
     
