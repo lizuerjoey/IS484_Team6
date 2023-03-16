@@ -417,7 +417,7 @@ def viewer_func(df, num, id):
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
     
-    print("HERE")
+    print("=====HERE" + str(num)+ "========")
     print(number_format)
     return (option, number_format[-1], is_df_empty, search_col_list_check, confirm_headers, search_col)
 

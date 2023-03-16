@@ -123,11 +123,11 @@ fiscal_month
 # Fiancial Format
 statement
 
-# Number Format - array
+# Number Format - array  - NEED TO CHECK
 num_format_list
 
 # DUPLICATE NUM FORMAT
-# Check if format is different if yes array of true - NEED TO CHECK
+# Check if format is different if yes array of true
 duplicate_num_format_list
 
 # Confirm header list --> Keyword
@@ -136,8 +136,8 @@ confirm_headers_list
 # Confirm Search Col List -- > Total - Keyword
 confirm_search_col_list
 
-# if False in is_df_empty_list:
-#     if st.button("Extract", key="extract"):
-#         save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, statement, format, duplicate_num_format, confirm_headers_list, confirm_search_col_list)                        
+if False in is_df_empty_list:
+    if st.button("Extract", key="extract"):
+        save_json_to_db(dataframe_list, search_col_check, currency, fiscal_month, statement, num_format_list, duplicate_num_format_list, confirm_headers_list, confirm_search_col_list)                        
 
         
