@@ -21,7 +21,7 @@ def get_file_type (file):
     return filetype
 
 st.header("Upload Reports")
-cross_stmt_calculation("income_statement", 2018, "revenue", 900, "AC-05b7", 900)
+# cross_stmt_calculation("income_statement", 2018, "revenue", 900, "AC-05b7", 900)
 
 ################## Company Name
 get_options = get_all_companies()["data"]

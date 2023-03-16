@@ -249,6 +249,7 @@ def viewer_func(df, num, id):
             if not delete:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
                 number_format.append(new_num_list[i])
+                number_format
                 if new_num_list[i] == "Unable to Determine":
                     st.warning("Number Format is a required field.", icon="⭐")
                 
@@ -415,9 +416,10 @@ def viewer_func(df, num, id):
         
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
+    
     print("HERE")
     print(number_format)
-    return (option, number_format, is_df_empty, search_col_list_check, confirm_headers, search_col)
+    return (option, number_format[-1], is_df_empty, search_col_list_check, confirm_headers, search_col)
 
 def extract_tables (tables):
     # CHECK ACCURACY

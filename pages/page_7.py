@@ -95,14 +95,13 @@ duplicate_num_format_list = []
 for i in range(len(dfs)):
     statement, num_format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i][0], i, "btnclicked")
     dataframe_list.append(dfs[i][0])
-    search_col_check
     confirm_search_col_list+=search_col
     is_df_empty_list.append(is_df_empty)
     confirm_headers_list.append(confirm_headers)
-    num_format
+    num_format_list.append(num_format)
     # num_format_list.append[format]
     if i == 0:
-        check_format = format
+        check_format = num_format
     elif (format!=check_format):
         duplicate_num_format_list.append(True)
 
@@ -113,7 +112,7 @@ for i in range(len(dfs)):
 dataframe_list
 
 # SEARCH COL LIST CHECK - array - NEED TO CHECK
-search_col_list_check  
+search_col_check  
 
 # CURRENCY
 currency
