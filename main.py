@@ -320,7 +320,7 @@ else:
                             other_metrics["returnOnAsset"][position] = (other_metrics["returnOnAsset"][position] + other_metrics_result["returnOnAsset"])/2
                         if ((other_metrics["currentRatio"][position] + other_metrics_result["currentRatio"])!=0):
                             other_metrics["currentRatio"][position] = (other_metrics["currentRatio"][position] + other_metrics_result["currentRatio"])/2
-                        if ((other_metrics["debtTodebtToEquityRatioEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])):
+                        if ((other_metrics["debtToEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])):
                             other_metrics["debtToEquityRatio"][position] = (other_metrics["debtToEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])/2
                         if ((other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])!=0):
                             other_metrics["netProfitMargin"][position] = (other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])/2
