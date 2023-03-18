@@ -80,6 +80,10 @@ if ("com_name" and "selected_comName" and "com_id" and "selected_comID") not in 
 if "text_option" not in st.session_state:
     session_state['text_option'] = False
 
+# to persist the form when user clicks on submit after previewing data
+if "extract_state" not in session_state:
+    session_state["extract_state"] = False
+
 # retrieve from upload files page
 com_name = session_state["com_name"]
 com_id = session_state["com_id"]
@@ -266,9 +270,9 @@ def viewer_func(df, num, id):
 
         st.subheader("Edit Headers")
 
-        col1, col2 = st.columns(2)
+        column1, column2 = st.columns(2)
 
-        with col1:
+        with column1:
             if not delete:
                 options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num))
                 st.session_state['column_del'] = True
@@ -279,7 +283,7 @@ def viewer_func(df, num, id):
                 options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num), disabled=True)
 
                 
-        with col2:
+        with column2:
             renamecol_tooltip = "Column headers must be unique and strictly years or years+quarters. For yearly statements, you can rename columns which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
             if not delete:
                 options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
@@ -412,7 +416,7 @@ def viewer_func(df, num, id):
         
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
-
+     
     return (option, selected, is_df_empty)
 
 def extract_tables (tables):
@@ -575,9 +579,15 @@ if session_state['upload_file_status'] == True:
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
             # show extract button
-            if st.button("Extract", key="extract"):
+            if st.button("Extract", key="extract") or session_state["extract_state"]:
+                # save extract button session
+                session_state["extract_state"] = True
+
                 # saving function here
-                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, duplicate_num_format, confirm_headers_list, confirm_search_col_list)                        
+                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, duplicate_num_format, confirm_headers_list, confirm_search_col_list)
+
+        else:
+            st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")                        
 
     # no files was uploaded
     else:
