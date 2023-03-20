@@ -204,7 +204,7 @@ def image_viewer(dataframes):
         with extraction_container.container():
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out)        
-                statement, format, is_df_empty = viewer_func(dataframes[i][0], i, 'img') 
+                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i][0], i, 'img') 
 
 
 def viewer_func(df, num, id):
@@ -253,6 +253,7 @@ def viewer_func(df, num, id):
             if not delete:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
                 number_format.append(new_num_list[i])
+                number_format
                 if new_num_list[i] == "Unable to Determine":
                     st.warning("Number Format is a required field.", icon="⭐")
                 
@@ -307,9 +308,10 @@ def viewer_func(df, num, id):
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
         else:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num), disabled=True)
+        
 
         confirm_headers_list.append(confirm_headers)
-            
+        
         if len(confirm_headers_list[num]) < 1:
             if not delete:
                 st.error("You need to select at least 1 column header.", icon="🚨")
@@ -403,10 +405,12 @@ def viewer_func(df, num, id):
         search_col_list = list(dataframe.columns)
         for item in confirm_headers:
             search_col_list.remove(item)
-            
+        
+        search_col = []
         if not delete:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num))
             confirm_search_col_list.append(search_headers)
+            search_col.append(search_headers)
 
             if len(search_headers) <= 0:
                 st.warning("You need to select at least 1 column to locate cell value.", icon="⭐")
@@ -416,8 +420,10 @@ def viewer_func(df, num, id):
         
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
-     
-    return (option, selected, is_df_empty)
+    
+    print("=====HERE" + str(num)+ "========")
+    print(number_format)
+    return (option, number_format[-1], is_df_empty, search_col_list_check, confirm_headers, search_col)
 
 def extract_tables (tables):
     # CHECK ACCURACY
@@ -437,10 +443,10 @@ def extract_tables (tables):
             print(accuracy)
             dfs = convert_file()
             for i in range(len(dfs[0])):
-                statement, format, is_df_empty = viewer_func(dfs[0][i], i, "pdfimg")
+                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[0][i], i, "pdfimg")
         else:
             for i in range(len(tables)):
-                statement, format, is_df_empty = viewer_func(tables[i], i, 'camelot')
+                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot')
 
 # make sure a file was being uploaded first
 if session_state['upload_file_status'] == True:
@@ -578,6 +584,14 @@ if session_state['upload_file_status'] == True:
         
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
+            search_col_list_check
+            currency
+            fiscal_month
+            financial_format
+            number_format
+            duplicate_num_format
+            confirm_headers_list
+            confirm_search_col_list
             # show extract button
             if st.button("Extract", key="extract") or session_state["extract_state"]:
                 # save extract button session

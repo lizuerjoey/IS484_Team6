@@ -8,6 +8,7 @@ from pages.page_4 import (
     get_currency_list
 )
 from extraction.pdf_to_image import (convert_file)
+from extraction.saving import (save_json_to_db)
 month = [
             "Not Selected",
             "January",
@@ -46,10 +47,11 @@ if st.session_state['text_option'] == True and session_state['upload_file_status
     st.header(com_name)
 else:
     st.header(selected_comName)
-
+fiscal_month = 0
 st.subheader('Basic Form Data')
 col1, col2 = st.columns(2)
 
+currency = ""
 with col1:
     currency_list = get_currency_list()
     option = st.selectbox('Select a Currency:', currency_list, key="currency_singlepg_pdf")
@@ -82,6 +84,60 @@ if "selected_pages.pdf" not in files and "file.pdf" not in files_target:
             shutil.copy(origin+file, target)
             os.rename(target+file, target+"file"+file_type)
 dfs = convert_file()
+dataframe_list = []
+search_col_list_check = []
+confirm_search_col_list = []
+is_df_empty_list = []
+confirm_headers_list = []
+num_format_list = []
+check_format = ""
+duplicate_num_format_list = []
 for i in range(len(dfs)):
-    # Check dfs[i][0] or dfs[0][i]
-    statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
+    statement, num_format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i][0], i, "btnclicked")
+    dataframe_list.append(dfs[i][0])
+    confirm_search_col_list+=search_col
+    is_df_empty_list.append(is_df_empty)
+    confirm_headers_list.append(confirm_headers)
+    num_format_list.append(num_format)
+    # num_format_list.append[format]
+    if i == 0:
+        check_format = num_format
+    elif (format!=check_format):
+        duplicate_num_format_list.append(True)
+
+
+
+
+# DATAFRAME LIST
+dataframe_list
+
+# SEARCH COL LIST CHECK - array - NEED TO CHECK
+search_col_check  
+
+# CURRENCY
+currency
+
+# Fiscal Month
+fiscal_month
+
+# Fiancial Format
+statement
+
+# Number Format - array  - NEED TO CHECK
+num_format_list
+
+# DUPLICATE NUM FORMAT
+# Check if format is different if yes array of true
+duplicate_num_format_list
+
+# Confirm header list --> Keyword
+confirm_headers_list
+
+# Confirm Search Col List -- > Total - Keyword
+confirm_search_col_list
+
+if False in is_df_empty_list:
+    if st.button("Extract", key="extract"):
+        save_json_to_db(dataframe_list, search_col_check, currency, fiscal_month, statement, num_format_list, duplicate_num_format_list, confirm_headers_list, confirm_search_col_list)                        
+
+        
