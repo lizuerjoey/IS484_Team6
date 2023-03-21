@@ -195,6 +195,8 @@ def get_currency_list():
     return currency_acronyms
 
 def image_viewer(dataframes):
+    print("IN")
+    print(dataframes)
     # check if dataframe is empty
     if len(dataframes) < 1:
         st.error('Please upload an image with a table.', icon="🚨")
@@ -204,7 +206,7 @@ def image_viewer(dataframes):
         with extraction_container.container():
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out)        
-                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i][0], i, 'img') 
+                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img') 
 
 
 def viewer_func(df, num, id):
@@ -253,7 +255,8 @@ def viewer_func(df, num, id):
             if not delete:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
                 number_format.append(new_num_list[i])
-                number_format
+                st.write("NOT DELETE")
+                st.write(new_num_list[i])
                 if new_num_list[i] == "Unable to Determine":
                     st.warning("Number Format is a required field.", icon="⭐")
                 
@@ -268,6 +271,10 @@ def viewer_func(df, num, id):
                     duplicate_num_format.append(True)
             else:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num), disabled=True)
+                st.write("ELSE")
+                st.write(new_num_list[i])
+
+        st.write("HERE")
 
         st.subheader("Edit Headers")
 
@@ -485,10 +492,11 @@ if session_state['upload_file_status'] == True:
                     # is_image.append(True)
                     is_image = True
                     if file_path not in path_list:
+                        dataframes = image_extraction(file_path[0])
                         for file in file_path:
-                            dataframes.append(image_extraction(file))
+                            # dataframes.append(image_extraction(file))
                             path_list.append(file_path)
-                            
+                            print(image_extraction(file))  
 
         # at least 1 page
         if (totalpages > 0 or is_image == True):
