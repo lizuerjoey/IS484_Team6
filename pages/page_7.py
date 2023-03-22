@@ -100,9 +100,10 @@ for i in range(len(dfs)):
     if i == 0:
         statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", "", "pdfimg")
         num_format = format
+        search_col_list_check=search_col_check
     else:
         statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
-    
+        search_col_list_check+=search_col_check
     
     dataframe_list.append(dfs[i])
     confirm_search_col_list+=search_col
@@ -122,7 +123,7 @@ for i in range(len(dfs)):
 dataframe_list
 
 # SEARCH COL LIST CHECK - array - NEED TO CHECK
-search_col_check  
+search_col_list_check  
 
 # CURRENCY
 currency
@@ -148,6 +149,6 @@ confirm_search_col_list
 
 if False in is_df_empty_list:
     if st.button("Extract", key="extract"):
-        save_json_to_db(dataframe_list, search_col_check, currency, fiscal_month, statement, num_format_list, duplicate_num_format_list, confirm_headers_list, confirm_search_col_list)                        
+        save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, statement, num_format_list, duplicate_num_format_list, confirm_headers_list, confirm_search_col_list)                        
 
         

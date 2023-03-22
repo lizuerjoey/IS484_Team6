@@ -209,6 +209,7 @@ def image_viewer(dataframes):
 
 
 def viewer_func(df, num, id, num_form, convert):
+    search_col_check = []
 
     # to loop through and search for number format
     df.to_excel("./temp_files/" + str(num) + ".xlsx")    
@@ -442,15 +443,17 @@ def viewer_func(df, num, id, num_form, convert):
             if len(search_headers) <= 0:
                 st.warning("You need to select at least 1 column to locate cell value.", icon="⭐")
                 search_col_list_check.append(False)
+                search_col_check.append(False)
             else:
                 search_col_list_check.append(True)
+                search_col_check.append(True)
         
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
     
     print("=====HERE" + str(num)+ "========")
     print(number_format)
-    return (option, numFormat, is_df_empty, search_col_list_check, confirm_headers, search_col)
+    return (option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col)
 
 def extract_tables (tables):
     # CHECK ACCURACY
