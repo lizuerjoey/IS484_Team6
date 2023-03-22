@@ -255,6 +255,8 @@ def viewer_func(df, num, id, num_form, convert):
                 if num_form!="":
                     st.selectbox("Number Format:", [num_form], key="num_format -" + id + str(num), disabled=True)
                     numFormat = num_form
+                    st.info("You cannot choose a different number format. Number Format should be consistent for every table in each uploaded report.", icon="ℹ️")
+
                 elif num_form =="" and convert=="pdfimg":
                     
                     nums= [            

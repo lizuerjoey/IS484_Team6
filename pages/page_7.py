@@ -74,9 +74,9 @@ origin = './temp_files/'
 target = './selected_files/'
 files = os.listdir(origin)
 files_target = os.listdir(target)
-for file in files_target:
-    if file=="file.pdf":
-        os.remove(target+file)
+# for file in files_target:
+#     if file=="file.pdf":
+#         os.remove(target+file)
 
 if "selected_pages.pdf" not in files and "file.pdf" not in files_target:
     for file in files:
