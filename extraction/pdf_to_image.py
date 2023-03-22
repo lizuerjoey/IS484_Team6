@@ -24,7 +24,10 @@ def convert_file():
         for file in os.listdir(temp_path):
             if (file != "test.txt" and file.endswith('.jpeg')):
                 extracted_data = image_extraction(os.path.join("selected_files",file))
-                df.append(extracted_data)
+                # df.append(extracted_data)
+                for data in extracted_data:
+                    df.append(data)
+                # print(extracted_data)
         return df
     
         

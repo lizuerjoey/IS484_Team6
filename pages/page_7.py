@@ -5,7 +5,8 @@ import shutil
 from pages.page_4 import (
     get_file_type,
     viewer_func,
-    get_currency_list
+    get_currency_list,
+    image_viewer
 )
 from extraction.pdf_to_image import (convert_file)
 from extraction.saving import (save_json_to_db)
@@ -92,13 +93,22 @@ confirm_headers_list = []
 num_format_list = []
 check_format = ""
 duplicate_num_format_list = []
+num_format = ""
+print(dfs)
+# image_viewer(dfs)
 for i in range(len(dfs)):
-    statement, num_format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i][0], i, "btnclicked")
-    dataframe_list.append(dfs[i][0])
+    if i == 0:
+        statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", "", "pdfimg")
+        num_format = format
+    else:
+        statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
+    
+    
+    dataframe_list.append(dfs[i])
     confirm_search_col_list+=search_col
     is_df_empty_list.append(is_df_empty)
     confirm_headers_list.append(confirm_headers)
-    num_format_list.append(num_format)
+    num_format_list.append(format)
     # num_format_list.append[format]
     if i == 0:
         check_format = num_format

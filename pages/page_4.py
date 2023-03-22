@@ -195,8 +195,7 @@ def get_currency_list():
     return currency_acronyms
 
 def image_viewer(dataframes):
-    print("IN")
-    print(dataframes)
+
     # check if dataframe is empty
     if len(dataframes) < 1:
         st.error('Please upload an image with a table.', icon="🚨")
@@ -206,10 +205,10 @@ def image_viewer(dataframes):
         with extraction_container.container():
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out)        
-                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img') 
+                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', "", "") 
 
 
-def viewer_func(df, num, id):
+def viewer_func(df, num, id, num_form, convert):
 
     # to loop through and search for number format
     df.to_excel("./temp_files/" + str(num) + ".xlsx")    
@@ -251,30 +250,49 @@ def viewer_func(df, num, id):
             num_format = get_number_format("./temp_files/" + str(num) + ".xlsx")
             new_num_list = sort_num_list(num_format)
             options = list(range(len(new_num_list)))
-            
+            numFormat = ""
             if not delete:
-                i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
-                number_format.append(new_num_list[i])
-                st.write("NOT DELETE")
-                st.write(new_num_list[i])
-                if new_num_list[i] == "Unable to Determine":
-                    st.warning("Number Format is a required field.", icon="⭐")
-                
-                # each financial statement should have a consistent number format
-                different = 0
-                for saved_num in number_format:
-                    if new_num_list[i] != saved_num:
-                        different += 1
+                if num_form!="":
+                    st.selectbox("Number Format:", [num_form], key="num_format -" + id + str(num), disabled=True)
+                    numFormat = num_form
+                elif num_form =="" and convert=="pdfimg":
+                    
+                    nums= [            
+                            "Unable to Determine",
+                            "Thousand",
+                            "Million",
+                            "Billion",
+                            "Trillion",
+                            "Quadrillion"
+                        ]
+                    extracted_num_format = nums[num_format]
 
-                if different > 0:
-                    st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
-                    duplicate_num_format.append(True)
+
+                    del nums[num_format]
+                    nums.insert(0, extracted_num_format)
+                    numFormat = st.selectbox("Number Format:", nums, key="num_format -" + id + str(num))
+                    if numFormat == "Unable to Determine":
+                        st.warning("Number Format is a required field.", icon="⭐")
+                else:
+                    i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
+                    number_format.append(new_num_list[i])
+                    numFormat = new_num_list[i]
+                    if new_num_list[i] == "Unable to Determine":
+                        st.warning("Number Format is a required field.", icon="⭐")
+                    
+                    # each financial statement should have a consistent number format
+                    different = 0
+                    for saved_num in number_format:
+                        if new_num_list[i] != saved_num:
+                            different += 1
+
+                    if different > 0:
+                        st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
+                        duplicate_num_format.append(True)
             else:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num), disabled=True)
-                st.write("ELSE")
-                st.write(new_num_list[i])
 
-        st.write("HERE")
+
 
         st.subheader("Edit Headers")
 
@@ -430,7 +448,7 @@ def viewer_func(df, num, id):
     
     print("=====HERE" + str(num)+ "========")
     print(number_format)
-    return (option, number_format[-1], is_df_empty, search_col_list_check, confirm_headers, search_col)
+    return (option, numFormat, is_df_empty, search_col_list_check, confirm_headers, search_col)
 
 def extract_tables (tables):
     # CHECK ACCURACY
@@ -450,10 +468,10 @@ def extract_tables (tables):
             print(accuracy)
             dfs = convert_file()
             for i in range(len(dfs[0])):
-                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[0][i], i, "pdfimg")
+                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[i], i, "pdfimg", "", "")
         else:
             for i in range(len(tables)):
-                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot')
+                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot', "", "")
 
 # make sure a file was being uploaded first
 if session_state['upload_file_status'] == True:
