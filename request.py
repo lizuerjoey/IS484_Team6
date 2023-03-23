@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 exchange_rate_api_key = os.getenv("EXCHANGE_RATE_API_KEY")
@@ -268,4 +269,37 @@ def add_synonym(did, synonym):
     }
     
     data = post(session, f"http://127.0.0.1:5000/add_synonym", body)
+    return data
+
+# RETRIEVE EXTRACTED DATA
+def retrieve_data(file_name):
+    session = requests.Session()
+    body = {
+        "file_name": base64.b64encode(file_name.encode("ascii")).decode("ascii"),
+    }
+    data = post(session, f"http://127.0.0.1:5000/get_all_from_nlp", body)
+    return data
+
+# RETRIEVE EXTRACTED DATA
+def retrieve_file_name(cid):
+    session = requests.Session()
+    body = {
+        "cid": cid,
+    }
+    datas = post(session, f"http://127.0.0.1:5000/get_file_name", body)
+    return_data = []
+    for data in datas["data"]:
+        return_data.append(base64.b64decode(data[0].encode("ascii")).decode("ascii"))
+    return return_data
+
+# INSERT SYNONYM
+def insert_extracted_data_nlp(fid, cid, data):
+    session = requests.Session()
+    body = {
+        "fid": fid,
+        "cid": cid,
+        "data": json.dumps(data)
+    }
+    
+    data = post(session, f"http://127.0.0.1:5000/insert_extracted_data_nlp", body)
     return data

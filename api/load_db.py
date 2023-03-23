@@ -13,6 +13,7 @@ from database import (
     Companies_Files,
     Extracted_Data,
     Dictionary,
+    NLP
 )
 
 ######### CREATE DB TABLES #########
@@ -27,6 +28,7 @@ table_objects = [
     Companies_Files.__table__,
     Extracted_Data.__table__,
     Dictionary.__table__,
+    NLP.__table__,
 ]
 
 # Drop All Tables

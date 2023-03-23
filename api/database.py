@@ -62,3 +62,10 @@ class Dictionary(Base):
     sheet = Column(String)
     financial_word = Column(String)
     synonym = Column(String)
+
+class NLP(Base):
+    __tablename__ = "nlp"
+    nid = Column(Integer, primary_key=True, autoincrement=True)
+    cid = Column(String, ForeignKey("companies.cid"))
+    fid = Column(Integer, ForeignKey("companies_files.fid"))
+    string = Column(String)

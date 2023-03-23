@@ -151,5 +151,59 @@ def add_synonym():
             cursor.execute(sql, (synonym, did))
     return {"message": "Updated", "code": 200}, 200
 
+# GET ALL DETAILS FROM NLP
+@app.post("/get_all_from_nlp")
+def get_all_from_nlp ():
+    data = request.get_json()
+    file_name = data["file_name"]
+    sql = (
+        "SELECT * FROM nlp WHERE fid = (SELECT fid FROM companies_files WHERE file = %s );"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [file_name])
+            results = cursor.fetchall()
+    response = {"code": 200, "data": results}
+    if (len(results)==0):
+            response["status"] = "No data available"
+            
+    return response, 200
+
+# RETRIEVE FILE NAME FROM SPECIFIC COMPANY
+@app.post("/get_file_name")
+def get_file_name ():
+    data = request.get_json()
+    cid = data["cid"]
+    sql = (
+        "SELECT file FROM companies_files WHERE cid =  %s ;"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [cid])
+            results = cursor.fetchall()
+    response = {"code": 200, "data": results}
+    if (len(results)==0):
+            response["status"] = "No data available"
+            
+    return response, 200
+
+
+# INSERT EXTRACTED DATA NLP
+@app.post("/insert_extracted_data_nlp")
+def insert_extracted_data_nlp():
+    data = request.get_json()
+    fid = data["fid"]
+    cid = data["cid"]
+    string = data["data"]
+    
+    sql = (
+    "INSERT INTO nlp (cid, fid, string) VALUES ( %s, %s, %s);"
+    )
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (cid, fid, string))
+    return {"message": "Added", "code": 201}, 201
+
+
 if __name__ == '__main__':
     app.run(debug=True)
