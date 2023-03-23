@@ -31,6 +31,9 @@ if "text_option" not in st.session_state:
 if "upload_file_status" not in st.session_state:
     session_state['upload_file_status'] = True
     
+if "extract_state" not in session_state:
+    session_state["extract_state"] = False
+    
 if ("com_name" and "selected_comName" and "com_id" and "selected_comID") not in st.session_state:
     st.session_state['com_name'] = ""
     st.session_state['com_id'] = ""
@@ -92,6 +95,7 @@ is_df_empty_list = []
 confirm_headers_list = []
 num_format_list = []
 check_format = ""
+financial_format = []
 num_format = ""
 # image_viewer(dfs)
 for i in range(len(dfs)):
@@ -99,9 +103,11 @@ for i in range(len(dfs)):
         statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", "", "pdfimg")
         num_format = format
         search_col_list_check=search_col_check
+        financial_format.append(statement)
     else:
         statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
         search_col_list_check+=search_col_check
+        financial_format.append(statement)
     
     dataframe_list.append(dfs[i])
     confirm_search_col_list+=search_col
@@ -127,7 +133,7 @@ currency
 fiscal_month
 
 # Fiancial Format
-statement
+financial_format
 
 # Number Format - array  - NEED TO CHECK
 num_format_list
@@ -140,7 +146,9 @@ confirm_headers_list
 confirm_search_col_list
 
 if False in is_df_empty_list:
-    if st.button("Extract", key="extract"):
-        save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, statement, num_format_list, confirm_headers_list, confirm_search_col_list)                        
+    if st.button("Extract", key="extract") or session_state["extract_state"]:
+        # save extract button session
+        session_state["extract_state"] = True
+        save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, num_format_list, confirm_headers_list, confirm_search_col_list)                        
 
         
