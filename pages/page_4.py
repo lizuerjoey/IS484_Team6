@@ -207,15 +207,15 @@ def image_viewer(dataframes):
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out) 
                 if i ==0:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', "", "")
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dataframes[i], i, 'img', "", "")
                     number_format = format
                 else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', number_format, "") 
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dataframes[i], i, 'img', number_format, "") 
 
 
 def viewer_func(df, num, id, num_form, convert):
     search_col_check = []
-
+    
     # to loop through and search for number format
     df.to_excel("./temp_files/" + str(num) + ".xlsx")    
 
@@ -444,7 +444,7 @@ def viewer_func(df, num, id, num_form, convert):
     
     print("=====HERE" + str(num)+ "========")
     print(number_format)
-    return (option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col)
+    return (option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col, delete)
 
 def extract_tables (tables):
     # CHECK ACCURACY
@@ -466,18 +466,18 @@ def extract_tables (tables):
             number_format = ""
             for i in range(len(dfs[0])):
                 if i ==0:
-                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[i], i, "img", "", "")
+                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col,  delete = viewer_func(dfs[i], i, "img", "", "")
                     number_format = format
                 else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, 'img', number_format, "") 
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, 'img', number_format, "") 
         else:
             number_format = ""
             for i in range(len(tables)):
                 if i ==0:
-                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, "camelot", "", "")
+                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col, delete = viewer_func(tables[i], i, "camelot", "", "")
                     number_format = format
                 else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot', number_format, "") 
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(tables[i], i, 'camelot', number_format, "") 
 
 
 # make sure a file was being uploaded first

@@ -30,7 +30,7 @@ if "text_option" not in st.session_state:
 
 if "upload_file_status" not in st.session_state:
     session_state['upload_file_status'] = True
-    
+
 if "extract_state" not in session_state:
     session_state["extract_state"] = False
     
@@ -97,24 +97,30 @@ num_format_list = []
 check_format = ""
 financial_format = []
 num_format = ""
+
 # image_viewer(dfs)
 for i in range(len(dfs)):
     if i == 0:
-        statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", "", "pdfimg")
+        statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, "btnclicked", "", "pdfimg")
         num_format = format
         search_col_list_check=search_col_check
-        financial_format.append(statement)
+        if not delete:
+            financial_format.append(statement)
+            dataframe_list.append(dfs[i])
+            confirm_search_col_list+=search_col
+            is_df_empty_list.append(is_df_empty)
+            confirm_headers_list.append(confirm_headers)
+            num_format_list.append(format)
     else:
-        statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
+        statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
         search_col_list_check+=search_col_check
-        financial_format.append(statement)
-    
-    dataframe_list.append(dfs[i])
-    confirm_search_col_list+=search_col
-    is_df_empty_list.append(is_df_empty)
-    confirm_headers_list.append(confirm_headers)
-    num_format_list.append(format)
-    # num_format_list.append[format]
+        if not delete:
+            financial_format.append(statement)
+            dataframe_list.append(dfs[i])
+            confirm_search_col_list+=search_col
+            is_df_empty_list.append(is_df_empty)
+            confirm_headers_list.append(confirm_headers)
+            num_format_list.append(format)
 
 
 
