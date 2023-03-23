@@ -334,11 +334,10 @@ def viewer_func(df, num, id, num_form, convert):
         confirm_headers_tooltip = "Select the columns with all rows consisting of financial keywords in your word dictionary e.g. Revenue, Liabilities, Operating Net Cash Flow etc."
         if not delete:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
+            confirm_headers_list.append(confirm_headers)
         else:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num), disabled=True)
         
-
-        confirm_headers_list.append(confirm_headers)
         
         if len(confirm_headers_list[num]) < 1:
             if not delete:

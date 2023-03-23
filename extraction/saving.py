@@ -218,11 +218,21 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     matched_dict_col = {}
 
     # below are required fields; if at least one field is not correct -> cannot save to json             
+    # if ((False in search_col_list_check) or 
+    #     (currency == 'Not Selected') or (str(fiscal_month) == " ") or
+    #     ('Not Selected' in financial_format) or 
+    #     ('Unable to Determine' in number_format) or
+    #     (True in duplicate_num_format)):
+    #     save_status = False
+    #     st.error("Please check the required fields.", icon="🚨")
+    #     session_state["extract_state"] = False
+    # else:
+    #     save_status = True
+
     if ((False in search_col_list_check) or 
         (currency == 'Not Selected') or (str(fiscal_month) == " ") or
         ('Not Selected' in financial_format) or 
-        ('Unable to Determine' in number_format) or
-        (True in duplicate_num_format)):
+        ('Unable to Determine' in number_format)):
         save_status = False
         st.error("Please check the required fields.", icon="🚨")
         session_state["extract_state"] = False
@@ -248,7 +258,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
     # saving to db
     all_tables_json_list = []
-    table_count = 0
+    table_count = -1
 
     # if all required fields are filled & total number of tables to extract is 0
     if save_status == True and total_num_tables <= 0:
@@ -257,6 +267,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     # if all required fields are filled & total number of tables to extract is not 0
     if save_status == True and total_num_tables > 0:
         
+        print(total_num_tables)
         # loop through each tables in the dataframe list
         for table in range(total_num_tables):
             # table count
@@ -289,8 +300,13 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             # single header
             elif len(confirm_headers_list[table]) == 1:
                 # return just the confirmed header
+                print("*************")
+                print(confirm_headers_list[table])
                 confirmed_header = confirm_headers_list[table][0]
-                new_col_list.append(dataframe_list[table][confirmed_header])
+                print(table)
+                print(confirmed_header)
+                print(dataframe_list[table])
+                new_col_list.append(dataframe_list[table][str(confirmed_header)])
                 new_col_list.insert(0, dataframe_list[table].index)
                 big_col = concat_lists(new_col_list)
 
@@ -309,6 +325,8 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             
             # search through (col) for financial word
             if financial_format[table] != "Not Selected":
+                print("********")
+                print(financial_format[table])
                 col_words = get_financial_words_col(financial_format[table])
                 for item in list_all_lower(big_col):
                     for key, synonyms in col_words.items():
