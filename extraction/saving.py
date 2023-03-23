@@ -202,7 +202,7 @@ def merge_col_cells(confirm_headers_table, table, dataframe_list, colname, new_c
         
     return new_col_list
 
-def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, duplicate_num_format, confirm_headers_list, confirm_search_col_list):      
+def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list):      
     save_status = False
     total_num_tables = get_total_num_tables(dataframe_list)
     big_col = []
