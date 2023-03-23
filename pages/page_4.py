@@ -203,9 +203,14 @@ def image_viewer(dataframes):
     else:
         extraction_container = st.empty()
         with extraction_container.container():
+            number_format = ""
             for i in range(len(dataframes)):
-                # if dataframe is not empty (manage to extract some things out)        
-                statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', "", "") 
+                # if dataframe is not empty (manage to extract some things out) 
+                if i ==0:
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', "", "")
+                    number_format = format
+                else:
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dataframes[i], i, 'img', number_format, "") 
 
 
 def viewer_func(df, num, id, num_form, convert):
@@ -257,8 +262,8 @@ def viewer_func(df, num, id, num_form, convert):
                     st.selectbox("Number Format:", [num_form], key="num_format -" + id + str(num), disabled=True)
                     numFormat = num_form
                     st.info("You cannot choose a different number format. Number Format should be consistent for every table in each uploaded report.", icon="ℹ️")
-
-                elif num_form =="" and convert=="pdfimg":
+                    number_format.append(numFormat)
+                else:
                     
                     nums= [            
                             "Unable to Determine",
@@ -276,22 +281,9 @@ def viewer_func(df, num, id, num_form, convert):
                     numFormat = st.selectbox("Number Format:", nums, key="num_format -" + id + str(num))
                     if numFormat == "Unable to Determine":
                         st.warning("Number Format is a required field.", icon="⭐")
-                else:
-                    i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num))
-                    number_format.append(new_num_list[i])
-                    numFormat = new_num_list[i]
-                    if new_num_list[i] == "Unable to Determine":
-                        st.warning("Number Format is a required field.", icon="⭐")
-                    
-                    # each financial statement should have a consistent number format
-                    different = 0
-                    for saved_num in number_format:
-                        if new_num_list[i] != saved_num:
-                            different += 1
+                   
+                    number_format.append(numFormat)
 
-                    if different > 0:
-                        st.warning("You cannot choose a different number format. Number Format should be consistent for each table in each uploaded report.", icon="⭐")
-                        duplicate_num_format.append(True)
             else:
                 i = st.selectbox("Number Format:", options, format_func=lambda x: new_num_list[int(x)], key="format -" + id + str(num), disabled=True)
 
@@ -472,11 +464,22 @@ def extract_tables (tables):
         if (any(i < 75 for i in accuracy)):
             print(accuracy)
             dfs = convert_file()
+            number_format = ""
             for i in range(len(dfs[0])):
-                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[i], i, "pdfimg", "", "")
+                if i ==0:
+                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(dfs[i], i, "img", "", "")
+                    number_format = format
+                else:
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(dfs[i], i, 'img', number_format, "") 
         else:
+            number_format = ""
             for i in range(len(tables)):
-                statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot', "", "")
+                if i ==0:
+                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col = viewer_func(tables[i], i, "camelot", "", "")
+                    number_format = format
+                else:
+                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col = viewer_func(tables[i], i, 'camelot', number_format, "") 
+
 
 # make sure a file was being uploaded first
 if session_state['upload_file_status'] == True:
@@ -495,9 +498,7 @@ if session_state['upload_file_status'] == True:
 
        
         for path in (file_paths):
-            # print("PATH: "  + path)
-            # print("PATH: "  + str(path == "./temp_files\selected_pages.pdf"))
-            # if path!="./temp_files\selected_pages.pdf":
+
                 file_type = get_file_type(path)
 
                 # file is pdf
@@ -554,29 +555,7 @@ if session_state['upload_file_status'] == True:
             # single page pdf
             if (is_image == False):
                 if (totalpages == 1):
-
-                    # # try aws button
-                    # button_clicked = False
-                    # btn_placeholder = st.empty()
-                    # with btn_placeholder.container():
-                    #     # if session_state["status"]:
-                    #         if (st.button("Try AWS", key="aws_singlepg_pdf")):
-                    #             origin = './temp_files/'
-                    #             target = './selected_files/'
-                    #             files = os.listdir(origin)
-                    #             files_target = os.listdir(target)
-                    #             for file in files_target:
-                    #                 if file=="file.pdf":
-                    #                     os.remove(target+file)
-                    #             for file in files:
-                    #                 if file!="test.txt" and file.endswith(".pdf"):
-                    #                     file_type = get_file_type(file)
-                    #                     shutil.copy(origin+file, target)
-                    #                     os.rename(target+file, target+"file"+file_type)
-
-                    #             button_clicked = True
-                    #             btn_placeholder.empty()
-                        
+         
                     tables = check_tables_single_PDF(file_path)
                     extraction_container = st.empty()
                     with extraction_container.container():
@@ -586,15 +565,6 @@ if session_state['upload_file_status'] == True:
                 else:
                     # user input is successful on page 3
                     if (status == True and pg_input != ''):
-                        # try aws button 
-                        # button_clicked = False
-                        # btn_placeholder = st.empty()
-                        # with btn_placeholder.container():
-                        #     if session_state["status"]:
-                        #         if (st.button("Try AWS", key="aws_multipg_pdf"+str(num))):
-                        #             button_clicked = True
-                        #             btn_placeholder.empty()
-
                         tables = check_tables_multi_PDF(file_path, str(pg_input))
                         extraction_container = st.empty()
                         with extraction_container.container():
@@ -604,15 +574,7 @@ if session_state['upload_file_status'] == True:
                         if (session_state['upload_file_status'] == True):
                             st.error("Please specify the pages you want to extract.", icon="🚨")
             
-            # if button_clicked:
-            #     extraction_container.empty()
-            #     next_extraction = st.empty()
-            #     with next_extraction.container():
-            #         dfs = convert_file()
-            #         for i in range(len(dfs)):
-            #             # fixed from dfs[0][i] for multi page pdf
-            #             statement, format, is_df_empty = viewer_func(dfs[i][0], i, "btnclicked")
-        
+
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
             search_col_list_check
@@ -629,7 +591,7 @@ if session_state['upload_file_status'] == True:
                 session_state["extract_state"] = True
 
                 # saving function here
-                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, duplicate_num_format, confirm_headers_list, confirm_search_col_list)
+                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list)
 
         else:
             st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")                        
