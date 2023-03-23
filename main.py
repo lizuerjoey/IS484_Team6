@@ -28,7 +28,7 @@ show_pages(
         Page("pages/page_2.py", "Search Files", ":eye:"),
         Page("pages/page_5.py", "Dictionary", ":book:"),
         Page("pages/page_6.py","Image Cropper", ":scissors:"),
-        Page("pages/page_7.py","Try AWS")
+        Page("pages/page_7.py","Try AWS", ":frame_with_picture:")
     ]
 )
 
@@ -572,7 +572,16 @@ else:
                 ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
                 metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), om_numForm, False)
     
-    
+        # allow user to select from dropdown list here (PDF ONLY)
+
+        # call api to retrieve json specific for each file
+
+        # display graph
+
+        # display spacy
+
+        # follow the code below to append to excel sheet
+
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         format_df["datetime"].append(str(date.today()) + " " + current_time)

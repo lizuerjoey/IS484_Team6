@@ -157,6 +157,15 @@ def save_file (ID, uploaded_file, com_name, json):
         last_file = len(all_files["data"]) - 1
         fid = all_files["data"][last_file][0]
 
+        # check whether file is blank or empty or no words -> show error message
+
+        # call the nlp extraction
+
+        # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
+        
+        # call api to insert 
+
+
         # call API to insert json data
         result = insert_data(fid, ID, json)
 
@@ -673,7 +682,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     if word not in json:
                                         json[word] = value     
 
-                            display_values = "<div class='multiple-identified-box'><b>⭐ Other values identified:</b>"
+                            display_values = "<div class='multiple-identified-box'><b>ℹ️ Other values identified:</b>"
                             display_values += "\n\nOur extraction usually takes the first value in the extracted list when multiple values are identified. Hence, below is a list of other values that were identified due to multiple financial keywords found in the columns to search."
                             for og_k, og_v in retrieved_value.items():
                                 for k, v_list in value_dict.items():
@@ -740,10 +749,10 @@ st.markdown("""
 }
 
 .multiple-identified-box {
-    background: rgba(255, 227, 18, 0.1);
+    background: rgba(28, 131, 225, 0.1);
     padding: 16px;
     margin-bottom: 16px;
-    color: rgb(146, 108, 5) 
+    color: rgb(0, 66, 128) 
 }
 
 </style>
