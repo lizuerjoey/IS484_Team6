@@ -53,30 +53,60 @@ def get_total_num_tables(df):
 def merge_sheets(sheet_lists):
     # create a new dictionary to hold the merged results
     merged_dict = {}
+    aggregation_dict = {}
     # same_sheet_multiple_values_dict = {}
     
     # iterate over each sheet in the list
     for sheet in sheet_lists:
 
-        # iterate over each data(s) extracted in the list
+        # iterate over each data(s) extracted in the list 
+        val_count = 0
+        aggregated_text = ""
+        aggregated_value = 0       
         for data_index in range(len(sheet)):
             year = sheet[data_index]['year']
+            
             if year in merged_dict:
-
-                # if year in same_sheet_multiple_values_dict:
-
+                
+                
                 #  loop through for the financial keywords
                 for key, val in sheet[data_index].items():
                     
                     # if the value is a float and exist in merge dict -> compute the average 
                     if isinstance(val, float) and isinstance(merged_dict[year][key], float):
-                        merged_dict[year][key] = (merged_dict[year][key] + val) / 2
-                        # same_sheet_multiple_values_dict[year][key] = "hello"
+                        
+                        st.write("IN")
+                        print(val)
+
+                        aggregated_value = merged_dict[year][key]
+                        aggregated_text += str(merged_dict[year][key])
+
+                        aggregated_value += val
                     
+                        aggregated_text += " + " + str(val)
+                
+                        st.write("agg: " + str(aggregated_value))
+
+                        val_count += 1
+                        
             else:
                 merged_dict[year] = sheet[data_index]
+                print(sheet[data_index])
+                aggregation_dict[year] = ""
                 # same_sheet_multiple_values_dict[year] = []
 
+        st.write(val_count)
+        # print(len(sheet_lists))
+        # if (val_count == len(sheet_lists)-1):
+            
+        #     merged_dict[year][key] += aggregated_value / len(sheet_lists)
+        #     st.write(merged_dict[year][key])
+        #     aggregated_text += "/ " + str(len(sheet_lists))
+                
+        #     print(val_count)
+        #     st.write(aggregated_text)
+        
+        
         # print(merged_dict)
 
         new_merged_list = []
@@ -202,7 +232,7 @@ def merge_col_cells(confirm_headers_table, table, dataframe_list, colname, new_c
         
     return new_col_list
 
-def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list):      
+def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list, delete_list):      
     save_status = False
     total_num_tables = get_total_num_tables(dataframe_list)
     big_col = []
@@ -218,17 +248,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     matched_dict_col = {}
 
     # below are required fields; if at least one field is not correct -> cannot save to json             
-    # if ((False in search_col_list_check) or 
-    #     (currency == 'Not Selected') or (str(fiscal_month) == " ") or
-    #     ('Not Selected' in financial_format) or 
-    #     ('Unable to Determine' in number_format) or
-    #     (True in duplicate_num_format)):
-    #     save_status = False
-    #     st.error("Please check the required fields.", icon="🚨")
-    #     session_state["extract_state"] = False
-    # else:
-    #     save_status = True
-
     if ((False in search_col_list_check) or 
         (currency == 'Not Selected') or (str(fiscal_month) == " ") or
         ('Not Selected' in financial_format) or 
@@ -238,16 +257,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         session_state["extract_state"] = False
     else:
         save_status = True
-
-    # if ((False in search_col_list_check) or 
-    #     (str(fiscal_month) == " ") or
-    #     ('Not Selected' in financial_format) or 
-    #     ('Unable to Determine' in number_format) or
-    #     (True in duplicate_num_format)):
-    #     save_status = False
-    #     st.error("Please check the required fields.", icon="🚨")
-    # else:
-    #     save_status = True
 
     # error message
     incorrect_format_error = []
@@ -261,13 +270,12 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     table_count = -1
 
     # if all required fields are filled & total number of tables to extract is 0
-    if save_status == True and total_num_tables <= 0:
-        st.error("There are no tables for extraction. Please check your tables.", icon="🚨")
+    # if save_status == True and total_num_tables <= 0:
+    #     st.error("No tables were selected for extraction, please check your delete tables selection.", icon="🚨")
 
     # if all required fields are filled & total number of tables to extract is not 0
     if save_status == True and total_num_tables > 0:
         
-        print(total_num_tables)
         # loop through each tables in the dataframe list
         for table in range(total_num_tables):
             # table count
@@ -300,12 +308,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             # single header
             elif len(confirm_headers_list[table]) == 1:
                 # return just the confirmed header
-                print("*************")
-                print(confirm_headers_list[table])
                 confirmed_header = confirm_headers_list[table][0]
-                print(table)
-                print(confirmed_header)
-                print(dataframe_list[table])
                 new_col_list.append(dataframe_list[table][str(confirmed_header)])
                 new_col_list.insert(0, dataframe_list[table].index)
                 big_col = concat_lists(new_col_list)
@@ -325,8 +328,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             
             # search through (col) for financial word
             if financial_format[table] != "Not Selected":
-                print("********")
-                print(financial_format[table])
                 col_words = get_financial_words_col(financial_format[table])
                 for item in list_all_lower(big_col):
                     for key, synonyms in col_words.items():
@@ -472,6 +473,16 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                             else:
                                                 # check multiple value here!!!
                                                 if none_count != len(fin_words[keyword]):
+                                                    
+                                                    # extracted_value = fin_words[keyword][i]
+
+                                                    if (("(" in fin_words[keyword][i]) or
+                                                        (")" in fin_words[keyword][i]) or 
+                                                        ("," in fin_words[keyword][i])):
+                                                        fin_words[keyword][i] = fin_words[keyword][i].replace("(", "")
+                                                        fin_words[keyword][i] = fin_words[keyword][i].replace(")", "")
+                                                        fin_words[keyword][i] = fin_words[keyword][i].replace(",", "")
+ 
                                                     financial_statement_format[keyword] = float(fin_words[keyword][i])
                                                 # else:
                                                 #     none_count
@@ -581,6 +592,8 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         for table in range(len(incorrect_format_error)):
             if incorrect_format_error[table] == True:
                 table_num = table + 1
+                if table_num in delete_list:
+                    table_num += 1
                 st.info("Data was detected but the column header is not a year or year and quarter. You might want to rename it in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
             
         no_extraction = 0
@@ -588,6 +601,8 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         for table in range(len(nothing_error)):
             if nothing_error[table] == True:
                 table_num = table + 1
+                if table_num in delete_list:
+                    table_num += 1
                 st.error("Table " + str(table_num) + " could not extract any data. Please check your table values, headers or the financial words dictionary and try again later.", icon="🚨")
                 no_extraction += 1
         
@@ -595,7 +610,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         # at least 1 table could extract something
         if no_extraction < len(nothing_error):
             # Save into DB
-            # basic_format
 
             with st.form("Preview Value"):
                 for data in basic_format:
@@ -659,7 +673,8 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     if word not in json:
                                         json[word] = value     
 
-                            display_values = "<div class='multiple-identified-box'><b>Other values identified</b>"
+                            display_values = "<div class='multiple-identified-box'><b>⭐ Other values identified:</b>"
+                            display_values += "\n\nOur extraction usually takes the first value in the extracted list when multiple values are identified. Hence, below is a list of other values that were identified due to multiple financial keywords found in the columns to search."
                             for og_k, og_v in retrieved_value.items():
                                 for k, v_list in value_dict.items():
                                     if (og_k == k):
@@ -667,10 +682,18 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
                                         count = 0
                                         for v in v_list:
+                                            
+                                            if (("(" in v) or
+                                                (")" in v) or 
+                                                ("," in v)):
+                                                v = v.replace("(", "")
+                                                v = v.replace(")", "")
+                                                v = v.replace(",", "")
+                                            
                                             if (float(og_v) != float(v)):
                                                 display_values += str(v)
                                                 count += 1
-                                                if (count != len(v_list)-1):
+                                                if (count != len(v_list)):
                                                     display_values += ", "
                                              
                                         display_values += "</li>"
@@ -678,8 +701,8 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
                             st.markdown(display_values, unsafe_allow_html=True)                              
                                 
-                                        
-           
+                            st.warning("**Values are aggregated:** \n\n **grossProfit:** 132.2 + 19.9 = 400")            
+
                             
                 
                 submitted = st.form_submit_button("Submit")
@@ -699,6 +722,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             st.error("Please enter a company name in Upload Report Page.", icon="🚨")
                     else:
                         save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+    
 
 st.markdown("""
 <style>

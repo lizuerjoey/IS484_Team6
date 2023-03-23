@@ -31,8 +31,8 @@ if "text_option" not in st.session_state:
 if "upload_file_status" not in st.session_state:
     session_state['upload_file_status'] = True
 
-if "extract_state" not in session_state:
-    session_state["extract_state"] = False
+if "extract_state_aws" not in session_state:
+    session_state["extract_state_aws"] = False
     
 if ("com_name" and "selected_comName" and "com_id" and "selected_comID") not in st.session_state:
     st.session_state['com_name'] = ""
@@ -97,10 +97,10 @@ num_format_list = []
 check_format = ""
 financial_format = []
 num_format = ""
+delete_list = []
 
 # image_viewer(dfs)
 for i in range(len(dfs)):
-    
     new_df, statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
     num_format = format
     search_col_list_check=search_col_check
@@ -111,40 +111,46 @@ for i in range(len(dfs)):
         is_df_empty_list.append(is_df_empty)
         confirm_headers_list.append(confirm_headers)
         num_format_list.append(format)
-
-
-
+    else:
+        delete_list.append(i+1)
 
 
 # DATAFRAME LIST
-dataframe_list
+# dataframe_list
 
 # SEARCH COL LIST CHECK - array - NEED TO CHECK
-search_col_list_check  
+# search_col_list_check  
 
 # CURRENCY
-currency
+# currency
 
 # Fiscal Month
-fiscal_month
+# fiscal_month
 
 # Fiancial Format
-financial_format
+# financial_format
 
 # Number Format - array  - NEED TO CHECK
-num_format_list
+# num_format_list
 
 
 # Confirm header list --> Keyword
-confirm_headers_list
+# confirm_headers_list
 
 # Confirm Search Col List -- > Total - Keyword
-confirm_search_col_list
+# confirm_search_col_list
+
+# table numbers that were deleted
+# delete_list
+
+# all tables were selected to not be extracted
+if (len(is_df_empty_list) == 0):
+    st.error("No tables were selected for extraction, please check your delete tables selection.", icon="🚨")
 
 if False in is_df_empty_list:
-    if st.button("Extract", key="extract") or session_state["extract_state"]:
+    if st.button("Extract", key="extract") or session_state["extract_state_aws"]:
         # save extract button session
-        session_state["extract_state"] = True
-        save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, num_format_list, confirm_headers_list, confirm_search_col_list)                        
+        session_state["extract_state_aws"] = True
+        save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, num_format_list, confirm_headers_list, confirm_search_col_list, delete_list)                        
 
         

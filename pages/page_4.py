@@ -53,6 +53,7 @@ number_format = []
 dataframe_list = []
 is_df_empty_list = []
 button_clicked = False
+delete_list = []
 
 if 'dataframes' not in session_state:
     session_state['dataframes'] = []
@@ -151,7 +152,7 @@ def get_number_format (excel_path):
     workbook = load_workbook(excel_path)
     for sheet_name in workbook.sheetnames:
         sheet = workbook[sheet_name]
-        print(f"Title = {sheet.title}")
+        # print(f"Title = {sheet.title}")
         for value in sheet.iter_rows(values_only=True):
             for cell in value:
                 if cell is None:
@@ -225,6 +226,9 @@ def viewer_func(df, num, id, num_form, convert):
 
     st.subheader('Extracted Table ' + str(num+1))
     delete = st.checkbox("Don't extract Table " + str(num+1) + "? (Clicking this will refresh the entire page and changes made might be lost.)")
+    
+    if delete:
+        delete_list.append(num+1)
 
     # check if an empty dataframe is extracted
     if dataframe.empty:
@@ -323,14 +327,15 @@ def viewer_func(df, num, id, num_form, convert):
         confirm_headers_tooltip = "Select the columns with all rows consisting of financial keywords in your word dictionary e.g. Revenue, Liabilities, Operating Net Cash Flow etc."
         if not delete:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num))
+
+            if len(confirm_headers) < 1:
+                st.error("You need to select at least 1 column header.", icon="🚨")
+
             confirm_headers_list.append(confirm_headers)
+        
         else:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num), disabled=True)
-            confirm_headers_list.append([])
-        
-        if len(confirm_headers_list[num]) < 1:
-            if not delete:
-                st.error("You need to select at least 1 column header.", icon="🚨")
+
 
         new_datafame = df
         # display aggrid
@@ -441,8 +446,6 @@ def viewer_func(df, num, id, num_form, convert):
         else:
             search_headers = st.multiselect('Select the Column(s) to Search Through:', search_col_list, key="search_cols -" + id + str(num), disabled=True)
     
-    print("=====HERE" + str(num)+ "========")
-    print(number_format)
     return (new_datafame, option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col, delete)
 
 def extract_tables (tables):
@@ -460,7 +463,7 @@ def extract_tables (tables):
         for i in range(len(tables)):
             accuracy.append(tables[i].parsing_report["accuracy"])
         if (any(i < 75 for i in accuracy)):
-            print(accuracy)
+            # print(accuracy)
             dfs = convert_file()
             number_format = ""
             for i in range(len(dfs[0])):
@@ -514,7 +517,7 @@ if session_state['upload_file_status'] == True:
                         for file in file_path:
                             # dataframes.append(image_extraction(file))
                             path_list.append(file_path)
-                            print(image_extraction(file))  
+                            # print(image_extraction(file))  
 
         # at least 1 page
         if (totalpages > 0 or is_image == True):
@@ -569,24 +572,28 @@ if session_state['upload_file_status'] == True:
                         if (session_state['upload_file_status'] == True):
                             st.error("Please specify the pages you want to extract.", icon="🚨")
             
+        # all tables were selected to not be extracted
+        if (len(is_df_empty_list) == 0):
+            st.error("No tables were selected for extraction, please check your delete tables selection.", icon="🚨")
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
-            search_col_list_check
-            currency
-            fiscal_month
-            financial_format
-            number_format
-            duplicate_num_format
-            confirm_headers_list
-            confirm_search_col_list
+            # dataframe_list
+            # search_col_list_check
+            # currency
+            # fiscal_month
+            # financial_format
+            # number_format
+            # duplicate_num_format
+            # confirm_headers_list
+            # confirm_search_col_list
             # show extract button
             if st.button("Extract", key="extract") or session_state["extract_state"]:
                 # save extract button session
                 session_state["extract_state"] = True
 
                 # saving function here
-                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list)
+                save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_month, financial_format, number_format, confirm_headers_list, confirm_search_col_list, delete_list)
 
         else:
             st.error("Nothing was extracted from all the tables. Please try again later or Try AWS.", icon="🚨")                        
