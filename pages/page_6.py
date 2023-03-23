@@ -40,7 +40,7 @@ cropped_image= st_cropper(img)
 st.write("Preview")
 test = cropped_image.thumbnail((450,450))
 st.image(cropped_image)
-st.write("Do you want to save the cropped image?")
+st.write("To save newly cropped image, select yes.")
 crop_yes = st.button("Yes")
 if "count" not in st.session_state:
     st.session_state.count=0
@@ -48,13 +48,15 @@ if crop_yes:
     st.session_state.count+=1
     path =(f"./temp_files/new_image{st.session_state.count}.jpeg")
     cropped_image.save(path)
-    crop_yes = False
+    #crop_yes = False
 
     
-st.write("Are you done with cropping?")
-fin_crop= st.button("Preview Extracted Data", key="previewimg")
-if fin_crop:
-    os.remove(file_path)
-    switch_page("preview extracted data")  
+    st.write("Are you done with cropping?")
+    fin_crop= st.button("Preview Extracted Data", key="previewimg")
+    if fin_crop:
+        os.remove(file_path)
+        switch_page("preview extracted data")  
+    else:
+        crop_yes=False
 
 
