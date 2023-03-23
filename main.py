@@ -12,10 +12,8 @@ from request import(
     get_symbols,
     retrieve_data,
     get_months,
-    retrieve_file_name,
 )
 
-print(retrieve_file_name("AC-05b7"))
 st.set_page_config(layout="wide")
 # Specify what pages should be shown in the sidebar, and what their titles and icons
 # should be
