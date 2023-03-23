@@ -101,12 +101,12 @@ num_format = ""
 # image_viewer(dfs)
 for i in range(len(dfs)):
     
-    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
+    new_df, statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, "btnclicked", num_format, "pdfimg")
     num_format = format
     search_col_list_check=search_col_check
     if not delete:
         financial_format.append(statement)
-        dataframe_list.append(dfs[i])
+        dataframe_list.append(new_df)
         confirm_search_col_list+=search_col
         is_df_empty_list.append(is_df_empty)
         confirm_headers_list.append(confirm_headers)

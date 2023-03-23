@@ -206,11 +206,8 @@ def image_viewer(dataframes):
             number_format = ""
             for i in range(len(dataframes)):
                 # if dataframe is not empty (manage to extract some things out) 
-                if i ==0:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dataframes[i], i, 'img', "", "")
-                    number_format = format
-                else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dataframes[i], i, 'img', number_format, "") 
+                new_df, statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dataframes[i], i, 'img', number_format, "")
+                number_format = format
 
 
 def viewer_func(df, num, id, num_form, convert):
@@ -329,12 +326,13 @@ def viewer_func(df, num, id, num_form, convert):
             confirm_headers_list.append(confirm_headers)
         else:
             confirm_headers = st.multiselect('Select the Column(s) with Financial Statement Keywords:', column_headers, column_headers[0], help=confirm_headers_tooltip ,key="confirm_headers -" + id + str(num), disabled=True)
-        
+            confirm_headers_list.append([])
         
         if len(confirm_headers_list[num]) < 1:
             if not delete:
                 st.error("You need to select at least 1 column header.", icon="🚨")
 
+        new_datafame = df
         # display aggrid
         if not delete:
             delete_row = JsCode("""
@@ -411,6 +409,7 @@ def viewer_func(df, num, id, num_form, convert):
 
             # retrieve edited table & append
             new_df = grid_table['data']
+            new_datafame = new_df
             dataframe_list.append(new_df)
 
         else:
@@ -444,7 +443,7 @@ def viewer_func(df, num, id, num_form, convert):
     
     print("=====HERE" + str(num)+ "========")
     print(number_format)
-    return (option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col, delete)
+    return (new_datafame, option, numFormat, is_df_empty, search_col_check, confirm_headers, search_col, delete)
 
 def extract_tables (tables):
     # CHECK ACCURACY
@@ -465,19 +464,15 @@ def extract_tables (tables):
             dfs = convert_file()
             number_format = ""
             for i in range(len(dfs[0])):
-                if i ==0:
-                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col,  delete = viewer_func(dfs[i], i, "img", "", "")
-                    number_format = format
-                else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(dfs[i], i, 'img', number_format, "") 
+                new_df, statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col,  delete = viewer_func(dfs[i], i, "img", number_format, "")
+                number_format = format
+                
         else:
             number_format = ""
             for i in range(len(tables)):
-                if i ==0:
-                    statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col, delete = viewer_func(tables[i], i, "camelot", "", "")
-                    number_format = format
-                else:
-                    statement, format, is_df_empty, search_col_check, confirm_headers, search_col, delete = viewer_func(tables[i], i, 'camelot', number_format, "") 
+                new_df, statement, format, is_df_empty, search_col_list_check, confirm_headers, search_col, delete = viewer_func(tables[i], i, "camelot", number_format, "")
+                number_format = format
+ 
 
 
 # make sure a file was being uploaded first

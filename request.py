@@ -83,8 +83,11 @@ def get_symbols():
     session = requests.Session()
     data = fetch(session, f"https://v6.exchangerate-api.com/v6/{exchange_rate_api_key}/codes")
     return_data = {}
-    for codes in data["supported_codes"]:
-        return_data[codes[0]] = codes[1]
+    if ("supported_codes" in data):
+        for codes in data["supported_codes"]:
+            return_data[codes[0]] = codes[1]
+    else:
+        return_data["SGD"] = "Singapore"
     return return_data
 
 # GET CURRENCIES
