@@ -271,8 +271,8 @@ def add_synonym(did, synonym):
     data = post(session, f"http://127.0.0.1:5000/add_synonym", body)
     return data
 
-# RETRIEVE EXTRACTED DATA
-def retrieve_data(file_name):
+# RETRIEVE FILE DETAILS
+def retrieve_details(file_name):
     session = requests.Session()
     body = {
         "file_name": base64.b64encode(file_name.encode("ascii")).decode("ascii"),
