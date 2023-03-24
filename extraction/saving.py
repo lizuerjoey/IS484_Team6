@@ -60,53 +60,51 @@ def get_total_num_tables(df):
 # check if same type of sheet
 # same type -> check for each year
 # for each year match the keyword and take the value if the keyword is empty
-# if keyword exist, average the second value
+# if keyword exist, don't aggregate but provide suggestion
 def merge_sheets(sheet_lists):
     # create a new dictionary to hold the merged results
     merged_dict = {}
-    aggregation_dict = {}
-    # same_sheet_multiple_values_dict = {}
+    same_sheet_multiple_values_dict = {}
     
+    val_count = 0
+
     # iterate over each sheet in the list
     for sheet in sheet_lists:
 
-        # iterate over each data(s) extracted in the list 
-        val_count = 0
-        aggregated_text = ""
-        aggregated_value = 0       
+        # iterate over each data(s) extracted in one sheet 
+        
+              
         for data_index in range(len(sheet)):
             year = sheet[data_index]['year']
             
             if year in merged_dict:
-                
-                
+
                 #  loop through for the financial keywords
                 for key, val in sheet[data_index].items():
                     
-                    # if the value is a float and exist in merge dict -> compute the average 
+                    # if the value is a float and exist in merge dict -> add
                     if isinstance(val, float) and isinstance(merged_dict[year][key], float):
                         
-                        st.write("IN")
-                        print(val)
+                        st.write(merged_dict[year][key])
 
-                        aggregated_value = merged_dict[year][key]
-                        aggregated_text += str(merged_dict[year][key])
+                        # aggregated_value = merged_dict[year][key]
+                        # aggregated_text += str(merged_dict[year][key])
 
-                        aggregated_value += val
+                        # aggregated_value += val
                     
-                        aggregated_text += " + " + str(val)
+                        # aggregated_text += " + " + str(val)
                 
-                        st.write("agg: " + str(aggregated_value))
+                        # st.write("agg: " + str(aggregated_value))
 
-                        val_count += 1
+                        # val_count += 1
                         
             else:
                 merged_dict[year] = sheet[data_index]
-                print(sheet[data_index])
-                aggregation_dict[year] = ""
+                # print(sheet[data_index])
+                # aggregation_dict[year] = ""
                 # same_sheet_multiple_values_dict[year] = []
 
-        st.write(val_count)
+        # st.write(val_count)
         # print(len(sheet_lists))
         # if (val_count == len(sheet_lists)-1):
             
@@ -566,16 +564,15 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                                 # check multiple value here!!!
                                                 if none_count != len(fin_words[keyword]):
                                                     
-                                                    # extracted_value = fin_words[keyword][i]
-
-                                                    if (("(" in fin_words[keyword][i]) or
-                                                        (")" in fin_words[keyword][i]) or 
-                                                        ("," in fin_words[keyword][i])):
-                                                        fin_words[keyword][i] = fin_words[keyword][i].replace("(", "")
-                                                        fin_words[keyword][i] = fin_words[keyword][i].replace(")", "")
-                                                        fin_words[keyword][i] = fin_words[keyword][i].replace(",", "")
- 
-                                                    financial_statement_format[keyword] = float(fin_words[keyword][i])
+                                                    # extracted_value = fin_words[keyword][i]   
+                                                    if (("(" in str(fin_words[keyword][i])) or
+                                                        (")" in str(fin_words[keyword][i])) or 
+                                                        ("," in str(fin_words[keyword][i]))):
+                                                        fin_words[keyword][i] = str(fin_words[keyword][i]).replace("(", "")
+                                                        fin_words[keyword][i] = str(fin_words[keyword][i]).replace(")", "")
+                                                        fin_words[keyword][i] = str(fin_words[keyword][i]).replace(",", "")
+                                                    
+                                                    financial_statement_format[keyword] = float(str(fin_words[keyword][i]))
                                                 # else:
                                                 #     none_count
                                                                                                 
@@ -775,23 +772,26 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                         count = 0
                                         for v in v_list:
                                             
-                                            if (("(" in v) or
-                                                (")" in v) or 
-                                                ("," in v)):
-                                                v = v.replace("(", "")
-                                                v = v.replace(")", "")
-                                                v = v.replace(",", "")
+                                            if (("(" in str(v)) or
+                                                (")" in str(v)) or 
+                                                ("," in str(v))):
+                                                v = str(v).replace("(", "")
+                                                v = str(v).replace(")", "")
+                                                v = str(v).replace(",", "")
                                             
-                                            if (float(og_v) != float(v)):
+                                            if (float(og_v) != float(str(v))):
                                                 display_values += str(v)
                                                 count += 1
-                                                if (count != len(v_list)):
+                                                if (count != len(v_list)-1):
                                                     display_values += ", "
                                              
                                         display_values += "</li>"
                             display_values += "</div>"
 
-                            st.markdown(display_values, unsafe_allow_html=True)                              
+                            # test = "ℹ️ Other values identified:\n\nOur extraction usually takes the first value in the extracted list when multiple values are identified. Hence, below is a list of other values that were identified due to multiple financial keywords found in the columns to search."    
+                            # print(len(test))
+                            if (len(display_values) > 259):
+                                st.markdown(display_values, unsafe_allow_html=True)                              
                                 
                             st.warning("**Values are aggregated:** \n\n **grossProfit:** 132.2 + 19.9 = 400")            
 
@@ -832,7 +832,7 @@ st.markdown("""
 }
 
 .multiple-identified-box {
-    background: rgba(28, 131, 225, 0.1);
+    background: rgba(28, 131, 225, 0.1) !important;
     padding: 16px;
     margin-bottom: 16px;
     color: rgb(0, 66, 128) 

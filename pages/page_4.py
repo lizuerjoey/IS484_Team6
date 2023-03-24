@@ -225,7 +225,7 @@ def viewer_func(df, num, id, num_form, convert):
     selected = ""
 
     st.subheader('Extracted Table ' + str(num+1))
-    delete = st.checkbox("Don't extract Table " + str(num+1) + "? (Clicking this will refresh the entire page and changes made might be lost.)")
+    delete = st.checkbox("Don't extract Table " + str(num+1) + "? (Clicking this will refresh the options below and changes made might be lost.)")
     
     if delete:
         delete_list.append(num+1)
@@ -296,7 +296,7 @@ def viewer_func(df, num, id, num_form, convert):
 
         with column1:
             if not delete:
-                options = st.multiselect('Select Columns to Delete:', list(dataframe.columns), key="coldelete -" + id + str(num))
+                options = st.multiselect('Select Columns to Delete: (Deleting columns will refresh the options below and changes made might be lost.)', list(dataframe.columns), key="coldelete -" + id + str(num))
                 st.session_state['column_del'] = True
                     
                 for col_option in options:
@@ -308,7 +308,7 @@ def viewer_func(df, num, id, num_form, convert):
         with column2:
             renamecol_tooltip = "Column headers must be unique and strictly years or years+quarters. For yearly statements, you can rename columns which falls under a specified year as 2020_1, 2020_2 etc. For quarterly statements, you can rename the headers as 2020 Q1, 2020 Q2 etc. If there are other columns which falls under 2020 Q1 for instance, you can rename it as 2020 Q1_1"
             if not delete:
-                options = st.multiselect('Select Column Header(s) to Rename:', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
+                options = st.multiselect('Select Column Header(s) to Rename: (Renaming columns will refresh the options below and changes made might be lost.)', list(dataframe.columns), help=renamecol_tooltip, key="colrename -" + id + str(num))
                 
                 for i in range(len(options)):
                     old_name = options[i]
