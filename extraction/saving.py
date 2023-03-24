@@ -61,62 +61,54 @@ def get_total_num_tables(df):
 # same type -> check for each year
 # for each year match the keyword and take the value if the keyword is empty
 # if keyword exist, don't aggregate but provide suggestion
-def merge_sheets(sheet_lists):
+def merge_sheets(type, sheet_lists):
+    print(sheet_lists)
     # create a new dictionary to hold the merged results
     merged_dict = {}
     same_sheet_multiple_values_dict = {}
     
     val_count = 0
 
+    if type not in same_sheet_multiple_values_dict:
+        same_sheet_multiple_values_dict[type] = {}
+    
+    test_list = []
     # iterate over each sheet in the list
     for sheet in sheet_lists:
 
         # iterate over each data(s) extracted in one sheet 
         
-              
+            
         for data_index in range(len(sheet)):
             year = sheet[data_index]['year']
-            
+
             if year in merged_dict:
 
                 #  loop through for the financial keywords
                 for key, val in sheet[data_index].items():
-                    
+
                     # if the value is a float and exist in merge dict -> add
                     if isinstance(val, float) and isinstance(merged_dict[year][key], float):
                         
-                        st.write(merged_dict[year][key])
+                        merged_dict[year][key] = merged_dict[year][key]
+                        
+                        if key not in same_sheet_multiple_values_dict[type][year]:
+                            same_sheet_multiple_values_dict[type][year][key] = [merged_dict[year][key]]
 
-                        # aggregated_value = merged_dict[year][key]
-                        # aggregated_text += str(merged_dict[year][key])
-
-                        # aggregated_value += val
-                    
-                        # aggregated_text += " + " + str(val)
-                
-                        # st.write("agg: " + str(aggregated_value))
-
-                        # val_count += 1
+                        if val not in same_sheet_multiple_values_dict[type][year]:
+                            same_sheet_multiple_values_dict[type][year][key].append(val)
+                            
+                    else:
+                        if (isinstance(val, float) and val != 0):
+                            merged_dict[year][key] = float(val)
                         
             else:
                 merged_dict[year] = sheet[data_index]
-                # print(sheet[data_index])
-                # aggregation_dict[year] = ""
-                # same_sheet_multiple_values_dict[year] = []
+                same_sheet_multiple_values_dict[type][year] = {}
 
-        # st.write(val_count)
-        # print(len(sheet_lists))
-        # if (val_count == len(sheet_lists)-1):
-            
-        #     merged_dict[year][key] += aggregated_value / len(sheet_lists)
-        #     st.write(merged_dict[year][key])
-        #     aggregated_text += "/ " + str(len(sheet_lists))
-                
-        #     print(val_count)
-        #     st.write(aggregated_text)
-        
-        
-        # print(merged_dict)
+        print("////////////")
+        print(same_sheet_multiple_values_dict)
+        print(merged_dict)
 
         new_merged_list = []
         for key, val in merged_dict.items():
@@ -644,17 +636,17 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
         # got more than 1 json data extracted under the same financial statement
         if len(income_statement_list) > 0:
-            income_statement_json = merge_sheets(income_statement_list)
+            income_statement_json = merge_sheets("income_statement", income_statement_list)
         else:
             income_statement_json = income_statement_list
 
         if len(balance_sheet_list) > 0:
-            balance_sheet_json = merge_sheets(balance_sheet_list)
+            balance_sheet_json = merge_sheets("balance_sheet", balance_sheet_list)
         else:
             balance_sheet_json = balance_sheet_list
 
         if len(cash_flow_list) > 0:
-            cash_flow_json = merge_sheets(cash_flow_list)
+            cash_flow_json = merge_sheets("cash_flow", cash_flow_list)
         else:
             cash_flow_json = cash_flow_list
 
