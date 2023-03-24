@@ -5,6 +5,16 @@ import os
 from datetime import datetime
 import pandas as pd
 import time
+import glob
+import nltk
+import PyPDF2
+from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import pipeline
+from transformers import AutoTokenizer
+from PyPDF2 import PdfReader
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer 
+
 
 from streamlit import session_state
 
@@ -17,7 +27,8 @@ from request import (
     get_json_financial_format,
     get_json_format,
     insert_data,
-    get_allFiles
+    get_allFiles,
+    insert_extracted_data_nlp
 )
 
 # retrieve from upload files page
@@ -158,12 +169,85 @@ def save_file (ID, uploaded_file, com_name, json):
         fid = all_files["data"][last_file][0]
 
         # check whether file is blank or empty or no words -> show error message
+        from PyPDF2 import PdfFileReader
+        pdf_file=open(last_file,"rb")
+        pdf_reader= PdfFileReader(pdf_file)
+        if pdf_reader.numPages<1:
+            st.error('Uploaded file is empty', icon="🚨")
 
         # call the nlp extraction
+        
 
+        from extraction.sentiment import (get_file_type)
+        from extraction.sentiment import (clean_text)
+        temp_path = "./temp_files"
+        dir = os.listdir(temp_path)
+        if len(dir) > 1:
+        # Check if file type uploaded to temp files is an image
+            file_paths = glob.glob("./temp_files/*")
+            count = 0
+            for path in file_paths:
+                file_type = get_file_type(path)
+                if file_type == '.pdf': 
+                    file_path = glob.glob("./temp_files/*.pdf")[0]
+                    input= file_path
+        
+
+        pdf = open(input, "rb")
+        reader = PdfReader(pdf)
+        pdf_reader = PyPDF2.PdfFileReader(pdf)
+        total_pages = pdf_reader.numPages
+
+        nltk.download('punkt') # Download the 'punkt' package if you haven't already
+
+        sentences_list = []
+        for i in range(total_pages):
+            page = pdf_reader.getPage(i)
+            text = page.extractText()
+            sentences = nltk.sent_tokenize(text)
+            sentences_list.extend(sentences)
+        
+        wordnet_lemmatizer = WordNetLemmatizer()
+  
+        cleaned_sentences=[]
+        for sentence in sentences_list:
+            cleaned_sentence = clean_text(sentence)
+            cleaned_sentences.append(cleaned_sentence)
+        
+        model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
+        tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
+        nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+        results = nlp(cleaned_sentences)
+        df=pd.DataFrame(results)
+        df['text']=cleaned_sentences
+        nlp_dataframe=df.to_json()
+        top_5_positive = df.loc[df['label'] == "Positive"].nlargest(5, 'score')
+        top_5_negative = df.loc[df['label'] == "Negative"].nlargest(5, 'score')
+        avg_score=0
+        data = {
+        "file_name": uploaded_file_name,
+        "nlp_dataframe": nlp_dataframe,
+        "positive": [
+            {"label": row['label'], "score": row['score']} for _, row in top_5_positive.iterrows()
+        ],
+        "negative": [
+            {"label": row['label'], "score": row['score']} for _, row in top_5_negative.iterrows()
+        ],
+        "avg_score": avg_score,
+        "sentences": []
+        }
+        print(data)
+
+
+
+
+
+            
         # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
         
         # call api to insert 
+
+        nlp_df = insert_extracted_data_nlp(fid,ID,data)
 
 
         # call API to insert json data
