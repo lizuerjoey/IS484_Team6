@@ -169,9 +169,8 @@ def save_file (ID, uploaded_file, com_name, json):
         fid = all_files["data"][last_file][0]
 
         # check whether file is blank or empty or no words -> show error message
-        from PyPDF2 import PdfFileReader
         pdf_file=open(last_file,"rb")
-        pdf_reader= PdfFileReader(pdf_file)
+        pdf_reader= PdfReader(pdf_file)
         if pdf_reader.numPages<1:
             st.error('Uploaded file is empty', icon="🚨")
 
@@ -195,7 +194,7 @@ def save_file (ID, uploaded_file, com_name, json):
 
         pdf = open(input, "rb")
         reader = PdfReader(pdf)
-        pdf_reader = PyPDF2.PdfFileReader(pdf)
+        pdf_reader = PyPDF2.PdfReader(pdf)
         total_pages = pdf_reader.numPages
 
         nltk.download('punkt') # Download the 'punkt' package if you haven't already
@@ -236,7 +235,7 @@ def save_file (ID, uploaded_file, com_name, json):
         "avg_score": avg_score,
         "sentences": []
         }
-        print(data)
+        data
 
 
 

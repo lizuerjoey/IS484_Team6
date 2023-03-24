@@ -10,9 +10,9 @@ import streamlit as st
 import glob
 import os
 
-def get_file_name (file):
-    filename = os.path.splitext(file)[0]
-    return filename
+#def get_file_name (file):
+  #  filename = os.path.splitext(file)[0]
+   # return filename
 
 def get_file_type (file):
     filetype = os.path.splitext(file)[1]
@@ -30,12 +30,12 @@ if len(dir) > 1:
         if file_type == '.pdf': 
             file_path = glob.glob("./temp_files/*.pdf")[0]
             input= file_path
-            file_name = get_file_name(file_path)
+            #file_name = get_file_name(file_path)
 
 
 pdf = open(input, "rb")
 reader = PdfReader(pdf)
-pdf_reader = PyPDF2.PdfFileReader(pdf)
+pdf_reader = PyPDF2.PdfReader(pdf)
 total_pages = pdf_reader.numPages
 
 nltk.download('punkt') # Download the 'punkt' package if you haven't already
