@@ -62,23 +62,18 @@ def get_total_num_tables(df):
 # for each year match the keyword and take the value if the keyword is empty
 # if keyword exist, don't aggregate but provide suggestion
 def merge_sheets(type, sheet_lists):
-    print(sheet_lists)
+    
     # create a new dictionary to hold the merged results
     merged_dict = {}
     same_sheet_multiple_values_dict = {}
-    
-    val_count = 0
 
     if type not in same_sheet_multiple_values_dict:
         same_sheet_multiple_values_dict[type] = {}
     
-    test_list = []
     # iterate over each sheet in the list
     for sheet in sheet_lists:
 
         # iterate over each data(s) extracted in one sheet 
-        
-            
         for data_index in range(len(sheet)):
             year = sheet[data_index]['year']
 
@@ -106,15 +101,11 @@ def merge_sheets(type, sheet_lists):
                 merged_dict[year] = sheet[data_index]
                 same_sheet_multiple_values_dict[type][year] = {}
 
-        print("////////////")
-        print(same_sheet_multiple_values_dict)
-        print(merged_dict)
-
         new_merged_list = []
         for key, val in merged_dict.items():
             new_merged_list.append(val)
 
-    return new_merged_list
+    return new_merged_list, same_sheet_multiple_values_dict
 
 def concat_lists(lists):
     result = []
@@ -328,6 +319,9 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     # matched_column_headers = []
     matched_list_row = []
     matched_dict_col = {}
+    income_statement_dict = {}
+    balance_sheet_dict = {}
+    cash_flow_dict = {}
 
     # below are required fields; if at least one field is not correct -> cannot save to json             
     if ((False in search_col_list_check) or 
@@ -349,7 +343,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
     # saving to db
     all_tables_json_list = []
-    table_count = -1
+    table_count = 0
 
     # if all required fields are filled & total number of tables to extract is 0
     # if save_status == True and total_num_tables <= 0:
@@ -429,6 +423,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
             # check if multiple values identified for 1 keyword
             multiple_row_id_dict = {}
+            multiple_row_cell_value_dict = {}
             identified_multiple_values_dict = {}
 
             new_format = financial_format[table].lower().replace(" ", "_")
@@ -461,8 +456,11 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                 if year_quarter not in multiple_row_id_dict:
                     multiple_row_id_dict[year_quarter] = {}
 
+                # store row_cell_values for multiple
+                if year_quarter not in multiple_row_cell_value_dict:
+                    multiple_row_cell_value_dict[year_quarter] = {}
+
                 # store values extracted for multiple
-                
                 if year_quarter not in identified_multiple_values_dict[new_format]:
                     identified_multiple_values_dict[new_format][year_quarter] = {}
 
@@ -481,7 +479,9 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                     for row_num in values:
                         # if row_id is not numeric or the length of the row_id is more than the total row_id of the table -> high chance is a string
                         if row_num.isnumeric() == False or len(row_num) > last_row_id:
+                            row_cell_value = ' '.join(row_num.split()[1:])
                             row_num = int(row_num.split()[0])
+                            
                         
                         # create a dict to store the multiple row id for each financial keyword identified
                         if new_key not in multiple_row_id_dict[year_quarter]:
@@ -490,29 +490,45 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             if row_num not in multiple_row_id_dict[year_quarter][new_key]:
                                 multiple_row_id_dict[year_quarter][new_key].append(row_num)
 
+                        # # create a dict to store the multiple row cell values for each financial keyword identified
+                        if new_key not in multiple_row_cell_value_dict[year_quarter]:
+                            multiple_row_cell_value_dict[year_quarter][new_key] = [row_cell_value]
+                        else:
+                            if row_cell_value not in multiple_row_cell_value_dict[year_quarter][new_key]:
+                                multiple_row_cell_value_dict[year_quarter][new_key].append(row_cell_value)
+
                     # if row_id is not numeric or the length of the row_id is more than the total row_id of the table -> high chance is a string
                     if row_id.isnumeric() == False or len(row_id) > last_row_id:
-                        row_id = int(row_id.split()[0])
-                    
+                        cell_value = ' '.join(row_id.split()[1:])
+                        row_id = int(row_id.split()[0])                        
+        
                     # save only financial key to dictionary and make sure the date exist in the column headers before extracting
                     if date in list(dataframe_list[table].columns):                     
                         cell = dataframe_list[table].loc[row_id][str(date)]
+
                         if new_key in result_dict[year_quarter]:
                             # check if space -> get the index and capitalise the next letter
                             result_dict[year_quarter][new_key].append(cell)
                         else:
                             result_dict[year_quarter][new_key] = [cell]
 
+
                         # locate/ identify the (multiple) values
                         # need to check _1 pagination
+
+                        index = 0
                         for mul_row_id in multiple_row_id_dict[date][new_key]:
-                            mul_cell = dataframe_list[table].loc[mul_row_id][str(date)]
+        
+                            mul_cell = mul_cell = dataframe_list[table].loc[mul_row_id][str(date)]
+                            
                             if new_key not in identified_multiple_values_dict[new_format][year_quarter]:
-                                identified_multiple_values_dict[new_format][year_quarter][new_key] = [mul_cell]
+                                identified_multiple_values_dict[new_format][year_quarter][new_key] = [str(mul_cell) + "_Table " + str(table_count) + "_" + str(multiple_row_cell_value_dict[date][new_key][index])]
                             else:
                                 if mul_row_id not in identified_multiple_values_dict[new_format][year_quarter][new_key]:
-                                    identified_multiple_values_dict[new_format][year_quarter][new_key].append(mul_cell)
-            
+                                    if mul_cell not in identified_multiple_values_dict[new_format][year_quarter][new_key]:
+                                        identified_multiple_values_dict[new_format][year_quarter][new_key].append(str(mul_cell) + "_Table " + str(table_count) + "_" + str(multiple_row_cell_value_dict[date][new_key][index]))
+                            index += 1
+                                        
             big_identified_values_list.append(identified_multiple_values_dict)
         
             # saving data in json when there is extracted header values e.g. year/ quarter
@@ -636,17 +652,17 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
         # got more than 1 json data extracted under the same financial statement
         if len(income_statement_list) > 0:
-            income_statement_json = merge_sheets("income_statement", income_statement_list)
+            income_statement_json, income_statement_dict  = merge_sheets("income_statement", income_statement_list)
         else:
             income_statement_json = income_statement_list
 
         if len(balance_sheet_list) > 0:
-            balance_sheet_json = merge_sheets("balance_sheet", balance_sheet_list)
+            balance_sheet_json, balance_sheet_dict = merge_sheets("balance_sheet", balance_sheet_list)
         else:
             balance_sheet_json = balance_sheet_list
 
         if len(cash_flow_list) > 0:
-            cash_flow_json = merge_sheets("cash_flow", cash_flow_list)
+            cash_flow_json, cash_flow_dict = merge_sheets("cash_flow", cash_flow_list)
         else:
             cash_flow_json = cash_flow_list
 
@@ -692,21 +708,36 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         if no_extraction < len(nothing_error):
             # Save into DB
 
+            merge_big_dict = {}
+            merge_big_dict.update(income_statement_dict)
+            merge_big_dict.update(balance_sheet_dict)
+            merge_big_dict.update(cash_flow_dict)
+            print(merge_big_dict)
+
+            edited_dict = {}
+
             with st.form("Preview Value"):
                 for data in basic_format:
                     # looping through each financial statement
+                    if data not in edited_dict:
+                        if data == "currency":
+                            edited_dict[data] = basic_format[data]
+                        elif data == "fiscal_start_month":
+                            edited_dict[data] = basic_format[data]
+
                     if data != "currency" and data != "fiscal_start_month" and data != "other_metrics":
+                        edited_dict[data] = []
                         sheet_json = basic_format[data]
                         sheet = data
-                        new_sheet = data.title().replace("_", " ")
+                        new_sheet = sheet.title().replace("_", " ")
                         st.markdown('**' + new_sheet + '**')
 
                         if len(sheet_json) <= 0:
-                            st.info("This financial sheet was not selected for the extracted table(s) above.", icon="ℹ️")
-                        
-                        new_dict = {}                       
-                        
+                            st.info("This financial sheet was not selected for the extracted table(s) above.", icon="ℹ️")                       
+
+                        each_edited_dict = {}
                         for i in range(len(sheet_json)):
+
                             st.write(sheet_json[i]["year"] + ":")
                             date = sheet_json[i]["year"]
                             
@@ -717,16 +748,29 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             display_list = []
                             value_dict = {}
                             retrieved_value = {}
+                            
                             for word in sheet_json[i]:
+
+
+                                if word not in each_edited_dict:
+                                    if word == "year":
+                                        each_edited_dict[word] = sheet_json[i][word]
+
+                                    elif word == "numberFormat":
+                                        each_edited_dict[word] = sheet_json[i][word]
+
+
                                 if word != "year" and word != "numberFormat":
 
                                     new_word = word
 
                                     for each_sheet_dict in big_identified_values_list:
                                         for each_sheet_key in each_sheet_dict:
+                                            
                                             for each_sheet_date in each_sheet_dict[each_sheet_key]:
                                                 
                                                 for each_sheet_value in each_sheet_dict[each_sheet_key][each_sheet_date]:
+                                                    
                                                     if str(date) == str(each_sheet_date):
                                                         if word == each_sheet_value:
 
@@ -734,10 +778,10 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                                             if word not in value_dict:
                                                                 value_dict[word] = []
                                                             
-                                                            value_dict[word].extend(each_sheet_dict[each_sheet_key][each_sheet_date][each_sheet_value])                                                                
+                                                            value_dict[word].extend(each_sheet_dict[each_sheet_key][each_sheet_date][each_sheet_value])                                                              
                                                             
                                                             # more than 1 means other than itself, there are other values identified
-                                                            if len(value_dict[word]) > 1: 
+                                                            if len(value_dict[word]) > 0: 
                                                                 new_word = f"<span class='other-highlight'>{word}</span>"
 
                                     
@@ -747,66 +791,89 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
                                     col.markdown(new_word, unsafe_allow_html=True)
                                     value = col.text_input(word, sheet_json[i][word], key=sheet + date + word, label_visibility='collapsed')
-                                    if word not in retrieved_value:
-                                        if (value != '0'):
-                                            retrieved_value[word] = value
+                                    each_edited_dict[word] = value
+                                    # if word not in retrieved_value:
+                                    if (value != '0'):
+                                        retrieved_value[word] = value
 
                                     if word not in json:
                                         json[word] = value     
 
                             display_values = "<div class='multiple-identified-box'><b>ℹ️ Other values identified:</b>"
                             display_values += "\n\nOur extraction usually takes the first value in the extracted list when multiple values are identified. Hence, below is a list of other values that were identified due to multiple financial keywords found in the columns to search."
+                            display_values += "<ul>"
                             for og_k, og_v in retrieved_value.items():
                                 for k, v_list in value_dict.items():
+                                    # print("K: " + str(k))
+                                    # print(v_list)
                                     if (og_k == k):
+                                        
+                                        # sub list wrapper
                                         display_values += "<li><b><span class='other-highlight'>" + k + "</span></b>: "
 
-                                        count = 0
+                                        # sub list
+                                        display_values += "<ul>"
+
                                         for v in v_list:
+
+                                            print("#####")
+                                            new_v = v.split("_")
+                                            print(new_v)
+                                            v_num = new_v[0]
+                                            v_table_num = new_v[1]
+                                            v_cell_name = new_v[2]
                                             
-                                            if (("(" in str(v)) or
-                                                (")" in str(v)) or 
-                                                ("," in str(v))):
-                                                v = str(v).replace("(", "")
-                                                v = str(v).replace(")", "")
-                                                v = str(v).replace(",", "")
+                                            if (("(" in str(v_num)) or
+                                                (")" in str(v_num)) or 
+                                                ("," in str(v_num))):
+                                                v_num = str(v_num).replace("(", "")
+                                                v_num = str(v_num).replace(")", "")
+                                                v_num = str(v_num).replace(",", "")
                                             
-                                            if (float(og_v) != float(str(v))):
-                                                display_values += str(v)
-                                                count += 1
-                                                if (count != len(v_list)-1):
-                                                    display_values += ", "
-                                             
-                                        display_values += "</li>"
-                            display_values += "</div>"
+                                            # print(v_num)
+                                            # if (float(og_v) != float(str(v_num))):
+                                            display_values += "<li>" + str(v_num) + " (" + str(v_cell_name) + ") | " + str(v_table_num) + "</li>"
+                                                # count += 1
+                                                # if (count != len(v_list)-1):
+                                                #     display_values += ", "
+
+                                    display_values += "</ul>"
+                                    display_values += "</li>"
+                            display_values += "</ul></div>"
 
                             # test = "ℹ️ Other values identified:\n\nOur extraction usually takes the first value in the extracted list when multiple values are identified. Hence, below is a list of other values that were identified due to multiple financial keywords found in the columns to search."    
                             # print(len(test))
                             if (len(display_values) > 259):
+                                if display_values.endswith(","):
+                                    display_values = display_values[:-1]
                                 st.markdown(display_values, unsafe_allow_html=True)                              
-                                
-                            st.warning("**Values are aggregated:** \n\n **grossProfit:** 132.2 + 19.9 = 400")            
+
+                        print("@@@@")
+                        print(each_edited_dict)               
 
                             
                 
                 submitted = st.form_submit_button("Submit")
 
                 if submitted:
-                    # st.write("clicked")
-                    if session_state["text_option"] == True:
-                        if com_name:
-                            add_com = add_company(com_id, com_name)
-                            if (add_com["message"] == "Added"):
-                                st.success("Company Added", icon="✅")
-                                save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
-                            else:
-                                st.error('Error adding company. Please try again later.', icon="🚨")
-                        else:
-                            # If company name not entered
-                            st.error("Please enter a company name in Upload Report Page.", icon="🚨")
-                    else:
-                        save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                    print(each_edited_dict)
+                    st.write("clicked")
+                    # if session_state["text_option"] == True:
+                    #     if com_name:
+                    #         add_com = add_company(com_id, com_name)
+                    #         if (add_com["message"] == "Added"):
+                    #             st.success("Company Added", icon="✅")
+                    #             save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
+                    #         else:
+                    #             st.error('Error adding company. Please try again later.', icon="🚨")
+                    #     else:
+                    #         # If company name not entered
+                    #         st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                    # else:
+                    #     save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
     
+            st.write("HERE")
+            edited_dict
 
 st.markdown("""
 <style>
@@ -819,8 +886,8 @@ st.markdown("""
 }
 
 .other-highlight {
-    background: yellow;
-    font-weight: bold 
+    background: yellow !important;
+    font-weight: bold !important
 }
 
 .multiple-identified-box {
