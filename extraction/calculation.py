@@ -19,6 +19,61 @@ def get_other_metrics_format():
     }
     return other_metrics_format
 
+def balance_sheet_cal(fin_sheet, other_fin_sheet, company_id, date, each_dict, value, key, edited_dict):
+
+    returnOnEquity = 0
+    returnOnAsset = 0
+    currentRatio = 0
+    debtToEquityRatio = 0
+    
+    # (3) Current Ratio = Current Assets / Current Liabilities
+    currentRatio = indv_stmt_calculation(fin_sheet, company_id, date, ["totalCurrentAssets"], ["totalCurrentLiabilties"], each_dict)
+
+    # (4) Debt-to-equity Ratio = Total Debt / Shareholders' Equity
+    debtToEquityRatio = indv_stmt_calculation(fin_sheet, company_id, date, ["debt"], ["totalEquities"], each_dict)
+
+    if key == "totalEquities":
+        # (1) ROE (%) = (Net Profit / Total Equity)
+        returnOnEquity = cross_stmt_calculation(fin_sheet, date, "totalEquities", value, company_id, "netProfit", edited_dict[other_fin_sheet])
+
+    if key == "totalAssets":
+        # (2) ROA (%) = (Net Profit / Total Assets)
+        returnOnAsset = cross_stmt_calculation(fin_sheet, date, "totalAssets", value, company_id, "netProfit", edited_dict[other_fin_sheet])
+    
+    return currentRatio, debtToEquityRatio, returnOnEquity, returnOnAsset
+
+def income_statement_cal(fin_sheet, other_fin_sheet, company_id, date, each_dict, value, key, edited_dict):
+
+    returnOnEquity = 0
+    returnOnAsset = 0
+    netProfitMargin = 0
+    ebitda = 0
+
+    # (5) Net Profit Margin (%) = Net Income / Total Revenue
+    netProfitMargin = indv_stmt_calculation(fin_sheet, company_id, date, ["netProfit"], ["revenue"], each_dict)
+
+    # (6) Ebitda (Ratio) = gross profit + interest + income tax + depreciation/ amortization
+
+    ebitda = indv_stmt_calculation(fin_sheet, company_id, date, ["grossProfit", "interest", "incomeTax", "depreciation"], [], each_dict)
+
+    if key == "netProfit":
+        # (1) ROE (%) = (Net Profit / Total Equity)
+        returnOnEquity = cross_stmt_calculation(fin_sheet, date, "netProfit", value, company_id, "totalEquities", edited_dict[other_fin_sheet])
+
+        # (2) ROA (%) = (Net Profit / Total Assets)
+        returnOnAsset = cross_stmt_calculation(fin_sheet, date, "netProfit", value, company_id, "totalAssets", edited_dict[other_fin_sheet])
+    
+    return netProfitMargin, ebitda, returnOnEquity, returnOnAsset
+
+def append_to_other_metrics(other_metrics_format, returnOnEquity, returnOnAsset, currentRatio, debtToEquityRatio, netProfitMargin, ebitda):
+    
+    other_metrics_format["returnOnEquity"] = returnOnEquity
+    other_metrics_format["returnOnAsset"] = returnOnAsset
+    other_metrics_format["currentRatio"] = currentRatio
+    other_metrics_format["debtToEquityRatio"] = debtToEquityRatio
+    other_metrics_format["netProfitMargin"] = netProfitMargin
+    other_metrics_format["ebitda"] = ebitda
+
 def calculate_other_metrics(edited_dict, company_id):
     # print(edited_dict)
     # print(company_id)
@@ -34,6 +89,7 @@ def calculate_other_metrics(edited_dict, company_id):
     currentRatio = 0
     debtToEquityRatio = 0
     netProfitMargin = 0
+    ebitda = 0
     date_list = []
 
     # check if there are extracted data in income statement
@@ -55,42 +111,14 @@ def calculate_other_metrics(edited_dict, company_id):
 
                 if fin_sheet == "income_statement":
 
-                    # (5) Net Profit Margin (%) = Net Income / Total Revenue
-                    netProfitMargin = indv_stmt_calculation(fin_sheet, company_id, date, ["netProfit"], ["revenue"], each_dict)
-
-                    # (6) Ebitda (Ratio) = earnings + interest + income tax + depreciation/ amortization
-                    ebitda = indv_stmt_calculation(fin_sheet, company_id, date, ["grossProfit", "interest", "incomeTax", "depreciation"], [], each_dict)
-
-                    if key == "netProfit":
-                        # (1) ROE (%) = (Net Profit / Total Equity)
-                        returnOnEquity = cross_stmt_calculation(fin_sheet, date, "netProfit", value, company_id, "totalEquities", edited_dict[other_fin_sheet])
-
-                        # (2) ROA (%) = (Net Profit / Total Assets)
-                        returnOnAsset = cross_stmt_calculation(fin_sheet, date, "netProfit", value, company_id, "totalAssets", edited_dict[other_fin_sheet])
+                    netProfitMargin, ebitda, returnOnEquity, returnOnAsset = income_statement_cal(fin_sheet, other_fin_sheet, company_id, date, each_dict, value, key, edited_dict)
                 
                 # balance sheet
                 else:
                     
-                    # (3) Current Ratio = Current Assets / Current Liabilities
-                    currentRatio = indv_stmt_calculation(fin_sheet, company_id, date, ["totalCurrentAssets"], ["totalCurrentLiabilties"], each_dict)
-
-                    # (4) Debt-to-equity Ratio = Total Debt / Shareholders' Equity
-                    debtToEquityRatio = indv_stmt_calculation(fin_sheet, company_id, date, ["debt"], ["totalEquities"], each_dict)
-
-                    if key == "totalEquities":
-                        # (1) ROE (%) = (Net Profit / Total Equity)
-                        returnOnEquity = cross_stmt_calculation(fin_sheet, date, "totalEquities", value, company_id, "netProfit", edited_dict[other_fin_sheet])
-
-                    if key == "totalAssets":
-                        # (2) ROA (%) = (Net Profit / Total Assets)
-                        returnOnAsset = cross_stmt_calculation(fin_sheet, date, "totalAssets", value, company_id, "netProfit", edited_dict[other_fin_sheet])
+                    currentRatio, debtToEquityRatio, returnOnEquity, returnOnAsset = balance_sheet_cal(fin_sheet, other_fin_sheet, company_id, date, each_dict, value, key, edited_dict)
                 
-                other_metrics_format["returnOnEquity"] = returnOnEquity
-                other_metrics_format["returnOnAsset"] = returnOnAsset
-                other_metrics_format["currentRatio"] = currentRatio
-                other_metrics_format["debtToEquityRatio"] = debtToEquityRatio
-                other_metrics_format["netProfitMargin"] = netProfitMargin
-                other_metrics_format["ebitda"] = ebitda
+                append_to_other_metrics(other_metrics_format, returnOnEquity, returnOnAsset, currentRatio, debtToEquityRatio, netProfitMargin, ebitda)
 
             big_other_metrics_list.append(other_metrics_format)
 
@@ -112,42 +140,14 @@ def calculate_other_metrics(edited_dict, company_id):
 
                         if other_fin_sheet == "income_statement":
 
-                            # (5) Net Profit Margin (%) = Net Income / Total Revenue
-                            netProfitMargin = indv_stmt_calculation(other_fin_sheet, company_id, date, ["netProfit"], ["revenue"], each_dict)
-
-                            # (6) Ebitda (Ratio) = earnings + interest + income tax + depreciation/ amortization
-                            ebitda = indv_stmt_calculation(other_fin_sheet, company_id, date, ["earnings", "interest", "incomeTax", "depreciation"], [], each_dict)
-
-                            if key == "netProfit":
-                                # (1) ROE (%) = (Net Profit / Total Equity)
-                                returnOnEquity = cross_stmt_calculation(other_fin_sheet, date, "netProfit", value, company_id, "totalEquities", edited_dict[fin_sheet])
-
-                                # (2) ROA (%) = (Net Profit / Total Assets)
-                                returnOnAsset = cross_stmt_calculation(other_fin_sheet, date, "netProfit", value, company_id, "totalAssets", edited_dict[fin_sheet])
+                            netProfitMargin, ebitda, returnOnEquity, returnOnAsset = income_statement_cal(other_fin_sheet, fin_sheet, company_id, date, each_dict, value, key, edited_dict)
                         
                         # balance sheet
                         else:
 
-                            # (3) Current Ratio = Current Assets / Current Liabilities
-                            currentRatio = indv_stmt_calculation(other_fin_sheet, company_id, date, ["totalCurrentAssets"], ["totalCurrentLiabilties"], each_dict)
-
-                            # (4) Debt-to-equity Ratio = Total Debt / Shareholders' Equity
-                            debtToEquityRatio = indv_stmt_calculation(other_fin_sheet, company_id, date, ["debt"], ["totalEquities"], each_dict)
-
-                            if key == "totalEquities":
-                                # (1) ROE (%) = (Net Profit / Total Equity)
-                                returnOnEquity = cross_stmt_calculation(other_fin_sheet, date, "totalEquities", value, company_id, "netProfit", edited_dict[fin_sheet])
-
-                            if key == "totalAssets":
-                                # (2) ROA (%) = (Net Profit / Total Assets)
-                                returnOnAsset = cross_stmt_calculation(other_fin_sheet, date, "totalAssets", value, company_id, "netProfit", edited_dict[fin_sheet])
+                            currentRatio, debtToEquityRatio, returnOnEquity, returnOnAsset = balance_sheet_cal(other_fin_sheet, fin_sheet, company_id, date, each_dict, value, key, edited_dict)
                         
-                        other_metrics_format["returnOnEquity"] = returnOnEquity
-                        other_metrics_format["returnOnAsset"] = returnOnAsset
-                        other_metrics_format["currentRatio"] = currentRatio
-                        other_metrics_format["debtToEquityRatio"] = debtToEquityRatio
-                        other_metrics_format["netProfitMargin"] = netProfitMargin
-                        other_metrics_format["ebitda"] = ebitda
+                        append_to_other_metrics(other_metrics_format, returnOnEquity, returnOnAsset, currentRatio, debtToEquityRatio, netProfitMargin, ebitda)
                     
                 big_other_metrics_list.append(other_metrics_format)
 
@@ -270,7 +270,6 @@ def indv_stmt_calculation(statement, company_id, year, numerator, denominator, s
                     else:
                         if stmt[denominator[i]] > 0:
                             denominator_dict[denominator[i]]["year_count"] +=1
-                        print(denominator_dict[denominator[i]]["value"])
                         denominator_dict[denominator[i]]["value"] += stmt[denominator[i]]
     total_numerator = 0  
     total_denominator = 0               
