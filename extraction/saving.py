@@ -14,7 +14,7 @@ from transformers import AutoTokenizer
 from PyPDF2 import PdfReader
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer 
-
+from extraction.calculation import (calculate_other_metrics)
 
 from streamlit import session_state
 
@@ -28,7 +28,7 @@ from request import (
     get_json_format,
     insert_data,
     get_allFiles,
-    insert_extracted_data_nlp
+    insert_extracted_data_nlp,
 )
 
 # retrieve from upload files page
@@ -718,6 +718,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             # merge_big_dict.update(cash_flow_dict)
             # print(merge_big_dict)
             
+            
             submit_status = True
             edited_dict = {}
 
@@ -726,6 +727,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                 for data in basic_format:
 
                     each_edited_list = []
+                    
 
                     # looping through each financial statement
                     if data not in edited_dict:
@@ -733,9 +735,12 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             edited_dict[data] = basic_format[data]
                         elif data == "fiscal_start_month":
                             edited_dict[data] = basic_format[data]
+                        elif data == "other_metrics":
+                            edited_dict[data] = []
 
                     if data != "currency" and data != "fiscal_start_month" and data != "other_metrics":
                         edited_dict[data] = []
+                        
                         sheet_json = basic_format[data]
                         sheet = data
                         new_sheet = sheet.title().replace("_", " ")
@@ -749,6 +754,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             edited_json_dict = {}
                             st.write(sheet_json[i]["year"] + ":")
                             date = sheet_json[i]["year"]
+                            empty_cell = []
                             
                             # looping the columns for each metrics
                             cols = st.columns(3)
@@ -809,15 +815,17 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                         # checks for strings other than nan
                                         try:
                                             float_value = float(value)
+
                                         except:
                                             submit_status = False
 
                                         if value == 'nan':
                                             submit_status = False
-                                        # if not isinstance(float(value), float):
-                                        #     submit_status.append(False)
-                                        # else:
-                                        #     submit_status.append(False)
+                                        
+                                        if value != '0':
+                                            empty_cell.append(False)
+                                        else:
+                                            empty_cell.append(True)
 
                                     # for each metrics append the user edited value
                                     edited_json_dict[word] = value    
@@ -878,11 +886,17 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                         display_values = display_values[:-1]
                                     st.markdown(display_values, unsafe_allow_html=True)
 
-
-                            # reformulate into a json format for saving
-                            each_edited_list.append(edited_json_dict)                              
+                            # for each year
+                            # check if all cells are empty
+                            # if all empty (all True) don't add into json; if at least 1 False then append
+                            if False in empty_cell:
+                                # reformulate into a json format for saving
+                                each_edited_list.append(edited_json_dict)                             
 
                         # for each financial sheet, add the list of edited json dictionary
+                        # when there are at least 1 value and not all 0
+                        # print(sheet)
+                        # print(each_edited_list)
                         edited_dict[sheet] = each_edited_list 
                             
                 
@@ -892,8 +906,11 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                     if submit_status == False:
                         st.error("Values cannot be empty or a word", icon="🚨")
                     else:
-                        # print(each_edited_dict)
-                        print(edited_dict)
+                        calculate_other_metrics(edited_dict)
+                        
+                        
+                        # calculate other metrics here or above
+                        
                         # if session_state["text_option"] == True:
                         #     if com_name:
                         #         add_com = add_company(com_id, com_name)

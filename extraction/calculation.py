@@ -3,6 +3,8 @@ from request import (
 )
 import json
 
+def calculate_other_metrics(edited_dict):
+    print(edited_dict)
 
 
 ###### GETTING FROM TWO FINANCIAL SHEET ######
