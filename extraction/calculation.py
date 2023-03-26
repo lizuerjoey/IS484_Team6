@@ -148,16 +148,17 @@ def cross_stmt_calculation(curr_statement, year, curr_financial_words, curr_valu
 # financial words must corresponds to the string of JSON stored in the DB ONLY
 # numerator = ARRAY
 # denominator = ARRAY
-# curr_fin_val_is_denominator = financial word is denominator or numerator
-# SAMPLE FUNC DATA: indv_stmt_calculation("income_statement",  "AC-05b7", 2018, ["netProfit", "grossProfit"], ["revenue", "cost"], "netProfit", 200, False)
-def indv_stmt_calculation(statement, company_id, year, numerator, denominator, curr_financial_words, curr_value, curr_fin_val_is_denominator):
+# SAMPLE FUNC DATA: indv_stmt_calculation("income_statement",  "AC-05b7", 2018, ["netProfit", "grossProfit"], ["revenue", "cost"], <Balance Sheet DICT>, False)
+def indv_stmt_calculation(statement, company_id, year, numerator, denominator, statement_object):
     all_extracted_results  = retrieve_data(company_id)["data"]
     numerator_dict = {}
     denominator_dict = {}
-    if (curr_fin_val_is_denominator == False):
-        numerator_dict = {curr_financial_words: { "year_count": 1, "value": curr_value}}
-    else:
-        denominator_dict = {curr_financial_words: { "year_count": 1, "value": curr_value}}
+    for num in numerator:
+        if (num in statement_object):
+            numerator_dict = {num: { "year_count": 1, "value": statement_object[num]}}
+    for den in denominator:
+        if (den in statement_object):
+            denominator_dict = {den: { "year_count": 1, "value": den}}
 
     for i in all_extracted_results:
         result = json.loads(i[3])
