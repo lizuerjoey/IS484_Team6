@@ -917,26 +917,22 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
                     if submit_status == False:
                         st.error("Values cannot be empty or a word", icon="🚨")
-                    else:
-                        # NEED TO CHANGE COM ID
-                        calculate_other_metrics(edited_dict, selected_comID)
-                        
-                        
-                        # calculate other metrics here or above
-                        
-                        # if session_state["text_option"] == True:
-                        #     if com_name:
-                        #         add_com = add_company(com_id, com_name)
-                        #         if (add_com["message"] == "Added"):
-                        #             st.success("Company Added", icon="✅")
-                        #             save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
-                        #         else:
-                        #             st.error('Error adding company. Please try again later.', icon="🚨")
-                        #     else:
-                        #         # If company name not entered
-                        #         st.error("Please enter a company name in Upload Report Page.", icon="🚨")
-                        # else:
-                        #     save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
+                    else:            
+                        if session_state["text_option"] == True:
+                            updated_edited_dict = calculate_other_metrics(edited_dict, com_id)
+                            if com_name:
+                                add_com = add_company(com_id, com_name)
+                                if (add_com["message"] == "Added"):
+                                    st.success("Company Added", icon="✅")          
+                                    save_file(com_id, session_state['og_uploaded_file'], com_name, updated_edited_dict)
+                                else:
+                                    st.error('Error adding company. Please try again later.', icon="🚨")
+                            else:
+                                # If company name not entered
+                                st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                        else:
+                            updated_edited_dict = calculate_other_metrics(edited_dict, selected_comID)
+                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, updated_edited_dict)
     
 
 st.markdown("""
