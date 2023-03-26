@@ -497,6 +497,15 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             if row_cell_value not in multiple_row_cell_value_dict[date][new_key]:
                                 multiple_row_cell_value_dict[date][new_key].append(row_cell_value)
 
+                        # if new_key not in multiple_row_cell_value_dict[date]:
+                        #     multiple_row_cell_value_dict[date][new_key] = {}
+                        # else:
+                        #     if row_num not in multiple_row_cell_value_dict[date][new_key]:
+                        #         multiple_row_cell_value_dict[date][new_key][row_num] = [row_cell_value]
+                        #     else:
+                        #         if row_cell_value not in multiple_row_cell_value_dict[date][new_key][row_num]:
+                        #             multiple_row_cell_value_dict[date][new_key].append(row_cell_value)
+
                     # if row_id is not numeric or the length of the row_id is more than the total row_id of the table -> high chance is a string
                     if row_id.isnumeric() == False or len(row_id) > last_row_id:
                         cell_value = ' '.join(row_id.split()[1:])
@@ -515,24 +524,26 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
 
                         # locate/ identify the (multiple) values
-                        index = 0
-                        # print("///////")
-                        # print(multiple_row_id_dict[date][new_key])
-                        # print(multiple_row_cell_value_dict[date][new_key])
+                        i = 0                        
+ 
                         for mul_row_id in multiple_row_id_dict[date][new_key]:
-                            
-                            # print("index:" + str(index))
+
                             mul_cell = mul_cell = dataframe_list[table].loc[mul_row_id][str(date)]
 
+                            value = str(mul_cell) + "_Table " + str(table_count) + "_" + str(multiple_row_cell_value_dict[date][new_key][i])
+
                             if new_key not in identified_multiple_values_dict[new_format][year_quarter]:
-                                identified_multiple_values_dict[new_format][year_quarter][new_key] = [str(mul_cell) + "_Table " + str(table_count) + "_" + str(multiple_row_cell_value_dict[date][new_key][index])]
+                                identified_multiple_values_dict[new_format][year_quarter][new_key] = [value]
                             else:
-                                if mul_row_id not in identified_multiple_values_dict[new_format][year_quarter][new_key]:
-                                    if mul_cell not in identified_multiple_values_dict[new_format][year_quarter][new_key]:
-                                        identified_multiple_values_dict[new_format][year_quarter][new_key].append(str(mul_cell) + "_Table " + str(table_count) + "_" + str(multiple_row_cell_value_dict[date][new_key][index]))
-                            index += 1
-                            
-                                        
+                                if value not in identified_multiple_values_dict[new_format][year_quarter][new_key]:
+                                    identified_multiple_values_dict[new_format][year_quarter][new_key].append(value)
+
+                            # when only multiple of the 1 same financial keyword is found
+                            if len(multiple_row_cell_value_dict[date][new_key]) == 1:
+                                i = 0
+                            else:
+                                i += 1                                
+                                                        
             big_identified_values_list.append(identified_multiple_values_dict)
         
             # saving data in json when there is extracted header values e.g. year/ quarter
