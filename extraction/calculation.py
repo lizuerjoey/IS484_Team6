@@ -166,29 +166,29 @@ def indv_stmt_calculation(statement, company_id, year, numerator, denominator, s
             for i in range(len(numerator)):
                 if stmt["year"] == str(year):
                     if numerator[i] not in numerator_dict:
-                        numerator_dict[numerator[i]] = {"year_count":1, "value": stmt[numerator[i]]}
+                        numerator_dict[numerator[i]] = {"year_count":1, "value": float(stmt[numerator[i]])}
                     else:
                         if stmt[numerator[i]] > 0:
                             numerator_dict[numerator[i]]["year_count"] +=1
-                        numerator_dict[numerator[i]]["value"] += stmt[numerator[i]]
+                        numerator_dict[numerator[i]]["value"] += float(stmt[numerator[i]])
 
             for i in range(len(denominator)):
                 if stmt["year"] == str(year):
                     if denominator[i] not in denominator_dict:
-                        denominator_dict[numerator[i]] = {"year_count":1, "value": stmt[denominator[i]]}
+                        denominator_dict[numerator[i]] = {"year_count":1, "value": float(stmt[denominator[i]])}
                     else:
                         if stmt[denominator[i]] > 0:
                             denominator_dict[denominator[i]]["year_count"] +=1
-                        denominator_dict[denominator[i]]["value"] += stmt[denominator[i]]
+                        denominator_dict[denominator[i]]["value"] += float(stmt[denominator[i]])
     total_numerator = 0  
     total_denominator = 0               
     for key in numerator_dict:
         idv_avg = numerator_dict[key]["value"]/numerator_dict[key]["year_count"]
-        total_numerator += idv_avg
+        total_numerator += float(idv_avg)
 
     for key in denominator_dict:
         idv_avg = denominator_dict[key]["value"]/denominator_dict[key]["year_count"]
-        total_denominator += idv_avg
+        total_denominator += float(idv_avg)
 
     if total_denominator == 0:
         return total_numerator/1
