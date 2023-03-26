@@ -190,4 +190,7 @@ def indv_stmt_calculation(statement, company_id, year, numerator, denominator, s
         idv_avg = denominator_dict[key]["value"]/denominator_dict[key]["year_count"]
         total_denominator += idv_avg
 
+    if total_denominator == 0:
+        return total_numerator/1
+
     return total_numerator/total_denominator
