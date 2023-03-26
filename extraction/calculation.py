@@ -66,13 +66,37 @@ def income_statement_cal(fin_sheet, other_fin_sheet, company_id, date, each_dict
     return netProfitMargin, ebitda, returnOnEquity, returnOnAsset
 
 def append_to_other_metrics(other_metrics_format, returnOnEquity, returnOnAsset, currentRatio, debtToEquityRatio, netProfitMargin, ebitda):
-    
+
     other_metrics_format["returnOnEquity"] = returnOnEquity
     other_metrics_format["returnOnAsset"] = returnOnAsset
     other_metrics_format["currentRatio"] = currentRatio
     other_metrics_format["debtToEquityRatio"] = debtToEquityRatio
     other_metrics_format["netProfitMargin"] = netProfitMargin
     other_metrics_format["ebitda"] = ebitda
+
+def remove_empty_years(big_other_metrics_list):
+    # Make a copy of the list
+    metrics_list_copy = big_other_metrics_list[:]
+    
+    # Iterate over the copy and remove items with empty year values
+    for item in metrics_list_copy:
+        if item["year"] == "":
+            big_other_metrics_list.remove(item)
+    
+    return big_other_metrics_list
+
+def check_empty(big_other_metrics_list):
+    for item in big_other_metrics_list[:]:
+        count = 0
+        for k, v in item.items():
+            if k != "year" or "numberFormat":
+                if v == 0 or v == 0.0:
+                    count += 1
+        
+        if count == 6:
+            big_other_metrics_list.remove(item)
+            
+    return big_other_metrics_list
 
 def calculate_other_metrics(edited_dict, company_id):
     # print(edited_dict)
@@ -152,15 +176,15 @@ def calculate_other_metrics(edited_dict, company_id):
                 big_other_metrics_list.append(other_metrics_format)
 
         # remove dict that has year empty
-        for i in range(len(big_other_metrics_list)):
-            if big_other_metrics_list[i]["year"] == '':
-                big_other_metrics_list.pop(i)
+        big_other_metrics_list = remove_empty_years(big_other_metrics_list)
+
+        # remove if all values except year and number format is empty
+        big_other_metrics_list = check_empty(big_other_metrics_list)
 
         # add metrics into edited_dict
         edited_dict["other_metrics"] = big_other_metrics_list
 
-        print(edited_dict)
-        
+        # print(edited_dict)
         return edited_dict
 
     # both income and balance sheet are empty -> can't calculate any other metrics
