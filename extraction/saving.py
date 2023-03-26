@@ -828,7 +828,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                             empty_cell.append(True)
 
                                     # for each metrics append the user edited value
-                                    edited_json_dict[word] = value    
+                                    edited_json_dict[word] = float(value)    
 
                             display_values = "<div class='multiple-identified-box'><b>ℹ️ Multiple Values Identifed:</b>"
                             display_values += "\n\nFor each financial keyword, a list of values are suggested due to it being similar to the keyword."
@@ -903,10 +903,12 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                 submitted = st.form_submit_button("Submit")
 
                 if submitted:
+
                     if submit_status == False:
                         st.error("Values cannot be empty or a word", icon="🚨")
                     else:
-                        calculate_other_metrics(edited_dict)
+                        # NEED TO CHANGE COM ID
+                        calculate_other_metrics(edited_dict, selected_comID)
                         
                         
                         # calculate other metrics here or above
