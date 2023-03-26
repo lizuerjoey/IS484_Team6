@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from request import (
@@ -14,7 +15,7 @@ def get_other_metrics_format():
         "currentRatio": 0,
         "debtToEquityRatio": 0,
         "netProfitMargin": 0,
-        "ebidta": 0
+        "ebitda": 0
     }
     return other_metrics_format
 
@@ -58,7 +59,7 @@ def calculate_other_metrics(edited_dict, company_id):
                     netProfitMargin = indv_stmt_calculation(fin_sheet, company_id, date, ["netProfit"], ["revenue"], each_dict)
 
                     # (6) Ebitda (Ratio) = earnings + interest + income tax + depreciation/ amortization
-                    ebitda = indv_stmt_calculation(fin_sheet, company_id, date, ["earnings", "interest", "incomeTax", "depreciation"], [], each_dict)
+                    ebitda = indv_stmt_calculation(fin_sheet, company_id, date, ["grossProfit", "interest", "incomeTax", "depreciation"], [], each_dict)
 
                     if key == "netProfit":
                         # (1) ROE (%) = (Net Profit / Total Equity)
@@ -157,6 +158,8 @@ def calculate_other_metrics(edited_dict, company_id):
 
         # add metrics into edited_dict
         edited_dict["other_metrics"] = big_other_metrics_list
+
+        print(edited_dict)
         
         return edited_dict
 
