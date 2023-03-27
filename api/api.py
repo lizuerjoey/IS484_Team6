@@ -175,7 +175,7 @@ def get_file_name ():
     data = request.get_json()
     cid = data["cid"]
     sql = (
-        "SELECT file FROM companies_files WHERE cid =  %s ;"
+        "SELECT file FROM companies_files WHERE cid =  %s and file_type = 'pdf';"
     )
     with connection:
         with connection.cursor() as cursor:
