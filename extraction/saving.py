@@ -150,20 +150,19 @@ def save_file (ID, uploaded_file, com_name, json):
         last_file = len(all_files["data"]) - 1
         fid = all_files["data"][last_file][0]
 
-        # check whether file is blank or empty or no words -> show error message
-        pdf_file=open(last_file,"rb")
-        pdf_reader= PdfReader(pdf_file)
-        if pdf_reader.numPages<1:
-            st.error('Uploaded file is empty', icon="🚨")
-
         # call the nlp extraction
-        
 
         from extraction.sentiment import (get_file_type)
         from extraction.sentiment import (clean_text)
+    
+        print(uploaded_file)
+        st.write(uploaded_file)
+
+        
    
-        if uploaded_file.type=='.pdf':
-            input=uploaded_file.path
+        if "pdf" in uploaded_file.type:
+            input=temp_path+"/"+str(uploaded_file.name)
+            st.write(input)
             pdf_file=open(input,"rb")
 
             pdf_reader= PdfFileReader(pdf_file)
@@ -174,68 +173,96 @@ def save_file (ID, uploaded_file, com_name, json):
                 text = page.extractText()
                 words = text.split()
                 total_words += len(words)
-                if total_words<0:
-                    st.error('Insufficient words to perform nlp.', icon="🚨")
-                else:
-                    status="processing nlp"
-                    pdf = open(input, "rb")
-                    reader = PdfReader(pdf)
-                    pdf_reader = PyPDF2.PdfReader(pdf)
-                    total_pages = pdf_reader.numPages
+            if total_words<0:
+                st.error('Insufficient words to perform nlp.', icon="🚨")
+            else:
+                status="processing nlp"
+                pdf = open(input, "rb")
+                reader = PdfReader(pdf)
+                pdf_reader = PyPDF2.PdfReader(pdf)
+                total_pages = pdf_reader.numPages
 
-                    nltk.download('punkt') # Download the 'punkt' package if you haven't already
+                nltk.download('punkt') # Download the 'punkt' package if you haven't already
 
-                    sentences_list = []
-                    for i in range(total_pages):
-                        page = pdf_reader.getPage(i)
-                        text = page.extractText()
-                        sentences = nltk.sent_tokenize(text)
-                        sentences_list.extend(sentences)
-        
-                    wordnet_lemmatizer = WordNetLemmatizer()
+                sentences_list = []
+                for i in range(total_pages):
+                    page = pdf_reader.getPage(i)
+                    text = page.extractText()
+                    sentences = nltk.sent_tokenize(text)
+                    sentences_list.extend(sentences)
+     
+                wordnet_lemmatizer = WordNetLemmatizer()
   
-                    cleaned_sentences=[]
-                    for sentence in sentences_list:
-                        cleaned_sentence = clean_text(sentence)
-                        cleaned_sentences.append(cleaned_sentence)
+                cleaned_sentences=[]
+                for sentence in sentences_list:
+                    cleaned_sentences.append(cleaned_sentences)
+                    st.write(cleaned_sentences)
+                    print(cleaned_sentences)
         
-                    model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
-                    tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
-                    nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
-                    results = nlp(cleaned_sentences)
-                    df=pd.DataFrame(results)
-                    df['text']=cleaned_sentences
-                    nlp_dataframe=df.to_json()
-                    top_5_positive = df.loc[df['label'] == "Positive"].nlargest(5, 'score')
-                    top_5_negative = df.loc[df['label'] == "Negative"].nlargest(5, 'score')
-                    pos_count = df[df['label'] == 'Positive'].count()
-                    neg_count = df[df['label'] == 'Negative'].count()
-                    avg_score=pos_count/neg_count
-                    data = {
-                    "file_name": uploaded_file_name,
-                    "nlp_dataframe": nlp_dataframe,
-                    "positive": [
-                        {"label": row['label'], "score": row['score']} for _, row in top_5_positive.iterrows()
-                    ],
-                    "negative": [
-                        {"label": row['label'], "score": row['score']} for _, row in top_5_negative.iterrows()
-                    ],
-                    "avg_score": avg_score,
-                    "sentences": []
-                    }
-                    data
+                model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
+                tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
+                nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+                results = nlp(cleaned_sentences)
+                df=pd.DataFrame(results)
+                df['text']=cleaned_sentences
+                nlp_dataframe=df.to_json()
+                st.write(df)
+                print(df)
+                nlp_dict = df.to_dict()
+                st.write(nlp_dict)
+                print(nlp_dict)
+                #import json
+                #data_json = json.dumps(nlp_dict)
+              
+                top_5_positive = df.loc[df['label'] == "Positive"].nlargest(5, 'score')
+                top_5_negative = df.loc[df['label'] == "Negative"].nlargest(5, 'score')
+                label_counts = df['label'].value_counts()
+                if (df['label'] == 'Positive').any():
+                    pos_count = label_counts['Positive']
+                else:
+                    pos_count = 0
+                if (df['label'] == 'Negative').any():
+                    neg_count = label_counts['Negative']
+                else:
+                    neg_count = 0
+                if (df['label'] == 'Neutral').any():
+                    neu_count = label_counts['Neutral']
+                else:
+                    neu_count = 0
+                pos_count = df[df['label'] == 'Positive'].sum()
+                neg_count = df[df['label'] == 'Negative'].sum()
+                neu_count = df[df['label'] == 'Neutral'].sum()
+                st.write(neu_count)
+                total_count=pos_count+neg_count+neu_count
+                avg_score=(pos_count*1)+(neu_count*0.5)/total_count
+                data = {
+                "file_name": uploaded_file_name,
+                "nlp_dataframe": nlp_dict,
+                "positive": [
+                    {"label": row['label'], "score": row['score']} for _, row in top_5_positive.iterrows()
+                ],
+                "negative": [
+                    {"label": row['label'], "score": row['score']} for _, row in top_5_negative.iterrows()
+                ],
+                "avg_score": avg_score,
+                "sentences": []
+                }
+                data
+                st.write(data)
+                print(data)
 
             
         # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
         
         # call api to insert 
 
-                    nlp_df = insert_extracted_data_nlp(fid,ID,data)
-                    if nlp_df:
-                        status="pass"
-                    else:
-                        status="fail"
-                        st.error('Error inserting nlp dataframe into database. Please try again later.', icon="🚨")
+                nlp_df = insert_extracted_data_nlp(fid,ID,data)
+                if nlp_df["message"]=="Added":
+                    status="pass"
+                    st.success("Successfull inserted nlp data!", icon="✅")
+                else:
+                    status="fail"
+                    st.error('Error inserting nlp dataframe into database. Please try again later.', icon="🚨")
 
 
 
@@ -933,7 +960,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                 add_com = add_company(com_id, com_name)
                                 if (add_com["message"] == "Added"):
                                     st.success("Company Added", icon="✅")          
-                                    save_file(com_id, session_state['og_uploaded_file'], com_name, updated_edited_dict)
+                                    save_file(com_id, session_state['og_uploaded_file'], com_name, basic_format)
                                 else:
                                     st.error('Error adding company. Please try again later.', icon="🚨")
                             else:
@@ -941,7 +968,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                 st.error("Please enter a company name in Upload Report Page.", icon="🚨")
                         else:
                             updated_edited_dict = calculate_other_metrics(edited_dict, selected_comID)
-                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, updated_edited_dict)
+                            save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, basic_format)
     
 
 st.markdown("""
