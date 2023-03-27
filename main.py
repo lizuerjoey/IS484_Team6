@@ -552,22 +552,40 @@ else:
             dte_col, npm_col, ebitda_col = st.columns(3)
 
             with roe_col:
-                returnOnEquity_ratio = ((other_metrics["returnOnEquity"][current_year_position] - other_metrics["returnOnEquity"][base_year_position])/other_metrics["returnOnEquity"][base_year_position])*100
+                if other_metrics["returnOnEquity"][base_year_position] > 0:
+                    returnOnEquity_ratio = ((other_metrics["returnOnEquity"][current_year_position] - other_metrics["returnOnEquity"][base_year_position])/other_metrics["returnOnEquity"][base_year_position])*100
+                else:
+                    returnOnEquity_ratio = 0
                 metrics_component("Return on Equity", other_metrics["returnOnEquity"][current_year_position], round(returnOnEquity_ratio, 2), om_numForm, False)
             with roa_col:
-                returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
+                if other_metrics["returnOnAsset"][base_year_position] != 0:
+                    returnOnAsset_ratio = ((other_metrics["returnOnAsset"][current_year_position] - other_metrics["returnOnAsset"][base_year_position])/other_metrics["returnOnAsset"][base_year_position])*100
+                else:
+                    returnOnAsset_ratio = 0
                 metrics_component("Return on Asset", other_metrics["returnOnAsset"][current_year_position], round(returnOnAsset_ratio, 2), om_numForm, False)
             with cr_col:
-                currentRatio_ratio = ((other_metrics["currentRatio"][current_year_position] - other_metrics["currentRatio"][base_year_position])/other_metrics["currentRatio"][base_year_position])*100
+                if other_metrics["currentRatio"][base_year_position] != 0:
+                    currentRatio_ratio = ((other_metrics["currentRatio"][current_year_position] - other_metrics["currentRatio"][base_year_position])/other_metrics["currentRatio"][base_year_position])*100
+                else:
+                    currentRatio_ratio = 0
                 metrics_component("Current Ratio", other_metrics["currentRatio"][current_year_position], round(currentRatio_ratio, 2), om_numForm, False)
             with dte_col:
-                debtToEquity_ratio = ((other_metrics["debtToEquityRatio"][current_year_position] - other_metrics["debtToEquityRatio"][base_year_position])/other_metrics["debtToEquityRatio"][base_year_position])*100
+                if other_metrics["debtToEquityRatio"][base_year_position] != 0:
+                    debtToEquity_ratio = ((other_metrics["debtToEquityRatio"][current_year_position] - other_metrics["debtToEquityRatio"][base_year_position])/other_metrics["debtToEquityRatio"][base_year_position])*100
+                else:
+                    debtToEquity_ratio = 0 
                 metrics_component("Debt to Equity Ratio ", other_metrics["debtToEquityRatio"][current_year_position], round(debtToEquity_ratio, 2), om_numForm, False)
             with npm_col:
-                netProfitMargin_ratio = ((other_metrics["netProfitMargin"][current_year_position] - other_metrics["netProfitMargin"][base_year_position])/other_metrics["netProfitMargin"][base_year_position])*100
+                if other_metrics["netProfitMargin"][base_year_position] != 0:
+                    netProfitMargin_ratio = ((other_metrics["netProfitMargin"][current_year_position] - other_metrics["netProfitMargin"][base_year_position])/other_metrics["netProfitMargin"][base_year_position])*100
+                else:
+                    netProfitMargin_ratio = 0 
                 metrics_component("Cost Income", other_metrics["netProfitMargin"][current_year_position], round(netProfitMargin_ratio, 2), om_numForm, False)
             with ebitda_col:
-                ebitda_ratio = ((other_metrics["ebitda"][current_year_position] - other_metrics["ebitda"][base_year_position])/other_metrics["ebitda"][base_year_position])*100
+                if other_metrics["ebitda"][base_year_position] != 0:
+                    ebitda_ratio = ((other_metrics["ebitda"][current_year_position] - other_metrics["ebitda"][base_year_position])/other_metrics["ebitda"][base_year_position])*100
+                else:
+                    ebitda_ratio = 0                    
                 metrics_component("ebitda", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
     
         # allow user to select from dropdown list here (PDF ONLY)
