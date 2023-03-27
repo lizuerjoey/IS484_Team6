@@ -213,7 +213,7 @@ def get_json_format():
             #     "netInterestMargin": 0,
             #     "netInterestIncomeRatio": 0,
             #     "costIncomeRatio": 0,
-            #     "ebidta": 0
+            #     "ebitda": 0
             # }
         ]
     }

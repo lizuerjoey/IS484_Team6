@@ -197,7 +197,7 @@ else:
             "currentRatio": [],
             "debtToEquityRatio": [],
             "netProfitMargin": [],
-            "ebidta":[],
+            "ebitda":[],
         }
 
         is_numForm = ""
@@ -325,8 +325,8 @@ else:
                             other_metrics["debtToEquityRatio"][position] = (other_metrics["debtToEquityRatio"][position] + other_metrics_result["debtToEquityRatio"])/2
                         if ((other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])!=0):
                             other_metrics["netProfitMargin"][position] = (other_metrics["netProfitMargin"][position] + other_metrics_result["netProfitMargin"])/2
-                        if ((other_metrics["ebidta"][position] + other_metrics_result["ebidta"])!=0):
-                            other_metrics["ebidta"][position] = (other_metrics["ebidta"][position] + other_metrics_result["ebidta"])/2
+                        if ((other_metrics["ebitda"][position] + other_metrics_result["ebitda"])!=0):
+                            other_metrics["ebitda"][position] = (other_metrics["ebitda"][position] + other_metrics_result["ebitda"])/2
                     else:
                         other_metrics["year"].append(str(other_metrics_result["year"]))
                         other_metrics["returnOnEquity"].append(other_metrics_result["returnOnEquity"]*exchange_rate)
@@ -334,10 +334,10 @@ else:
                         other_metrics["currentRatio"].append(other_metrics_result["currentRatio"]*exchange_rate)
                         other_metrics["debtToEquityRatio"].append(other_metrics_result["debtToEquityRatio"]*exchange_rate)
                         other_metrics["netProfitMargin"].append(other_metrics_result["netProfitMargin"]*exchange_rate)
-                        other_metrics["ebidta"].append(other_metrics_result["ebidta"]*exchange_rate)
+                        other_metrics["ebitda"].append(other_metrics_result["ebitda"]*exchange_rate)
             # Create Dataframe
             df_om = pd.DataFrame(data=other_metrics)
-            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'currentRatio': 'Current Ratio', 'debtToEquityRatio':'Debt to Equity Ratio', "netProfitMargin":"Net Profit Margin", "ebidta": "EBIDTA", "returnOnEquity": "Return on Equity"}, axis=1, inplace=True)
+            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'currentRatio': 'Current Ratio', 'debtToEquityRatio':'Debt to Equity Ratio', "netProfitMargin":"Net Profit Margin", "ebitda": "ebitda", "returnOnEquity": "Return on Equity"}, axis=1, inplace=True)
         
         if len(income_statement["Year"])<2 and len(balance_sheet["year"])<2 and len(cashflow["year"])<2 and len(other_metrics["year"])<2:
             st.error("Please upload more reports", icon="🚨")
@@ -534,7 +534,7 @@ else:
                 # st.bar_chart(df_is, x="Year")
                 plost.bar_chart(data=df_om,
                     bar = "Year",
-                    value=["Current Ratio", "Debt to Equity Ratio", "EBIDTA", "Net Profit Margin", "Return On Asset", "Return on Equity"],
+                    value=["Current Ratio", "Debt to Equity Ratio", "ebitda", "Net Profit Margin", "Return On Asset", "Return on Equity"],
                     group=True,
                     width=150)
             with om_raw_data:
@@ -549,7 +549,7 @@ else:
             base_year_position = other_metrics["year"].index(str(min(res)))
             current_year_position = other_metrics["year"].index(str(max(res)))
             roe_col, roa_col, cr_col = st.columns(3)
-            dte_col, npm_col, ebidta_col = st.columns(3)
+            dte_col, npm_col, ebitda_col = st.columns(3)
 
             with roe_col:
                 returnOnEquity_ratio = ((other_metrics["returnOnEquity"][current_year_position] - other_metrics["returnOnEquity"][base_year_position])/other_metrics["returnOnEquity"][base_year_position])*100
@@ -566,9 +566,9 @@ else:
             with npm_col:
                 netProfitMargin_ratio = ((other_metrics["netProfitMargin"][current_year_position] - other_metrics["netProfitMargin"][base_year_position])/other_metrics["netProfitMargin"][base_year_position])*100
                 metrics_component("Cost Income", other_metrics["netProfitMargin"][current_year_position], round(netProfitMargin_ratio, 2), om_numForm, False)
-            with ebidta_col:
-                ebidta_ratio = ((other_metrics["ebidta"][current_year_position] - other_metrics["ebidta"][base_year_position])/other_metrics["ebidta"][base_year_position])*100
-                metrics_component("EBIDTA", other_metrics["ebidta"][current_year_position], round(ebidta_ratio, 2), om_numForm, False)
+            with ebitda_col:
+                ebitda_ratio = ((other_metrics["ebitda"][current_year_position] - other_metrics["ebitda"][base_year_position])/other_metrics["ebitda"][base_year_position])*100
+                metrics_component("ebitda", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
     
         # allow user to select from dropdown list here (PDF ONLY)
 
