@@ -337,7 +337,7 @@ else:
                         other_metrics["ebitda"].append(other_metrics_result["ebitda"]*exchange_rate)
             # Create Dataframe
             df_om = pd.DataFrame(data=other_metrics)
-            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'currentRatio': 'Current Ratio', 'debtToEquityRatio':'Debt to Equity Ratio', "netProfitMargin":"Net Profit Margin", "ebitda": "ebitda", "returnOnEquity": "Return on Equity"}, axis=1, inplace=True)
+            df_om.rename({'year': 'Year', 'returnOnAsset': 'Return On Asset', 'currentRatio': 'Current Ratio', 'debtToEquityRatio':'Debt to Equity Ratio', "netProfitMargin":"Net Profit Margin", "ebitda": "EBITDA", "returnOnEquity": "Return on Equity"}, axis=1, inplace=True)
         
         if len(income_statement["Year"])<2 and len(balance_sheet["year"])<2 and len(cashflow["year"])<2 and len(other_metrics["year"])<2:
             st.error("Please upload more reports", icon="🚨")
@@ -534,7 +534,7 @@ else:
                 # st.bar_chart(df_is, x="Year")
                 plost.bar_chart(data=df_om,
                     bar = "Year",
-                    value=["Current Ratio", "Debt to Equity Ratio", "ebitda", "Net Profit Margin", "Return On Asset", "Return on Equity"],
+                    value=["Current Ratio", "Debt to Equity Ratio", "EBITDA", "Net Profit Margin", "Return On Asset", "Return on Equity"],
                     group=True,
                     width=150)
             with om_raw_data:
@@ -586,7 +586,7 @@ else:
                     ebitda_ratio = ((other_metrics["ebitda"][current_year_position] - other_metrics["ebitda"][base_year_position])/other_metrics["ebitda"][base_year_position])*100
                 else:
                     ebitda_ratio = 0                    
-                metrics_component("ebitda", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
+                metrics_component("EBITDA", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
     
         # allow user to select from dropdown list here (PDF ONLY)
 
