@@ -85,12 +85,10 @@ def get_symbols():
     data = fetch(session, f"https://v6.exchangerate-api.com/v6/{exchange_rate_api_key}/codes")
     return_data = {}
    
-    if ("supported_codes" not in data):
-        return_data["SGD"] = "Singapore"
-    else:
-        for codes in data["supported_codes"]:
-            return_data[codes[0]] = codes[1]
     
+    for codes in data["supported_codes"]:
+        return_data[codes[0]] = codes[1]
+
     return return_data
 
 # GET CURRENCIES
