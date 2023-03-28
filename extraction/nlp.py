@@ -8,8 +8,8 @@ from transformers import pipeline
 from transformers import AutoTokenizer
 from PyPDF2 import PdfReader
 from PyPDF2 import PdfFileReader
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer 
+# from nltk.corpus import stopwords
+# from nltk.stem import WordNetLemmatizer 
 
 # from extraction.sentiment import (get_file_type)
 from extraction.sentiment import (clean_text)
@@ -49,7 +49,7 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
                 sentences = nltk.sent_tokenize(text)
                 sentences_list.extend(sentences)
 
-            wordnet_lemmatizer = WordNetLemmatizer()
+            # wordnet_lemmatizer = WordNetLemmatizer()
 
             cleaned_sentences=[]
             for sentence in sentences_list:
@@ -62,12 +62,12 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             results = nlp(cleaned_sentences)
             df=pd.DataFrame(results)
             df['text']=cleaned_sentences
-            nlp_dataframe=df.to_json()
-            st.write(df)
-            print(df)
+            # nlp_dataframe=df.to_json()
+            # st.write(df)
+            # print(df)
             nlp_dict = df.to_dict()
-            st.write(nlp_dict)
-            print(nlp_dict)
+            # st.write(nlp_dict)
+            # print(nlp_dict)
             #import json
             #data_json = json.dumps(nlp_dict)
             
@@ -118,9 +118,9 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             "sentences": []
             }
 
-            data
-            st.write(data)
-            print(data)
+            # data
+            # st.write(data)
+            # print(data)
 
             # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
 
