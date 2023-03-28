@@ -1,8 +1,10 @@
 boto3==1.26.67
-# camelot==13.04.13-gpl-pyqt
+camelot==13.04.13-gpl-pyqt
 camelot_py==0.9.0
 fitz==0.0.1.dev2
 Flask==2.0.2
+nltk==3.8.1
+numpy==1.24.1
 openpyxl==3.0.10
 pandas==1.4.3
 Pillow==9.4.0
@@ -15,6 +17,7 @@ PyPDF2==3.0.1
 # PyPDF2==2.9.0
 python-dotenv==1.0.0
 requests==2.28.1
+seaborn==0.12.2
 SQLAlchemy==1.4.41
 st_pages==0.3.5
 streamlit==1.15.2
@@ -23,3 +26,4 @@ streamlit_extras==0.2.6
 streamlit_keyup==0.2.0
 streamlit_scrollable_textbox==0.0.3
 streamlit_tags==1.2.8
+transformers==4.27.3
