@@ -12,6 +12,7 @@ from request import(
     get_symbols,
     retrieve_data,
     get_months,
+    retrieve_file_name
 )
 
 st.set_page_config(layout="wide")
@@ -589,6 +590,12 @@ else:
                 metrics_component("EBITDA", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
     
         # allow user to select from dropdown list here (PDF ONLY)
+        file_names=[]
+        files=retrieve_file_name(selected_comID)
+        for file in files:
+            file_names.append(file)
+    
+        file_selection = st.selectbox('Select File for NLP Analysis', file_names)
 
         # call api to retrieve json specific for each file
 
