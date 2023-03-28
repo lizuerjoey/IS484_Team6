@@ -12,7 +12,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer 
 
 # from extraction.sentiment import (get_file_type)
-# from extraction.sentiment import (clean_text)
+from extraction.sentiment import (clean_text)
 
 from request import (
     insert_extracted_data_nlp,
@@ -53,10 +53,9 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
 
             cleaned_sentences=[]
             for sentence in sentences_list:
-                cleaned_sentences.append(sentence)
-                st.write(cleaned_sentences)
-                print(cleaned_sentences)
-
+                cleaned_sentence = clean_text(sentence)
+                cleaned_sentences.append(cleaned_sentence)
+                
             model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
             tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
             nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
@@ -88,27 +87,27 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             else:
                 neu_count = 0
                 
-            pos_count = df[df['label'] == 'Positive'].sum()
-            neg_count = df[df['label'] == 'Negative'].sum()
-            neu_count = df[df['label'] == 'Neutral'].sum()
+            pos_count = df(['label'] == 'Positive').sum()
+            neg_count = df(['label'] == 'Negative').sum()
+            neu_count = df(['label'] == 'Neutral').sum()
             st.write(neu_count)
 
-            # total_count = 0
-            # total_count = pos_count+neg_count+neu_count
-            # avg_score = (pos_count*1)+(neu_count*0.5)/total_count
+            total_count = 0
+            total_count = pos_count+neg_count+neu_count
+            avg_score = (pos_count*1)+(neu_count*0.5)/total_count
 
-            # data = {
-            # "file_name": uploaded_file_name,
-            # "nlp_dataframe": nlp_dict,
-            # "positive": [
-            #     {"label": row['label'], "score": row['score']} for _, row in top_5_positive.iterrows()
-            # ],
-            # "negative": [
-            #     {"label": row['label'], "score": row['score']} for _, row in top_5_negative.iterrows()
-            # ],
-            # "avg_score": avg_score,
-            # "sentences": []
-            # }
+            data = {
+            "file_name": uploaded_file_name,
+            "nlp_dataframe": nlp_dict,
+            "positive": [
+                {"label": row['label'], "score": row['score']} for _, row in top_5_positive.iterrows()
+            ],
+            "negative": [
+                {"label": row['label'], "score": row['score']} for _, row in top_5_negative.iterrows()
+            ],
+            "avg_score": avg_score,
+            "sentences": []
+            }
 
             data = {
             "file_name": uploaded_file_name,

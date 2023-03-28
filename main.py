@@ -12,7 +12,8 @@ from request import(
     get_symbols,
     retrieve_data,
     get_months,
-    retrieve_file_name
+    retrieve_file_name,
+    retrieve_details
 )
 
 st.set_page_config(layout="wide")
@@ -598,9 +599,24 @@ else:
         file_selection = st.selectbox('Select File for NLP Analysis', file_names)
 
         # call api to retrieve json specific for each file
-
+        nlp_data=retrieve_details(file_selection)
+        for data in nlp_data['data']:
+            st.write(data)
+            #df = pd.DataFrame.from_dict(data[1])
+            #avg_score = data[4]
+            #top_5_pos = data[2]
+            #top_5_neg = data[3]
         # display graph
+        #import seaborn as sns
+        #sns.countplot(x='Label', data=df)
+        #avg_score_sentence= f'The average sentiment score is {avg_score}.'
+        #st.write(avg_score_sentence)
+        #st.subheader("Top 5 positive sentences based on confidence score")
+        
+        #st.subheader("Top 5 negative sentences based on confidence score")
 
+
+    
         # display spacy
 
         # follow the code below to append to excel sheet
