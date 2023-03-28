@@ -86,10 +86,10 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
                 neu_count = label_counts['Neutral']
             else:
                 neu_count = 0
-                
-            pos_count = df(['label'] == 'Positive').sum()
-            neg_count = df(['label'] == 'Negative').sum()
-            neu_count = df(['label'] == 'Neutral').sum()
+            pos_count = (df['label'] == 'Positive').sum()     
+            neg_count = (df['label'] == 'Negative').sum()     
+            neu_count = (df['label'] == 'Neutral').sum()     
+           
             st.write(neu_count)
 
             total_count = 0
