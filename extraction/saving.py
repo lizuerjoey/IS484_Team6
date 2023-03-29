@@ -633,7 +633,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                 table_num = table + 1
                 if table_num in delete_list:
                     table_num += 1
-                st.info("Data was detected but the column header is not a year or year and quarter. You might want to rename it in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
+                st.info("Column header is not a year or year and quarter. You might want to rename it in Table " + str(table_num) + " for this data to be saved.", icon="ℹ️")
             
         no_extraction = 0
         # nothing_error
