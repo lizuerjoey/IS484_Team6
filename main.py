@@ -601,14 +601,25 @@ else:
         # call api to retrieve json specific for each file
         nlp_data=retrieve_details(file_selection)
         for data in nlp_data['data']:
-            st.write(data)
-            #df = pd.DataFrame.from_dict(data[1])
-            #avg_score = data[4]
-            #top_5_pos = data[2]
-            #top_5_neg = data[3]
+            nlp = data[3]
+            nlp_data=json.loads(nlp)
+            st.write(nlp_data)
+            df_json = nlp_data["nlp_dataframe"]
+            pos = nlp_data["positive"]
+            neg = nlp_data["negative"]
+            df = pd.DataFrame(columns=['label','score','text'])
+        for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
+            df.loc[i] = [label, score, text]
+        st.write(df)
+          
+
         # display graph
+    
         #import seaborn as sns
-        #sns.countplot(x='Label', data=df)
+        #sns.countplot(x='label', data=df)
+        #st.write(df["label"])
+        plost.bar_chart(data=df, bar='label',value='label', direction= "horizontal")
+        
         #avg_score_sentence= f'The average sentiment score is {avg_score}.'
         #st.write(avg_score_sentence)
         #st.subheader("Top 5 positive sentences based on confidence score")
