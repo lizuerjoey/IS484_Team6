@@ -154,6 +154,9 @@ def save_file (ID, uploaded_file, com_name, json):
         # call the nlp extraction
         nlp_status = "processing nlp"
         nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
+
+        # call spacy extraction
+        spacy_status = spacy_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
         
         # st.write(nlp_status)
         if nlp_status != "processing nlp":

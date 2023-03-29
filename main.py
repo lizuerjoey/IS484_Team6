@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from st_pages import Page, show_pages, add_page_title
+import streamlit_scrollable_textbox as stx
 import json
 import re
 from datetime import date, datetime
@@ -664,6 +665,29 @@ else:
         st.write(top_5_negative)
     
         # display spacy
+        for data in nlp_data['data']:
+            nlp = data[3]
+            nlp_data=json.loads(nlp)
+        #st.write(nlp_data['sentences'])
+        sentence_list = nlp_data['sentences']
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.subheader("Organisation")
+            if sentence_list[0] != []:
+                sentence_list[0] = str(sentence_list[0]).replace(",", "\n")
+                stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation-")
+                
+        with col2:
+            st.subheader("Product") 
+            if sentence_list[1] != []:
+                sentence_list[1] = str(sentence_list[1]).replace(",", "\n")
+                stx.scrollableTextbox(sentence_list[1], height = 150, key="product")
+        with col3: 
+            st.subheader("Country")
+            if sentence_list[2] != []:
+                sentence_list[2] = str(sentence_list[2]).replace(",", "\n")
+                stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
 
         # follow the code below to append to excel sheet
 
