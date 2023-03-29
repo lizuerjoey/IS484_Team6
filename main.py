@@ -603,17 +603,39 @@ else:
         for data in nlp_data['data']:
             nlp = data[3]
             nlp_data=json.loads(nlp)
-            st.write(nlp_data)
             df_json = nlp_data["nlp_dataframe"]
-            pos = nlp_data["positive"]
-            neg = nlp_data["negative"]
-            avg_score = nlp_data["avg_score"]
-            nlp_df = pd.DataFrame(columns=['label','score','text'])
+    
+    
+        st.write(nlp_data)
+    
+        nlp_df = pd.DataFrame(columns=['label','score','text'])
         for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
             nlp_df.loc[i] = [label, score, text]
+    
+        label_counts = nlp_df['label'].value_counts()
+        if (nlp_df['label'] == 'Positive').any():
+               pos_count = label_counts['Positive']
+        else:
+            pos_count = 0
+        if (nlp_df['label'] == 'Negative').any():
+            neg_count = label_counts['Negative']
+        else:
+            neg_count = 0
+        if (nlp_df['label'] == 'Neutral').any():
+            neu_count = label_counts['Neutral']
+        else:
+            neu_count = 0
+        pos_count = (nlp_df['label'] == 'Positive').sum()     
+        neg_count = (nlp_df['label'] == 'Negative').sum()     
+        neu_count = (nlp_df['label'] == 'Neutral').sum()   
+
+        total_count = 0
+        total_count = pos_count+neg_count+neu_count
+        avg_score = round(((pos_count*1)+(neu_count*0.5))/total_count,2)
+        
+        st.write(avg_score)
         
         sentiment_label_count = nlp_df.groupby('label').size().reset_index(name='count')
-        
 
         # display graph
         if not nlp_df.empty:
@@ -633,12 +655,13 @@ else:
 
         top_5_positive = nlp_df.loc[nlp_df['label'] == "Positive"].nlargest(5, 'score')
         top_5_positive = top_5_positive.drop('label', axis=1)
+        st.write(top_5_positive)
         
         
         st.subheader("Top 5 Negative Sentences")
         top_5_negative = nlp_df.loc[nlp_df['label'] == "Negative"].nlargest(5, 'score')
         top_5_negative = top_5_negative.drop('label', axis=1)
-
+        st.write(top_5_negative)
     
         # display spacy
 
