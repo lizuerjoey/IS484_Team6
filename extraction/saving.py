@@ -17,6 +17,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer 
 from extraction.calculation import (calculate_other_metrics)
 from extraction.nlp import (nlp_extraction)
+from extraction.spacy import (spacy_extraction)
 
 from streamlit import session_state
 
