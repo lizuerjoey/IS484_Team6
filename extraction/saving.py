@@ -156,7 +156,7 @@ def save_file (ID, uploaded_file, com_name, json):
         nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
 
         # call spacy extraction
-        spacy_status = spacy_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
+        # spacy_status = spacy_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
         
         # st.write(nlp_status)
         if nlp_status != "processing nlp":
@@ -707,7 +707,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             for word in sheet_json[i]:
 
                                 if word == "year":
-                                    edited_json_dict[word] = sheet_json[i]["year"]
+                                    edited_json_dict[word] = sheet_json[i][word]
 
                                 elif word == "numberFormat":
                                     edited_json_dict[word] = sheet_json[i][word]
@@ -840,14 +840,24 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                         # print(sheet)
                         # print(each_edited_list)
                         edited_dict[sheet] = each_edited_list 
-                            
-                
+
+
                 submitted = st.form_submit_button("Submit")
 
                 if submitted:
+                    st.write(edited_dict)
+                    empty_count = 0            
+                    for k, v in edited_dict.items():
+                        if k != "currency" and k != "fiscal_start_month" and k != "other_metrics":
+                            if len(v) == 0:
+                                empty_count += 1
 
-                    if submit_status == False:
+                    if empty_count == 3:
+                        st.error("You cannot submit 0 for all financial metrics", icon="🚨")
+                    
+                    elif submit_status == False:
                         st.error("Values cannot be empty or a word", icon="🚨")
+                    
                     else:            
                         if session_state["text_option"] == True:
                             updated_edited_dict = calculate_other_metrics(edited_dict, com_id)
@@ -868,14 +878,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
 st.markdown("""
 <style>
-.my-class {
-  margin-bottom: 0px !important;
-}
-
-.my-class:has(p) {
-  color: red !important;
-}
-
 .other-highlight {
     background: yellow !important;
     font-weight: bold !important

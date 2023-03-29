@@ -18,7 +18,6 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
     if "pdf" in uploaded_file.type:
         status="processing nlp"
         input=temp_path+"/"+str(uploaded_file.name)
-        st.write(input)
 
         with open(input, "rb") as pdf_file:
             pdf_reader= PdfFileReader(pdf_file)
