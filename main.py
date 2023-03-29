@@ -671,6 +671,10 @@ else:
         #st.write(nlp_data['sentences'])
         sentence_list = nlp_data['sentences']
 
+        spacy_data = {"Organisation":sentence_list[0],
+             "Product": sentence_list[1],
+             "Country": sentence_list[2]}
+
         col1, col2, col3 = st.columns(3)
         with col1:
             st.subheader("Organisation")
@@ -688,6 +692,8 @@ else:
             if sentence_list[2] != []:
                 sentence_list[2] = str(sentence_list[2]).replace(",", "\n")
                 stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
+        
+        spacy_df = pd.DataFrame(data=spacy_data, index=None)
 
         # follow the code below to append to excel sheet
 
@@ -721,6 +727,9 @@ else:
 
             if not top_5_negative.empty:
                 top_5_negative.to_excel(writer, sheet_name='Top 5 Negative')
+
+            if not spacy_df.empty:
+                spacy_df.to_excel(writer, sheet_name='Spacy')     
 
         
         # DOWNLOAD EXCEL SHEET
