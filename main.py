@@ -607,25 +607,37 @@ else:
             df_json = nlp_data["nlp_dataframe"]
             pos = nlp_data["positive"]
             neg = nlp_data["negative"]
-            df = pd.DataFrame(columns=['label','score','text'])
+            avg_score = nlp_data["avg_score"]
+            nlp_df = pd.DataFrame(columns=['label','score','text'])
         for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
-            df.loc[i] = [label, score, text]
-        st.write(df)
-          
+            nlp_df.loc[i] = [label, score, text]
+        
+        sentiment_label_count = nlp_df.groupby('label').size().reset_index(name='count')
+        
 
         # display graph
-    
-        #import seaborn as sns
-        #sns.countplot(x='label', data=df)
-        #st.write(df["label"])
-        plost.bar_chart(data=df, bar='label',value='label', direction= "horizontal")
-        
-        #avg_score_sentence= f'The average sentiment score is {avg_score}.'
-        #st.write(avg_score_sentence)
-        #st.subheader("Top 5 positive sentences based on confidence score")
-        
-        #st.subheader("Top 5 negative sentences based on confidence score")
+        if not nlp_df.empty:
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Income Statement (in """ + is_numForm + """)</span>
+                """, unsafe_allow_html=True) 
+            sentiment_bar_chart, nlp_raw_data = st.tabs (["Bar Chart", "Raw Data"])
+            with sentiment_bar_chart:          
+                plost.bar_chart(data=sentiment_label_count, bar='label',value='count', direction= "vertical", title="Sentiment Label Count")
+            with nlp_raw_data:
+                sentiment_label_count
+                
+        avg_score_sentence= f'The average sentiment score is {avg_score}.'
+        st.write(avg_score_sentence)
 
+        st.subheader("Top 5 Positive Sentences")
+
+        top_5_positive = nlp_df.loc[nlp_df['label'] == "Positive"].nlargest(5, 'score')
+        top_5_positive = top_5_positive.drop('label', axis=1)
+        
+        
+        st.subheader("Top 5 Negative Sentences")
+        top_5_negative = nlp_df.loc[nlp_df['label'] == "Negative"].nlargest(5, 'score')
+        top_5_negative = top_5_negative.drop('label', axis=1)
 
     
         # display spacy
@@ -653,6 +665,16 @@ else:
 
             if not df_om.empty:
                 df_om.to_excel(writer, sheet_name='Other Metrics')
+
+            if not sentiment_label_count.empty:
+                sentiment_label_count.to_excel(writer, sheet_name='Sentiment count data')
+            
+            if not top_5_positive.empty:
+                top_5_positive.to_excel(writer, sheet_name='Top 5 Positive')
+
+            if not top_5_negative.empty:
+                top_5_negative.to_excel(writer, sheet_name='Top 5 Negative')
+
         
         # DOWNLOAD EXCEL SHEET
         with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
