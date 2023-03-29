@@ -1,17 +1,13 @@
 import streamlit as st
-from datetime import datetime
 import pandas as pd
+
+from PyPDF2 import PdfFileReader
+
+# nlp
 import nltk
-import PyPDF2
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import BertForSequenceClassification
 from transformers import pipeline
 from transformers import AutoTokenizer
-from PyPDF2 import PdfReader
-from PyPDF2 import PdfFileReader
-# from nltk.corpus import stopwords
-# from nltk.stem import WordNetLemmatizer 
-
-# from extraction.sentiment import (get_file_type)
 from extraction.sentiment import (clean_text)
 
 from request import (
@@ -49,8 +45,6 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
                 sentences = nltk.sent_tokenize(text)
                 sentences_list.extend(sentences)
 
-            # wordnet_lemmatizer = WordNetLemmatizer()
-
             cleaned_sentences=[]
             for sentence in sentences_list:
                 cleaned_sentence = clean_text(sentence)
@@ -62,23 +56,14 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             results = nlp(cleaned_sentences)
             df=pd.DataFrame(results)
             df['text']=cleaned_sentences
-            # nlp_dataframe=df.to_json()
-            # st.write(df)
-            # print(df)
             nlp_dict = df.to_dict()
-            # st.write(nlp_dict)
-            # print(nlp_dict)
-            #import json
-            #data_json = json.dumps(nlp_dict)
             
-        
             data = {
             "file_name": uploaded_file_name,
             "nlp_dataframe": nlp_dict,
             "sentences": []
             }
 
-        
             # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
 
             # call api to insert 
