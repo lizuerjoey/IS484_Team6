@@ -371,7 +371,7 @@ else:
                 df_is
 
             #### METRICES
-            ###### BASE AND CURRENT YEAR
+            ###### BASE AND CURRENT YEARmetrics_compo
             res = [eval(i) for i in income_statement["Year"]]
             base_year_position = income_statement["Year"].index(str(min(res)))
             current_year_position = income_statement["Year"].index(str(max(res)))
@@ -598,6 +598,7 @@ else:
             file_names.append(file)
     
         file_selection = st.selectbox('Select File for NLP Analysis', file_names)
+        st.header("Sentiment Analysis")
 
         # call api to retrieve json specific for each file
         nlp_data=retrieve_details(file_selection)
@@ -606,8 +607,6 @@ else:
             nlp_data=json.loads(nlp)
             df_json = nlp_data["nlp_dataframe"]
     
-    
-        st.write(nlp_data)
     
         nlp_df = pd.DataFrame(columns=['label','score','text'])
         for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
@@ -634,36 +633,55 @@ else:
         total_count = pos_count+neg_count+neu_count
         avg_score = round(((pos_count*1)+(neu_count*0.5))/total_count,2)
         
-        st.write(avg_score)
-        
+    
         sentiment_label_count = nlp_df.groupby('label').size().reset_index(name='count')
 
         # display graph
+        nlp_col3, nlp_col4 = st.columns(2)
         if not nlp_df.empty:
-            st.markdown("""
-                    <span style='font-weight: 600; font-size: 2rem'>Income Statement (in """ + is_numForm + """)</span>
-                """, unsafe_allow_html=True) 
-            sentiment_bar_chart, nlp_raw_data = st.tabs (["Bar Chart", "Raw Data"])
-            with sentiment_bar_chart:          
-                plost.bar_chart(data=sentiment_label_count, bar='label',value='count', direction= "vertical", title="Sentiment Label Count")
-            with nlp_raw_data:
-                sentiment_label_count
-                
-        avg_score_sentence= f'The average sentiment score is {avg_score}.'
-        st.write(avg_score_sentence)
+            with nlp_col3:
+                st.markdown("""
+                        <span style='font-weight: 600; font-size: 2rem'>Income Statement (in """ + is_numForm + """)</span>
+                    """, unsafe_allow_html=True) 
+                sentiment_bar_chart, nlp_raw_data = st.tabs (["Bar Chart", "Raw Data"])
+                with sentiment_bar_chart:          
+                    plost.bar_chart(data=sentiment_label_count, bar='label',value='count', direction= "vertical", height=500, width=500, title="Sentiment Label Count")
+                with nlp_raw_data:
+                    sentiment_label_count
+            with nlp_col4:
+                title = "Overall Sentiment"
+                num = avg_score
+                if avg_score>0.5:
+                    label="Positive"
+                elif avg_score<0.5:
+                    label="Negative"
+                else:
+                    label="Neutral"
+               
+                html_string = "<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px; margin-top: 100px;'>"
+                html_string += "<div style='display:flex; padding-left:20px; padding-top:15px;'>"
+                html_string += "<div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + title + "</div>"
+                html_string += "<div style='color: rgb( 96, 149, 111 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 231, 243, 226); padding:6px; height:40px'>" + label + "</div></div>"
+                html_string += "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + str(num) + " </div></div>"
 
-        st.subheader("Top 5 Positive Sentences")
+                st.markdown(html_string, unsafe_allow_html=True)
+                        
 
         top_5_positive = nlp_df.loc[nlp_df['label'] == "Positive"].nlargest(5, 'score')
         top_5_positive = top_5_positive.drop('label', axis=1)
-        st.write(top_5_positive)
-        
-        
-        st.subheader("Top 5 Negative Sentences")
+
         top_5_negative = nlp_df.loc[nlp_df['label'] == "Negative"].nlargest(5, 'score')
         top_5_negative = top_5_negative.drop('label', axis=1)
-        st.write(top_5_negative)
-    
+
+        nlp_col1, nlp_col2 = st.columns(2)
+        with nlp_col1:
+            st.subheader("Top 5 Positive Sentences")
+            st.write(top_5_positive)
+
+        with nlp_col2:
+            st.subheader("Top 5 Negative Sentences")
+            st.write(top_5_negative)
+        
         # display spacy
         for data in nlp_data['data']:
             nlp = data[3]
