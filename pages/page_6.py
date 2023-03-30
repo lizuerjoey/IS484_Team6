@@ -48,15 +48,14 @@ if crop_yes:
     st.session_state.count+=1
     path =(f"./temp_files/new_image{st.session_state.count}.jpeg")
     cropped_image.save(path)
-    #crop_yes = False
-
-    
-    st.write("Are you done with cropping?")
-    fin_crop= st.button("Preview Extracted Data", key="previewimg")
-    if fin_crop:
-        os.remove(file_path)
-        switch_page("preview extracted data")  
-    else:
-        crop_yes=False
+st.write("Are you done with cropping?")
+fin_crop= st.button("Preview Extracted Data", key="previewimg")
+if fin_crop:
+    os.remove(file_path)
+    switch_page("preview extracted data")    
+       
+         
+else:
+    crop_yes=False
 
 
