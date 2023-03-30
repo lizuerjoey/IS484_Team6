@@ -5,28 +5,15 @@ import os
 from datetime import datetime
 import pandas as pd
 import time
-import glob
-import nltk
-import PyPDF2
-from transformers import BertTokenizer, BertForSequenceClassification
-from transformers import pipeline
-from transformers import AutoTokenizer
-from PyPDF2 import PdfReader
-from PyPDF2 import PdfFileReader
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer 
 from extraction.calculation import (calculate_other_metrics)
 from extraction.nlp import (nlp_extraction)
-from extraction.spacy import (spacy_extraction)
 
 from streamlit import session_state
 
 from request import (
-    get_symbols,
     add_company,
     add_file,
     get_financial_words_col,
-    get_financial_words_row,
     get_json_financial_format,
     get_json_format,
     insert_data,
@@ -154,9 +141,6 @@ def save_file (ID, uploaded_file, com_name, json):
         # call the nlp extraction
         nlp_status = "processing nlp"
         nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
-
-        # call spacy extraction
-        # spacy_status = spacy_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
         
         # st.write(nlp_status)
         if nlp_status != "processing nlp":
@@ -734,7 +718,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                                             
                                                             # more than 1 means other than itself, there are other values identified
                                                             if len(value_dict[word]) > 0: 
-                                                                new_word = f"<span class='other-highlight'>{word}</span>"
+                                                                new_word = f"<span style='background: yellow !important; font-weight: bold !important'>{word}</span>"
 
                                     x += 1
 
@@ -772,7 +756,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     # for each metrics append the user edited value
                                     edited_json_dict[word] = float(value)    
 
-                            display_values = "<div class='multiple-identified-box'><b>ℹ️ Multiple Values Identifed:</b>"
+                            display_values = "<div style='background: rgba(28, 131, 225, 0.1) !important; padding: 16px; margin-bottom: 16px; color: rgb(0, 66, 128)'><b>ℹ️ Multiple Values Identifed:</b>"
                             display_values += "\n\nFor each financial keyword, a list of values are suggested due to it being similar to the keyword."
                             
                             # display when there is multiple values identified
@@ -845,7 +829,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                 submitted = st.form_submit_button("Submit")
 
                 if submitted:
-                    st.write(edited_dict)
+                    # st.write(edited_dict)
                     empty_count = 0            
                     for k, v in edited_dict.items():
                         if k != "currency" and k != "fiscal_start_month" and k != "other_metrics":

@@ -9,6 +9,7 @@ from transformers import BertForSequenceClassification
 from transformers import pipeline
 from transformers import AutoTokenizer
 from extraction.sentiment import (clean_text)
+from extraction.spacy import (spacy_extraction)
 
 from request import (
     insert_extracted_data_nlp,
@@ -64,6 +65,7 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             }
 
             # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
+            updated_data = spacy_extraction(data, input)
 
             # call api to insert 
             nlp_df = insert_extracted_data_nlp(fid,ID,data)

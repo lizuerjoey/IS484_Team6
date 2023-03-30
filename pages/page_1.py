@@ -260,7 +260,7 @@ def proceed_next_pg():
 if uploaded_file is not None:
     if st.session_state["text_option"]:
         if com_name == "":
-            st.error("Please enter a company name")
+            st.error("Please enter a company name", icon="🚨")
         else:
             proceed_next_pg()
     else:

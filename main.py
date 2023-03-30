@@ -591,171 +591,171 @@ else:
                     ebitda_ratio = 0                    
                 metrics_component("EBITDA", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
     
-        # allow user to select from dropdown list here (PDF ONLY)
-        file_names=[]
-        files=retrieve_file_name(selected_comID)
-        for file in files:
-            file_names.append(file)
+    st.header("NLP Analysis")
+    # allow user to select from dropdown list here (PDF ONLY)
+    file_names=[]
+    files=retrieve_file_name(selected_comID)
+    for file in files:
+        file_names.append(file)
+
+    file_selection = st.selectbox('Select File for NLP Analysis', file_names)
+
+    # call api to retrieve json specific for each file
+    nlp_data=retrieve_details(file_selection)
+    st.write(nlp_data["data"])
+    for data in nlp_data['data']:
+        nlp = data[3]
+        nlp_data=json.loads(nlp)
+        df_json = nlp_data["nlp_dataframe"]
+
+
+    nlp_df = pd.DataFrame(columns=['label','score','text'])
+    for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
+        nlp_df.loc[i] = [label, score, text]
+
+    label_counts = nlp_df['label'].value_counts()
+    if (nlp_df['label'] == 'Positive').any():
+            pos_count = label_counts['Positive']
+    else:
+        pos_count = 0
+    if (nlp_df['label'] == 'Negative').any():
+        neg_count = label_counts['Negative']
+    else:
+        neg_count = 0
+    if (nlp_df['label'] == 'Neutral').any():
+        neu_count = label_counts['Neutral']
+    else:
+        neu_count = 0
+    pos_count = (nlp_df['label'] == 'Positive').sum()     
+    neg_count = (nlp_df['label'] == 'Negative').sum()     
+    neu_count = (nlp_df['label'] == 'Neutral').sum()   
+
+    total_count = 0
+    total_count = pos_count+neg_count+neu_count
+    avg_score = round(((pos_count*1)+(neu_count*0.5))/total_count,2)
     
-        file_selection = st.selectbox('Select File for NLP Analysis', file_names)
-        st.header("Sentiment Analysis")
 
-        # call api to retrieve json specific for each file
-        nlp_data=retrieve_details(file_selection)
-        for data in nlp_data['data']:
-            nlp = data[3]
-            nlp_data=json.loads(nlp)
-            df_json = nlp_data["nlp_dataframe"]
-    
-    
-        nlp_df = pd.DataFrame(columns=['label','score','text'])
-        for i, (label, score, text) in enumerate(zip(df_json['label'].values(), df_json['score'].values(), df_json['text'].values())):
-            nlp_df.loc[i] = [label, score, text]
-    
-        label_counts = nlp_df['label'].value_counts()
-        if (nlp_df['label'] == 'Positive').any():
-               pos_count = label_counts['Positive']
-        else:
-            pos_count = 0
-        if (nlp_df['label'] == 'Negative').any():
-            neg_count = label_counts['Negative']
-        else:
-            neg_count = 0
-        if (nlp_df['label'] == 'Neutral').any():
-            neu_count = label_counts['Neutral']
-        else:
-            neu_count = 0
-        pos_count = (nlp_df['label'] == 'Positive').sum()     
-        neg_count = (nlp_df['label'] == 'Negative').sum()     
-        neu_count = (nlp_df['label'] == 'Neutral').sum()   
+    sentiment_label_count = nlp_df.groupby('label').size().reset_index(name='count')
 
-        total_count = 0
-        total_count = pos_count+neg_count+neu_count
-        avg_score = round(((pos_count*1)+(neu_count*0.5))/total_count,2)
-        
-    
-        sentiment_label_count = nlp_df.groupby('label').size().reset_index(name='count')
+    # display graph
+    nlp_col3, nlp_col4 = st.columns(2)
+    if not nlp_df.empty:
+        with nlp_col3:
+            st.markdown("""
+                    <span style='font-weight: 600; font-size: 2rem'>Overall Sentiment Count</span>
+                """, unsafe_allow_html=True) 
+            sentiment_bar_chart, nlp_raw_data = st.tabs (["Bar Chart", "Raw Data"])
+            with sentiment_bar_chart:          
+                plost.bar_chart(data=sentiment_label_count, bar='label',value='count', direction= "vertical", height=500, width=500, title="Sentiment Label Count")
+            with nlp_raw_data:
+                sentiment_label_count
+        with nlp_col4:
+            title = "Overall Sentiment"
+            num = avg_score
+            if avg_score>0.5:
+                label="Positive"
+            elif avg_score<0.5:
+                label="Negative"
+            else:
+                label="Neutral"
+            
+            html_string = "<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px; margin-top: 100px;'>"
+            html_string += "<div style='display:flex; padding-left:20px; padding-top:15px;'>"
+            html_string += "<div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + title + "</div>"
+            html_string += "<div style='color: rgb( 96, 149, 111 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 231, 243, 226); padding:6px; height:40px'>" + label + "</div></div>"
+            html_string += "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + str(num) + " </div></div>"
 
-        # display graph
-        nlp_col3, nlp_col4 = st.columns(2)
-        if not nlp_df.empty:
-            with nlp_col3:
-                st.markdown("""
-                        <span style='font-weight: 600; font-size: 2rem'>Income Statement (in """ + is_numForm + """)</span>
-                    """, unsafe_allow_html=True) 
-                sentiment_bar_chart, nlp_raw_data = st.tabs (["Bar Chart", "Raw Data"])
-                with sentiment_bar_chart:          
-                    plost.bar_chart(data=sentiment_label_count, bar='label',value='count', direction= "vertical", height=500, width=500, title="Sentiment Label Count")
-                with nlp_raw_data:
-                    sentiment_label_count
-            with nlp_col4:
-                title = "Overall Sentiment"
-                num = avg_score
-                if avg_score>0.5:
-                    label="Positive"
-                elif avg_score<0.5:
-                    label="Negative"
-                else:
-                    label="Neutral"
-               
-                html_string = "<div style='border: 2px solid black; border-radius:10px; margin-bottom: 20px; margin-top: 100px;'>"
-                html_string += "<div style='display:flex; padding-left:20px; padding-top:15px;'>"
-                html_string += "<div style='font-size: 20px; color:rgba(161, 164, 170, 1);'>" + title + "</div>"
-                html_string += "<div style='color: rgb( 96, 149, 111 ); margin-left:10px; margin-right:10px; border-radius: 8px; background-color:rgb( 231, 243, 226); padding:6px; height:40px'>" + label + "</div></div>"
-                html_string += "<div style='font-size: 3rem; margin-left:20px; padding-bottom: 10px; padding-right: 10px'>" + str(num) + " </div></div>"
+            st.markdown(html_string, unsafe_allow_html=True)
+                    
 
-                st.markdown(html_string, unsafe_allow_html=True)
-                        
+    top_5_positive = nlp_df.loc[nlp_df['label'] == "Positive"].nlargest(5, 'score')
+    top_5_positive = top_5_positive.drop('label', axis=1)
 
-        top_5_positive = nlp_df.loc[nlp_df['label'] == "Positive"].nlargest(5, 'score')
-        top_5_positive = top_5_positive.drop('label', axis=1)
+    top_5_negative = nlp_df.loc[nlp_df['label'] == "Negative"].nlargest(5, 'score')
+    top_5_negative = top_5_negative.drop('label', axis=1)
 
-        top_5_negative = nlp_df.loc[nlp_df['label'] == "Negative"].nlargest(5, 'score')
-        top_5_negative = top_5_negative.drop('label', axis=1)
-
-        nlp_col1, nlp_col2 = st.columns(2)
-        with nlp_col1:
+    nlp_col1, nlp_col2 = st.columns(2)
+    with nlp_col1:
+        if not top_5_positive.empty:
             st.subheader("Top 5 Positive Sentences")
             st.write(top_5_positive)
 
-        with nlp_col2:
+    with nlp_col2:
+        if not top_5_negative.empty:
             st.subheader("Top 5 Negative Sentences")
             st.write(top_5_negative)
-        
-        # display spacy
-        for data in nlp_data['data']:
-            nlp = data[3]
-            nlp_data=json.loads(nlp)
-        #st.write(nlp_data['sentences'])
-        sentence_list = nlp_data['sentences']
+    
+    # display spacy
+    sentence_list = nlp_data['sentences']
 
-        spacy_data = {"Organisation":sentence_list[0],
-             "Product": sentence_list[1],
-             "Country": sentence_list[2]}
+    spacy_data = {"Organisation":sentence_list[0],
+            "Product": sentence_list[1],
+            "Country": sentence_list[2]}
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.subheader("Organisation")
-            if sentence_list[0] != []:
-                sentence_list[0] = str(sentence_list[0]).replace(",", "\n")
-                stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation-")
-                
-        with col2:
-            st.subheader("Product") 
-            if sentence_list[1] != []:
-                sentence_list[1] = str(sentence_list[1]).replace(",", "\n")
-                stx.scrollableTextbox(sentence_list[1], height = 150, key="product")
-        with col3: 
-            st.subheader("Country")
-            if sentence_list[2] != []:
-                sentence_list[2] = str(sentence_list[2]).replace(",", "\n")
-                stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
-        
-        spacy_df = pd.DataFrame(data=spacy_data, index=None)
-
-        # follow the code below to append to excel sheet
-
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        format_df["datetime"].append(str(date.today()) + " " + current_time)
-        df = pd.DataFrame(data=format_df)
-        df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
-
-        # CONVERT TO EXCEL SHEET
-        with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
-            df.to_excel(writer, sheet_name='Main')
-            if not df_bs.empty and len(df_bs)>1:
-                df_bs = pd.concat([df_bs, df_assets, df_liabilities])
-                df_bs.to_excel(writer, sheet_name='Balance Sheet')
-
-            if not df_is.empty:
-                df_is.to_excel(writer, sheet_name='Income Statement')
-
-            if not df_cf.empty:
-                df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
-
-            if not df_om.empty:
-                df_om.to_excel(writer, sheet_name='Other Metrics')
-
-            if not sentiment_label_count.empty:
-                sentiment_label_count.to_excel(writer, sheet_name='Sentiment count data')
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.subheader("Organisation")
+        if len(sentence_list[0]) > 0:
+            sentence_list[0] = str(sentence_list[0]).replace(",", "\n")
+            stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation-")
             
-            if not top_5_positive.empty:
-                top_5_positive.to_excel(writer, sheet_name='Top 5 Positive')
+    with col2:
+        st.subheader("Product")
+        if len(sentence_list[1]) > 0:
+            sentence_list[1] = str(sentence_list[1]).replace(",", "\n")
+            stx.scrollableTextbox(sentence_list[1], height = 150, key="product")
+    
+    with col3: 
+        st.subheader("Country")
+        if len(sentence_list[2]) > 0:
+            sentence_list[2] = str(sentence_list[2]).replace(",", "\n")
+            stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
+    
+    spacy_df = pd.DataFrame(data=spacy_data, index=None)
 
-            if not top_5_negative.empty:
-                top_5_negative.to_excel(writer, sheet_name='Top 5 Negative')
+    # follow the code below to append to excel sheet
 
-            if not spacy_df.empty:
-                spacy_df.to_excel(writer, sheet_name='Spacy')     
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    format_df["datetime"].append(str(date.today()) + " " + current_time)
+    df = pd.DataFrame(data=format_df)
+    df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
 
+    # CONVERT TO EXCEL SHEET
+    with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
+        df.to_excel(writer, sheet_name='Main')
+        if not df_bs.empty and len(df_bs)>1:
+            df_bs = pd.concat([df_bs, df_assets, df_liabilities])
+            df_bs.to_excel(writer, sheet_name='Balance Sheet')
+
+        if not df_is.empty:
+            df_is.to_excel(writer, sheet_name='Income Statement')
+
+        if not df_cf.empty:
+            df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+
+        if not df_om.empty:
+            df_om.to_excel(writer, sheet_name='Other Metrics')
+
+        if not sentiment_label_count.empty:
+            sentiment_label_count.to_excel(writer, sheet_name='Sentiment count data')
         
-        # DOWNLOAD EXCEL SHEET
-        with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
-            btn = st.download_button(
-                    label="Download Excel 📥",
-                    data=file,
-                    file_name="Download.xlsx",
-                    mime="text/xlsx"
-                )
+        if not top_5_positive.empty:
+            top_5_positive.to_excel(writer, sheet_name='Top 5 Positive')
+
+        if not top_5_negative.empty:
+            top_5_negative.to_excel(writer, sheet_name='Top 5 Negative')
+
+        if not spacy_df.empty:
+            spacy_df.to_excel(writer, sheet_name='Spacy')     
+
+    
+    # DOWNLOAD EXCEL SHEET
+    with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
+        btn = st.download_button(
+                label="Download Excel 📥",
+                data=file,
+                file_name="Download.xlsx",
+                mime="text/xlsx"
+            )
     
