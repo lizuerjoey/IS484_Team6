@@ -590,7 +590,30 @@ else:
                 else:
                     ebitda_ratio = 0                    
                 metrics_component("EBITDA", other_metrics["ebitda"][current_year_position], round(ebitda_ratio, 2), om_numForm, False)
-    
+
+        # follow the code below to append to excel sheet
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        format_df["datetime"].append(str(date.today()) + " " + current_time)
+        df = pd.DataFrame(data=format_df)
+        df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
+
+        # CONVERT TO EXCEL SHEET
+        with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
+            df.to_excel(writer, sheet_name='Main')
+            if not df_bs.empty and len(df_bs)>1:
+                df_bs = pd.concat([df_bs, df_assets, df_liabilities])
+                df_bs.to_excel(writer, sheet_name='Balance Sheet')
+
+            if not df_is.empty:
+                df_is.to_excel(writer, sheet_name='Income Statement')
+
+            if not df_cf.empty:
+                df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+
+            if not df_om.empty:
+                df_om.to_excel(writer, sheet_name='Other Metrics')
+
     st.header("NLP Analysis")
     # allow user to select from dropdown list here (PDF ONLY)
     file_names=[]
@@ -602,7 +625,6 @@ else:
 
     # call api to retrieve json specific for each file
     nlp_data=retrieve_details(file_selection)
-    st.write(nlp_data["data"])
     for data in nlp_data['data']:
         nlp = data[3]
         nlp_data=json.loads(nlp)
@@ -676,15 +698,15 @@ else:
 
     nlp_col1, nlp_col2 = st.columns(2)
     with nlp_col1:
+        st.subheader("Top 5 Positive Sentences")
         if not top_5_positive.empty:
-            st.subheader("Top 5 Positive Sentences")
             st.write(top_5_positive)
         else:
             st.info("No data available", icon="ℹ️")
 
     with nlp_col2:
+        st.subheader("Top 5 Negative Sentences")
         if not top_5_negative.empty:
-            st.subheader("Top 5 Negative Sentences")
             st.write(top_5_negative)
         else:
             st.info("No data available", icon="ℹ️")
@@ -705,6 +727,8 @@ else:
             sentence_list[0] = sentence_list[0].replace("]","")
             sentence_list[0] = sentence_list[0].replace("'","")
             stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation")
+        else:
+            st.info("No data available", icon="ℹ️")
             
     with col2:
         st.subheader("Product")
@@ -714,7 +738,9 @@ else:
             sentence_list[1] = sentence_list[1].replace("]","")
             sentence_list[1] = sentence_list[1].replace("'","")
             stx.scrollableTextbox(sentence_list[1], height = 150, key="product")
-    
+        else:
+            st.info("No data available", icon="ℹ️")
+
     with col3: 
         st.subheader("Country")
         if len(sentence_list[2]) > 0:
@@ -723,36 +749,16 @@ else:
             sentence_list[2] = sentence_list[2].replace("]","")
             sentence_list[2] = sentence_list[2].replace("'","")
             stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
+        else:
+            st.info("No data available", icon="ℹ️")
     
     # spacy dataframe
     df_org = pd.DataFrame(data=org_data, index=None)
     df_pro = pd.DataFrame(data=pro_data, index=None)
     df_coun = pd.DataFrame(data=coun_data, index=None)
 
-    # follow the code below to append to excel sheet
 
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    format_df["datetime"].append(str(date.today()) + " " + current_time)
-    df = pd.DataFrame(data=format_df)
-    df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
-
-    # CONVERT TO EXCEL SHEET
     with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
-        df.to_excel(writer, sheet_name='Main')
-        if not df_bs.empty and len(df_bs)>1:
-            df_bs = pd.concat([df_bs, df_assets, df_liabilities])
-            df_bs.to_excel(writer, sheet_name='Balance Sheet')
-
-        if not df_is.empty:
-            df_is.to_excel(writer, sheet_name='Income Statement')
-
-        if not df_cf.empty:
-            df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
-
-        if not df_om.empty:
-            df_om.to_excel(writer, sheet_name='Other Metrics')
-
         if not sentiment_label_count.empty:
             sentiment_label_count.to_excel(writer, sheet_name='Sentiment count data')
         
@@ -770,9 +776,7 @@ else:
 
         if not df_coun.empty:
             df_coun.to_excel(writer, sheet_name='Country')     
-  
 
-    
     # DOWNLOAD EXCEL SHEET
     with open(os.path.join("temp_files",'output.xlsx'), "rb") as file:
         btn = st.download_button(
