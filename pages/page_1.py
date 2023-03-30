@@ -245,7 +245,7 @@ def proceed_next_pg():
 
             # check if uploade file is png/ jpg/ jpeg
             elif uploaded_file.name.endswith('.png') or uploaded_file.name.endswith('.jpg') or uploaded_file.name.endswith('.jpeg'):
-                st.write("Does the uploaded image have more than one table?")
+                st.write("Do you want to crop the image?")
                 col3, col4 = st.columns([2,22])
                 with col3:
                     result_yes = st.button("Yes")
