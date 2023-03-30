@@ -142,7 +142,7 @@ else:
     endYear = []
     
     format_df["start"].append(start_year)
-
+    financial_statement_df=[]
     if year.index(start_year) != len(year)-1:
         for y in year[year.index(start_year)+1:]:
             if len(start_year) == len(y) :
@@ -595,24 +595,24 @@ else:
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         format_df["datetime"].append(str(date.today()) + " " + current_time)
-        df = pd.DataFrame(data=format_df)
-        df.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
+        df_main = pd.DataFrame(data=format_df)
+        df_main.rename({'company': 'Company', 'base_currency': 'Base Currency', 'currency_to_convert': 'Currency To Convert', 'start':'Start Year', "end":"End Year", "fiscal_month": "Fiscal Month", "datetime": "Date/Time"}, axis=1, inplace=True)
 
         # CONVERT TO EXCEL SHEET
-        with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
-            df.to_excel(writer, sheet_name='Main')
-            if not df_bs.empty and len(df_bs)>1:
-                df_bs = pd.concat([df_bs, df_assets, df_liabilities])
-                df_bs.to_excel(writer, sheet_name='Balance Sheet')
+        financial_statement_df.append({"df": df_main, "sheet_name": "Main"})
 
-            if not df_is.empty:
-                df_is.to_excel(writer, sheet_name='Income Statement')
+        if not df_bs.empty and len(df_bs)>1:
+            df_bs = pd.concat([df_bs, df_assets, df_liabilities])
+            financial_statement_df.append({"df": df_bs, "sheet_name": "Balance Sheet"})
 
-            if not df_cf.empty:
-                df_cf.to_excel(writer, sheet_name='Cash Flow Statement')
+        if not df_is.empty:
+            financial_statement_df.append({"df": df_is, "sheet_name": "Income Statement"})
 
-            if not df_om.empty:
-                df_om.to_excel(writer, sheet_name='Other Metrics')
+        if not df_cf.empty:
+            financial_statement_df.append({"df": df_cf, "sheet_name": "Cash Flow Statement"})
+
+        if not df_om.empty:
+            financial_statement_df.append({"df": df_om, "sheet_name": "Other Metrics"})
 
     st.header("NLP Analysis")
     # allow user to select from dropdown list here (PDF ONLY)
@@ -759,6 +759,9 @@ else:
 
 
     with pd.ExcelWriter(os.path.join("temp_files",'output.xlsx')) as writer:
+        for stmt in financial_statement_df:
+            stmt["df"].to_excel(writer, sheet_name=stmt["sheet_name"])
+            
         if not sentiment_label_count.empty:
             sentiment_label_count.to_excel(writer, sheet_name='Sentiment count data')
         
