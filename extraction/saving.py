@@ -240,7 +240,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
 
     # below are required fields; if at least one field is not correct -> cannot save to json             
     if ((False in search_col_list_check) or 
-        (currency == 'Not Selected') or (str(fiscal_month) == " ") or
+        (currency == "") or (str(fiscal_month) == "") or
         ('Not Selected' in financial_format) or 
         ('Unable to Determine' in number_format)):
         save_status = False
@@ -718,7 +718,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                                             
                                                             # more than 1 means other than itself, there are other values identified
                                                             if len(value_dict[word]) > 0: 
-                                                                new_word = f"<span style='background: yellow !important; font-weight: bold !important'>{word}</span>"
+                                                                new_word = f"<span style='background: yellow; font-weight: bold'>{word}</span>"
 
                                     x += 1
 
@@ -756,7 +756,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     # for each metrics append the user edited value
                                     edited_json_dict[word] = float(value)    
 
-                            display_values = "<div style='background: rgba(28, 131, 225, 0.1) !important; padding: 16px; margin-bottom: 16px; color: rgb(0, 66, 128)'><b>ℹ️ Multiple Values Identifed:</b>"
+                            display_values = "<div style='background: rgba(28, 131, 225, 0.1); padding: 16px; margin-bottom: 16px; color: rgb(0, 66, 128)'><b>ℹ️ Multiple Values Identifed:</b>"
                             display_values += "\n\nFor each financial keyword, a list of values are suggested due to it being similar to the keyword."
                             
                             # display when there is multiple values identified

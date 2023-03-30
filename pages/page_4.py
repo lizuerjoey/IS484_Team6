@@ -578,9 +578,10 @@ if session_state['upload_file_status'] == True:
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
+            if (currency == " "):
+                st.write("IN")
             # dataframe_list
             # search_col_list_check
-            # currency
             # fiscal_month
             # financial_format
             # number_format
