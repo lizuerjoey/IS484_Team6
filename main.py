@@ -679,11 +679,15 @@ else:
         if not top_5_positive.empty:
             st.subheader("Top 5 Positive Sentences")
             st.write(top_5_positive)
+        else:
+            st.info("No data available", icon="ℹ️")
 
     with nlp_col2:
         if not top_5_negative.empty:
             st.subheader("Top 5 Negative Sentences")
             st.write(top_5_negative)
+        else:
+            st.info("No data available", icon="ℹ️")
     
     # display spacy
     sentence_list = nlp_data['sentences']
