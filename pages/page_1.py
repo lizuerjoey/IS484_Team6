@@ -97,7 +97,8 @@ def initials(full_name):
 if st.session_state['text_option'] == True:
     
     if len(get_options) > 0:
-        
+
+        com_name = "" 
         col1, col2 = st.columns([10,2])
         with col1:
             com_name = st.text_input(
@@ -149,112 +150,123 @@ def save_file_to_temp (uploaded_file):
     with open(os.path.join("temp_files",uploaded_file.name),"wb") as f: 
         f.write(uploaded_file.getbuffer())   
 
-if uploaded_file is not None:
+def proceed_next_pg():
     # File Size limit 2mb in bytes
-    limit = 2*1000000
-    # Check file type
-    position = uploaded_file.type.find("/")
-    file_type = uploaded_file.type[position+1: ]
-    # Accepted File Type
-    supported_file_type=["pdf", "png", "jpg", "jpeg"]
+            limit = 2*1000000
+            # Check file type
+            position = uploaded_file.type.find("/")
+            file_type = uploaded_file.type[position+1: ]
+            # Accepted File Type
+            supported_file_type=["pdf", "png", "jpg", "jpeg"]
 
-    # Check if the temp folder is empty
-    temp_path = "./temp_files"
-    dir = os.listdir(temp_path)
+            # Check if the temp folder is empty
+            temp_path = "./temp_files"
+            dir = os.listdir(temp_path)
 
-    if (file_type not in supported_file_type):
-        st.error("Unsupported File Type", icon="🚨")
-    
-    else:
-        if len(dir) > 0:
-            for f in os.listdir(temp_path):
-                if (f != "test.txt"):
-                    os.remove(os.path.join(temp_path, f))
-
-            for f in os.listdir("./selected_files/"):
-                if (f != "test.txt"):
-                    os.remove(os.path.join("./selected_files/", f))
-
-        save_file_to_temp(uploaded_file)
-
-    # check if uploaded file is pdf
-    if uploaded_file.name.endswith('.pdf'):
-        file_path = "./temp_files/" + uploaded_file.name
-        pdfReader = PyPDF2.PdfReader(file_path)
-        totalpages = len(pdfReader.pages)
-        
-        if (uploaded_file.size>limit):
-            st.info('File Size is more than 2MB. This will take awhile to load.', icon="ℹ️")
-            print("File Size more than 2MB")
-            file_path = "./temp_files/" + uploaded_file.name
-            # no need error -> compress file here
-            # save back into the original file name
-            # importing the ilovepdf api
-            # public key
-            public_key = COMPRESSED_PDF_KEY
-
-            # creating a ILovePdf object
-            ilovepdf = ILovePdf(public_key, verify_ssl=True)
-
-            # assigning a new compress task
-            task = ilovepdf.new_task('compress')
-
-            # adding the pdf file to the task
-            task.add_file(file_path)
-
-            # setting the output folder directory
-            # if no folder exist it will create one
-            task.set_output_folder('temp_files')
-
-            # execute the task
-            task.execute()
-
-            # download the task
-            task.download()
-
-            # delete the task
-            task.delete_current_task()
-            new_file_name = uploaded_file.name
+            if (file_type not in supported_file_type):
+                st.error("Unsupported File Type", icon="🚨")
             
-            if len(dir) > 0:
-                for f in os.listdir(temp_path):
-                    if (f == uploaded_file.name):
-                        os.remove(os.path.join(temp_path, f))
-                        
-                for f in os.listdir(temp_path):
-                    if (f.endswith(".pdf")):
-                        old_path = os.path.join("temp_files",f)
-                        new_path = os.path.join("temp_files",new_file_name)
-                        os.rename(old_path, new_path)
-                        if (os.stat(new_path).st_size>limit): 
-                            st.warning('File size is more than 2 MB after compressing. Please note that you might not be able to view the file in the PDF viewer. You may proceed with the extraction.', icon="⚠️")
-                        print(os.stat(new_path).st_size)
-                        
+            else:
+                if len(dir) > 0:
+                    for f in os.listdir(temp_path):
+                        if (f != "test.txt"):
+                            os.remove(os.path.join(temp_path, f))
 
-        if totalpages > 1:
-            # uploaded file is multi pdf -> select
-            multipgpdf = st.button("Select Pages (PDF)", key="multipgpdf")
-            if multipgpdf:
-                switch_page("select pages (pdf)")
+                    for f in os.listdir("./selected_files/"):
+                        if (f != "test.txt"):
+                            os.remove(os.path.join("./selected_files/", f))
+
+                save_file_to_temp(uploaded_file)
+
+            # check if uploaded file is pdf
+            if uploaded_file.name.endswith('.pdf'):
+                file_path = "./temp_files/" + uploaded_file.name
+                pdfReader = PyPDF2.PdfReader(file_path)
+                totalpages = len(pdfReader.pages)
+                
+                if (uploaded_file.size>limit):
+                    st.info('File Size is more than 2MB. This will take awhile to load.', icon="ℹ️")
+                    print("File Size more than 2MB")
+                    file_path = "./temp_files/" + uploaded_file.name
+                    # no need error -> compress file here
+                    # save back into the original file name
+                    # importing the ilovepdf api
+                    # public key
+                    public_key = COMPRESSED_PDF_KEY
+
+                    # creating a ILovePdf object
+                    ilovepdf = ILovePdf(public_key, verify_ssl=True)
+
+                    # assigning a new compress task
+                    task = ilovepdf.new_task('compress')
+
+                    # adding the pdf file to the task
+                    task.add_file(file_path)
+
+                    # setting the output folder directory
+                    # if no folder exist it will create one
+                    task.set_output_folder('temp_files')
+
+                    # execute the task
+                    task.execute()
+
+                    # download the task
+                    task.download()
+
+                    # delete the task
+                    task.delete_current_task()
+                    new_file_name = uploaded_file.name
+                    
+                    if len(dir) > 0:
+                        for f in os.listdir(temp_path):
+                            if (f == uploaded_file.name):
+                                os.remove(os.path.join(temp_path, f))
+                                
+                        for f in os.listdir(temp_path):
+                            if (f.endswith(".pdf")):
+                                old_path = os.path.join("temp_files",f)
+                                new_path = os.path.join("temp_files",new_file_name)
+                                os.rename(old_path, new_path)
+                                if (os.stat(new_path).st_size>limit): 
+                                    st.warning('File size is more than 2 MB after compressing. Please note that you might not be able to view the file in the PDF viewer. You may proceed with the extraction.', icon="⚠️")
+                                print(os.stat(new_path).st_size)
+                                
+
+                if totalpages > 1:
+                    # uploaded file is multi pdf -> select
+                    multipgpdf = st.button("Select Pages (PDF)", key="multipgpdf")
+                    if multipgpdf:
+                        switch_page("select pages (pdf)")
+                else:
+                    # uploaded file is single pg -> preview
+                    previewpdf = st.button("Preview Extracted Data", key="previewpdf")
+                    if previewpdf:
+                        switch_page("preview extracted data")
+
+            # check if uploade file is png/ jpg/ jpeg
+            elif uploaded_file.name.endswith('.png') or uploaded_file.name.endswith('.jpg') or uploaded_file.name.endswith('.jpeg'):
+                st.write("Does the uploaded image have more than one table?")
+                col3, col4 = st.columns([2,22])
+                with col3:
+                    result_yes = st.button("Yes")
+                with col4:
+                    result_no = st.button("No")
+                
+                if result_yes:
+                    switch_page("image cropper")
+                if result_no:
+                    switch_page("preview extracted data")  
+
+if uploaded_file is not None:
+    if st.session_state["text_option"]:
+        if com_name == "":
+            st.error("Please enter a company name")
         else:
-            # uploaded file is single pg -> preview
-            previewpdf = st.button("Preview Extracted Data", key="previewpdf")
-            if previewpdf:
-                switch_page("preview extracted data")
+            proceed_next_pg()
+    else:
+        proceed_next_pg()
 
-    # check if uploade file is png/ jpg/ jpeg
-    elif uploaded_file.name.endswith('.png') or uploaded_file.name.endswith('.jpg') or uploaded_file.name.endswith('.jpeg'):
-        st.write("Does the uploaded image have more than one table?")
-        col3, col4 = st.columns([2,22])
-        with col3:
-            result_yes = st.button("Yes")
-        with col4:
-            result_no = st.button("No")
-        
-        if result_yes:
-            switch_page("image cropper")
-        if result_no:
-            switch_page("preview extracted data")           
+                     
 
 ############## CSS
 st.markdown("""
