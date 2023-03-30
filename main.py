@@ -688,30 +688,42 @@ else:
     # display spacy
     sentence_list = nlp_data['sentences']
 
-    spacy_data = {"Organisation":sentence_list[0],
-            "Product": sentence_list[1],
-            "Country": sentence_list[2]}
+    org_data = {"Organisation":sentence_list[0]}
+    pro_data = {"Product": sentence_list[1]}
+    coun_data = {"Country": sentence_list[2]}
 
     col1, col2, col3 = st.columns(3)
     with col1:
         st.subheader("Organisation")
         if len(sentence_list[0]) > 0:
             sentence_list[0] = str(sentence_list[0]).replace(",", "\n")
-            stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation-")
+            sentence_list[0] = sentence_list[0].replace("[","")
+            sentence_list[0] = sentence_list[0].replace("]","")
+            sentence_list[0] = sentence_list[0].replace("'","")
+            stx.scrollableTextbox(sentence_list[0], height = 150, key="organisation")
             
     with col2:
         st.subheader("Product")
         if len(sentence_list[1]) > 0:
             sentence_list[1] = str(sentence_list[1]).replace(",", "\n")
+            sentence_list[1] = sentence_list[1].replace("[","")
+            sentence_list[1] = sentence_list[1].replace("]","")
+            sentence_list[1] = sentence_list[1].replace("'","")
             stx.scrollableTextbox(sentence_list[1], height = 150, key="product")
     
     with col3: 
         st.subheader("Country")
         if len(sentence_list[2]) > 0:
             sentence_list[2] = str(sentence_list[2]).replace(",", "\n")
+            sentence_list[2] = sentence_list[2].replace("[","")
+            sentence_list[2] = sentence_list[2].replace("]","")
+            sentence_list[2] = sentence_list[2].replace("'","")
             stx.scrollableTextbox(sentence_list[2], height = 150, key="country")
     
-    spacy_df = pd.DataFrame(data=spacy_data, index=None)
+    # spacy dataframe
+    df_org = pd.DataFrame(data=org_data, index=None)
+    df_pro = pd.DataFrame(data=pro_data, index=None)
+    df_coun = pd.DataFrame(data=coun_data, index=None)
 
     # follow the code below to append to excel sheet
 
@@ -746,8 +758,15 @@ else:
         if not top_5_negative.empty:
             top_5_negative.to_excel(writer, sheet_name='Top 5 Negative')
 
-        if not spacy_df.empty:
-            spacy_df.to_excel(writer, sheet_name='Spacy')     
+        if not df_org.empty:
+            df_org.to_excel(writer, sheet_name='Organisation')   
+
+        if not df_pro.empty:
+            df_pro.to_excel(writer, sheet_name='Product')  
+
+        if not df_coun.empty:
+            df_coun.to_excel(writer, sheet_name='Country')     
+  
 
     
     # DOWNLOAD EXCEL SHEET
