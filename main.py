@@ -371,10 +371,11 @@ else:
                 df_is
 
             #### METRICES
-            ###### BASE AND CURRENT YEARmetrics_compo
-            res = [eval(i) for i in income_statement["Year"]]
-            base_year_position = income_statement["Year"].index(str(min(res)))
-            current_year_position = income_statement["Year"].index(str(max(res)))
+            ###### BASE AND CURRENT YEAR
+            base_year_position = income_statement["Year"].index(min(income_statement["Year"]))
+            current_year_position = income_statement["Year"].index(max(income_statement["Year"]))
+            current_year_position = income_statement["Year"].index(end_year)
+
             col1, col2 = st.columns(2)
             col3, col4 =st.columns(2)
             
@@ -489,10 +490,8 @@ else:
                 
             # DEBT/CASH
             debt_col, cash_col = st.columns(2)
-
-            res = [eval(i) for i in balance_sheet_metric["year"]]
-            base_year_position = balance_sheet_metric["year"].index(str(min(res)))
-            current_year_position = balance_sheet_metric["year"].index(str(max(res)))
+            base_year_position =  balance_sheet_metric["year"].index(min(balance_sheet_metric["year"]))
+            current_year_position =  balance_sheet_metric["year"].index(max(balance_sheet_metric["year"]))
             
             with debt_col:
                 debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
@@ -548,9 +547,10 @@ else:
                 df_om
             
             ###### BASE AND CURRENT YEAR
-            res = [eval(i) for i in other_metrics["year"]]
-            base_year_position = other_metrics["year"].index(str(min(res)))
-            current_year_position = other_metrics["year"].index(str(max(res)))
+
+            base_year_position = other_metrics["year"].index(min(other_metrics["year"]))
+            current_year_position = other_metrics["year"].index(max(other_metrics["year"]))
+
             roe_col, roa_col, cr_col = st.columns(3)
             dte_col, npm_col, ebitda_col = st.columns(3)
 
