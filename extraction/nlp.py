@@ -15,7 +15,7 @@ from request import (
     insert_extracted_data_nlp,
 )
 
-def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
+def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID, status):
     if "pdf" in uploaded_file.type:
         status="processing nlp"
         input=temp_path+"/"+str(uploaded_file.name)
@@ -77,5 +77,9 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID):
             else:
                 status="fail"
                 st.error('Error inserting nlp dataframe into database. Please try again later.', icon="🚨")
+    
+    # if not pdf
+    else:
+        status="fail"
 
     return status

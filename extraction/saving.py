@@ -140,7 +140,7 @@ def save_file (ID, uploaded_file, com_name, json):
 
         # call the nlp extraction
         nlp_status = "processing nlp"
-        nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID)
+        nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID, nlp_status)
         
         # st.write(nlp_status)
         if nlp_status != "processing nlp":
@@ -852,9 +852,9 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     save_file(com_id, session_state['og_uploaded_file'], com_name, updated_edited_dict)
                                 else:
                                     st.error('Error adding company. Please try again later.', icon="🚨")
-                            else:
-                                # If company name not entered
-                                st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                            # else:
+                            #     # If company name not entered
+                            #     st.error("Please enter a company name in Upload Report Page.", icon="🚨")
                         else:
                             updated_edited_dict = calculate_other_metrics(edited_dict, selected_comID)
                             save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, updated_edited_dict)
