@@ -36,7 +36,7 @@ def paginations(display_list, page):
 
 # Display files
 def view(fid, file, file_type, company): 
-    print(fid)
+    
     with open(os.path.join("upload_files",file),"rb") as f: 
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         col1, col2 =st.columns([4,15])
@@ -45,6 +45,11 @@ def view(fid, file, file_type, company):
         with col2:
             st.header(company)
             st.text(file_name)
+        file_size = os.path.getsize(os.path.join("upload_files",file)) 
+        limit = 1*1000000
+        if file_size >= limit:
+            st.error("File can't be viewed as the file size exit 1MB.", icon="🚨")
+
         if file_type =="pdf":
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="1000" height="1200" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
@@ -56,7 +61,7 @@ def view(fid, file, file_type, company):
         if file_type == "csv":
             dfs = pd.read_csv(os.path.join("upload_files",file))
             st.write(dfs)
-
+        
 placeholder = st.empty()
 state = False
 with placeholder.container():

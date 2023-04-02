@@ -147,8 +147,8 @@ def save_file_to_temp (uploaded_file):
         f.write(uploaded_file.getbuffer())   
 
 def proceed_next_pg():
-    # File Size limit 2mb in bytes
-            limit = 2*1000000
+    # File Size limit 1mb in bytes
+            limit = 1.5*1000000
             # Check file type
             position = uploaded_file.type.find("/")
             file_type = uploaded_file.type[position+1: ]
@@ -181,8 +181,8 @@ def proceed_next_pg():
                 totalpages = len(pdfReader.pages)
                 
                 if (uploaded_file.size>limit):
-                    st.info('File Size is more than 2MB. This will take awhile to load.', icon="ℹ️")
-                    print("File Size more than 2MB")
+                    st.info('File Size is more than 1.5MB. This will take awhile to load.', icon="ℹ️")
+                    print("File Size more than 1MB")
                     file_path = "./temp_files/" + uploaded_file.name
                     # no need error -> compress file here
                     # save back into the original file name
