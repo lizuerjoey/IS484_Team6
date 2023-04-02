@@ -48,7 +48,7 @@ def view(fid, file, file_type, company):
         file_size = os.path.getsize(os.path.join("upload_files",file)) 
         limit = 1*1000000
         if file_size >= limit:
-            st.error("File can't be viewed as the file size exit 1MB.", icon="🚨")
+            st.info("File can't be viewed as the file size exit 1MB.", icon="ℹ️")
 
         if file_type =="pdf":
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="1000" height="1200" type="application/pdf">'

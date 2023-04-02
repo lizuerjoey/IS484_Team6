@@ -15,6 +15,12 @@ def get_file_type (file):
 
 # Display PDF
 def displayPDF (file, file_type):
+    file_size = os.path.getsize(file) 
+    limit = 1*1000000
+    if file_size >= limit:
+        st.info("File can't be viewed as the file size exit 1MB.", icon="ℹ️")
+
+
     with open(file,"rb") as f: 
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         if file_type ==".pdf":
@@ -72,7 +78,6 @@ if len(dir) > 1:
                     cfmpg = st.button("Confirm Page", key="confirmpg")
                     
                 if cfmpg:
-                    print(num_page_input)
                     final_input = []
 
                     # User input single digit

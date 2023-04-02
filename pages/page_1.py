@@ -148,7 +148,7 @@ def save_file_to_temp (uploaded_file):
 
 def proceed_next_pg():
     # File Size limit 1mb in bytes
-            limit = 1.5*1000000
+            limit = 1*1000000
             # Check file type
             position = uploaded_file.type.find("/")
             file_type = uploaded_file.type[position+1: ]
@@ -181,7 +181,7 @@ def proceed_next_pg():
                 totalpages = len(pdfReader.pages)
                 
                 if (uploaded_file.size>limit):
-                    st.info('File Size is more than 1.5MB. This will take awhile to load.', icon="ℹ️")
+                    st.info('File Size is more than 1MB. This will take awhile to load.', icon="ℹ️")
                     print("File Size more than 1MB")
                     file_path = "./temp_files/" + uploaded_file.name
                     # no need error -> compress file here
@@ -224,7 +224,7 @@ def proceed_next_pg():
                                 new_path = os.path.join("temp_files",new_file_name)
                                 os.rename(old_path, new_path)
                                 if (os.stat(new_path).st_size>limit): 
-                                    st.warning('File size is more than 2 MB after compressing. Please note that you might not be able to view the file in the PDF viewer. You may proceed with the extraction.', icon="⚠️")
+                                    st.warning('File size is more than 1MB after compressing. Please note that you might not be able to view the file in the PDF viewer. You may proceed with the extraction.', icon="⚠️")
                                 print(os.stat(new_path).st_size)
                                 
 
