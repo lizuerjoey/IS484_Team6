@@ -99,8 +99,6 @@ def check_empty(big_other_metrics_list):
     return big_other_metrics_list
 
 def calculate_other_metrics(edited_dict, company_id):
-    # print(edited_dict)
-    # print(company_id)
 
     big_other_metrics_list = []
     
@@ -146,7 +144,6 @@ def calculate_other_metrics(edited_dict, company_id):
 
             big_other_metrics_list.append(other_metrics_format)
 
-        # print(big_other_metrics_list)
         # check if the other sheet have extracted data that we missed out
         if len(edited_dict[other_fin_sheet]) > 0:
             for each_dict in edited_dict[other_fin_sheet]:

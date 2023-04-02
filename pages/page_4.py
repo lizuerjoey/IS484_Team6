@@ -1,30 +1,15 @@
 import streamlit as st
-import time
-# import camelot.io as camelot
 import camelot
 import PyPDF2
 import os
-# import base64
-from datetime import datetime
 from streamlit import session_state
 from st_aggrid import AgGrid, GridUpdateMode, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
-# import re
-import math
 import glob
 import pandas as pd
 from openpyxl import load_workbook
-import shutil
 from request import (
-        get_symbols,
-        add_company,
-        add_file,
-        get_financial_words_col,
-        get_financial_words_row,
-        get_json_financial_format,
-        get_json_format,
-        insert_data,
-        get_allFiles
+        get_symbols
     )
 from extraction.pdf_to_image import (convert_file)
 from extraction.aws_image import (image_extraction)
@@ -45,7 +30,6 @@ currency = ""
 fiscal_month = ""
 duplicate_num_format = []
 confirm_headers_list = []
-# confirm_rows_list = []
 confirm_search_col_list = []
 search_col_list_check = []
 financial_format =[]
@@ -580,15 +564,6 @@ if session_state['upload_file_status'] == True:
         if False in is_df_empty_list:
             if (currency == " "):
                 st.write("IN")
-            # dataframe_list
-            # search_col_list_check
-            # fiscal_month
-            # financial_format
-            # number_format
-            # duplicate_num_format
-            # confirm_headers_list
-            # confirm_search_col_list
-            # show extract button
             if st.button("Extract", key="extract") or session_state["extract_state"]:
                 # save extract button session
                 session_state["extract_state"] = True

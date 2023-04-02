@@ -122,7 +122,6 @@ if st.session_state['text_option'] == True:
         )
         
     # Get Company Name
-    # print(com_name)
     if com_name:
         # Save Company Name
         st.session_state['com_name'] = com_name
@@ -136,10 +135,7 @@ if st.session_state['text_option'] == True:
             com_ID += my_hash[rad_num] 
         
         st.session_state['com_id'] = com_ID    
-        # print(com_ID)
 
-# else:
-#     print(selected_comID)
 
 #################### Upload File
 uploaded_file = st.file_uploader("Choose a file", label_visibility="collapsed")

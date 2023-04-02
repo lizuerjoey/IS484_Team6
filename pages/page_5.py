@@ -2,7 +2,6 @@ import streamlit as st
 from request import(
     add_synonym,
     get_dict,
-    get_financial_words_col
 ) 
 import streamlit_scrollable_textbox as stx
 from streamlit_tags import st_tags
@@ -42,12 +41,6 @@ if sheet is not None:
                     synonyms_list = []
                     for i in synonyms:
                         synonyms_list.append(i.capitalize())
-                        # i = i.lower()
-                        # list_of_synonyms = list_of_synonyms + "- " + i.capitalize() + "\n"
-                    # list_of_synonyms = ""
-                    # for i in synonyms:
-                    #     i = i.lower()
-                    #     list_of_synonyms = list_of_synonyms + "- " + i.capitalize() + "\n"
                 else:
                     synonyms_list = []
 
@@ -55,7 +48,6 @@ if sheet is not None:
                     label='Edit Synonyms:',
                     text='Press enter to confirm the addition of new word',
                     value=synonyms_list)
-                    # stx.scrollableTextbox(list_of_synonyms,height = 150)
                 id = option[0]
                 st.info("Synonyms added must be unique.", icon="ℹ️")
 
@@ -71,13 +63,10 @@ if sheet is not None:
 
         if st.button('Submit'):
             if error == False:
-                # synonyms.append(synonym)
                 data = add_synonym(id, synonyms)
                 if (data["message"] == "Updated"):
                     st.success("Dictionary Updated Successfully!", icon="✅")
             else:
-                # print("Already in dict")
-                # st.error('Word already in Dictionary', icon="🚨")
                 st.error('Unable to submit, please check the synonyms you are adding.', icon="🚨")
                     
 ############## CSS

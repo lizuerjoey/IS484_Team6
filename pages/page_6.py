@@ -2,8 +2,6 @@ import streamlit as st
 import glob
 import os
 import io
-#cropper page
-#pip install streamlit-cropper
 from streamlit_cropper import st_cropper
 from PIL import Image
 from streamlit_extras.switch_page_button import switch_page
@@ -26,7 +24,6 @@ if len(dir) > 1:
         if file_type == '.jpeg': 
             file_path = glob.glob("./temp_files/*.jpeg")[0]
             img= Image.open(file_path)
-           # st.image(img)
         elif file_type =='.jpg':
             file_path = glob.glob("./temp_files/*.jpg")[0]
             img= Image.open(file_path)

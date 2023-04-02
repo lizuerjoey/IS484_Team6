@@ -149,11 +149,6 @@ if state:
     with display_files.container():
         view(fid, file_name, file_type, company)
 
-from streamlit_extras.switch_page_button import switch_page
-#pip install streamlit-extras
-#on uploader page, ask user if image has more than one table present
-
-
 
 ############## CSS
 st.markdown("""

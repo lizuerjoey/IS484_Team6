@@ -6,7 +6,6 @@ from pages.page_4 import (
     get_file_type,
     viewer_func,
     get_currency_list,
-    image_viewer
 )
 from extraction.pdf_to_image import (convert_file)
 from extraction.saving import (save_json_to_db)
@@ -50,9 +49,6 @@ origin = './temp_files/'
 target = './selected_files/'
 files = os.listdir(origin)
 files_target = os.listdir(target)
-# for file in files_target:
-#     if file=="file.pdf":
-#         os.remove(target+file)        
 
 if "selected_pages.pdf" not in files and "file.pdf" not in files_target:
     for file in files:
@@ -64,12 +60,9 @@ if "selected_pages.pdf" not in files and "file.pdf" not in files_target:
 selected_path = "./selected_files"
 dir2 = os.listdir(selected_path)
 
-# if "file.pdf" in files_target:
-#     st.write(True)
 
 if "selected_pages.pdf" in files or "file.pdf" in files_target or len(dir2) > 1:
-    st.write("File exist")
-
+    
     # check if file was uploaded
     if st.session_state['text_option'] == True and session_state['upload_file_status']:
         st.header(com_name)
@@ -124,34 +117,6 @@ if "selected_pages.pdf" in files or "file.pdf" in files_target or len(dir2) > 1:
         else:
             delete_list.append(i+1)
 
-
-    # DATAFRAME LIST
-    # dataframe_list
-
-    # SEARCH COL LIST CHECK - array - NEED TO CHECK
-    # search_col_list_check  
-
-    # CURRENCY
-    # currency
-
-    # Fiscal Month
-    # fiscal_month
-
-    # Fiancial Format
-    # financial_format
-
-    # Number Format - array  - NEED TO CHECK
-    # num_format_list
-
-
-    # Confirm header list --> Keyword
-    # confirm_headers_list
-
-    # Confirm Search Col List -- > Total - Keyword
-    # confirm_search_col_list
-
-    # table numbers that were deleted
-    # delete_list
 
     # all tables were selected to not be extracted
     if (len(is_df_empty_list) == 0):

@@ -57,10 +57,7 @@ def merge_sheets(sheet_lists):
     
     # create a new dictionary to hold the merged results
     merged_dict = {}
-    # same_sheet_multiple_values_dict = {}
 
-    # if type not in same_sheet_multiple_values_dict:
-    #     same_sheet_multiple_values_dict[type] = {}
     
     # iterate over each sheet in the list
     for sheet in sheet_lists:
@@ -76,22 +73,14 @@ def merge_sheets(sheet_lists):
 
                     # if the value is a float and exist in merge dict -> add
                     if isinstance(val, float) and isinstance(merged_dict[year][key], float):
-                        
                         merged_dict[year][key] = merged_dict[year][key]
-                        
-                        # if key not in same_sheet_multiple_values_dict[type][year]:
-                        #     same_sheet_multiple_values_dict[type][year][key] = [merged_dict[year][key]]
-
-                        # if val not in same_sheet_multiple_values_dict[type][year]:
-                        #     same_sheet_multiple_values_dict[type][year][key].append(val)
-                            
+                                                    
                     else:
                         if (isinstance(val, float) and val != 0):
                             merged_dict[year][key] = float(val)
                         
             else:
                 merged_dict[year] = sheet[data_index]
-                # same_sheet_multiple_values_dict[type][year] = {}
 
         new_merged_list = []
         for key, val in merged_dict.items():
@@ -107,16 +96,13 @@ def concat_lists(lists):
 
 def save_file (ID, uploaded_file, com_name, json):
 
-    # uploaded_file_name = os.path.basename(uploaded_file_path)
     uploaded_file_name = uploaded_file.name
 
     now = datetime.now()
     date_time = str(now.strftime("%d%m%Y%H%M%S"))
 
     # Upload into directory
-    # pdfWriter = PyPDF2.PdfWriter()
     with open(os.path.join("upload_files", uploaded_file_name),"wb") as f: 
-        # pdfWriter.write(uploaded_file_name) 
         f.write(uploaded_file.getbuffer())     
 
     # Change file name to directory before saving into DB
@@ -145,7 +131,6 @@ def save_file (ID, uploaded_file, com_name, json):
         nlp_status = "processing nlp"
         nlp_status = nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID, nlp_status)
         
-        # st.write(nlp_status)
         if nlp_status != "processing nlp":
             # call API to insert json data
             result = insert_data(fid, ID, json)
@@ -242,7 +227,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     new_row_list = []
     yr_qtr = []
     searched_col = []
-    # matched_column_headers = []
     matched_list_row = []
     matched_dict_col = {}
     income_statement_dict = {}
@@ -270,10 +254,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
     # saving to db
     all_tables_json_list = []
     table_count = 0
-
-    # if all required fields are filled & total number of tables to extract is 0
-    # if save_status == True and total_num_tables <= 0:
-    #     st.error("No tables were selected for extraction, please check your delete tables selection.", icon="🚨")
 
     # if all required fields are filled & total number of tables to extract is not 0
     if save_status == True and total_num_tables > 0:
@@ -423,15 +403,6 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             if row_cell_value not in multiple_row_cell_value_dict[date][new_key]:
                                 multiple_row_cell_value_dict[date][new_key].append(row_cell_value)
 
-                        # if new_key not in multiple_row_cell_value_dict[date]:
-                        #     multiple_row_cell_value_dict[date][new_key] = {}
-                        # else:
-                        #     if row_num not in multiple_row_cell_value_dict[date][new_key]:
-                        #         multiple_row_cell_value_dict[date][new_key][row_num] = [row_cell_value]
-                        #     else:
-                        #         if row_cell_value not in multiple_row_cell_value_dict[date][new_key][row_num]:
-                        #             multiple_row_cell_value_dict[date][new_key].append(row_cell_value)
-
                     # if row_id is not numeric or the length of the row_id is more than the total row_id of the table -> high chance is a string
                     if row_id.isnumeric() == False or len(row_id) > last_row_id:
                         cell_value = ' '.join(row_id.split()[1:])
@@ -571,11 +542,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
             nothing_error.append(is_nothing)
             incorrect_format_error.append(is_incorrect)
 
-            # is_incorrect
-            # is_nothing
 
-            # basic_format
-        
         # for each financial statements
         income_statement_list = []
         balance_sheet_list = []
@@ -648,13 +615,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
         # at least 1 table could extract something
         if no_extraction < len(nothing_error):
             # Save into DB
-
-            # merge_big_dict = {}
-            # merge_big_dict.update(income_statement_dict)
-            # merge_big_dict.update(balance_sheet_dict)
-            # merge_big_dict.update(cash_flow_dict)
-            # print(merge_big_dict)
-            
+       
             
             submit_status = True
             edited_dict = {}
@@ -774,13 +735,9 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                             if len(retrieved_value) > 0:
                                 for og_k, og_v in retrieved_value.items():
                                     for k, v_list in value_dict.items():
-                                        # print("K: " + str(k))
-                                        # print(v_list)
+
                                         if (og_k == k):
 
-                                            # only when there are suggestions then display
-                                            # if(len(v_list) > 0):
-                                            
                                             # sub list wrapper
                                             display_values += "<ul><li><b><span style='background: yellow; font-weight: bold'>" + k + "</span></b>: "
 
@@ -803,21 +760,15 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                                     v_num = str(v_num).replace(")", "")
                                                     v_num = str(v_num).replace(",", "")
                                                 
-                                                # print(v_num)
-                                                # original value is what was retrieve
-                                                # if (float(og_v) != float(str(v_num))):
-                                                # if v_num != 'nan':
+
                                                 display_values += "<li>" + str(v_num) + " (" + str(v_cell_name) + ") | " + str(v_table_num) + "</li>"
-                                                    # count += 1
-                                                    # if (count != len(v_list)-1):
-                                                    #     display_values += ", "
+
 
                                         display_values += "</ul>"
                                         display_values += "</li>"
                                 display_values += "</ul></div>"
 
-                                # test = "ℹ️ Located Multiple Financial Keywords:\n\n For each financial keyword shows a list of suggested values that has been extracted due to it being similar to the keywords."    
-                                # print(len(test))
+
                                 if (len(display_values) > 166):
                                     if display_values.endswith(","):
                                         display_values = display_values[:-1]
@@ -830,17 +781,12 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                 # reformulate into a json format for saving
                                 each_edited_list.append(edited_json_dict)                             
 
-                        # for each financial sheet, add the list of edited json dictionary
-                        # when there are at least 1 value and not all 0
-                        # print(sheet)
-                        # print(each_edited_list)
                         edited_dict[sheet] = each_edited_list 
 
 
                 submitted = st.form_submit_button("Submit")
 
                 if submitted:
-                    # st.write(edited_dict)
                     empty_count = 0            
                     for k, v in edited_dict.items():
                         if k != "currency" and k != "fiscal_start_month" and k != "other_metrics":
@@ -863,9 +809,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                     save_file(com_id, session_state['og_uploaded_file'], com_name, updated_edited_dict)
                                 else:
                                     st.error('Error adding company. Please try again later.', icon="🚨")
-                            # else:
-                            #     # If company name not entered
-                            #     st.error("Please enter a company name in Upload Report Page.", icon="🚨")
+                        
                         else:
                             updated_edited_dict = calculate_other_metrics(edited_dict, selected_comID)
                             save_file(selected_comID, session_state['og_uploaded_file'], selected_comName, updated_edited_dict)

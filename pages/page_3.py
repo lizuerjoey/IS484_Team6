@@ -85,9 +85,7 @@ if len(dir) > 1:
                         num_page_input = num_page_input.split(',')
                         i = 0
                         while i < len(num_page_input):
-                            # print(num_page_input[i])
                             if int(num_page_input[i]) <= totalpages and int(num_page_input[i]) > 0:
-                                #print(int(num_page_input[i]))
                                 status = True
 
                             else: 
@@ -200,15 +198,6 @@ if len(dir) > 1:
                             switch_page("preview extracted data")                    
 
             else: 
-                # Upload one page pdf into selected_files directory
-                # origin = './temp_files/'
-                # target = './selected_files/'
-                # files = os.listdir(origin)
-                # for file in files:
-                #     if file!="test.txt":
-                #         file_type = get_file_type(file)
-                #         shutil.copy(origin+file, target)
-                #         os.rename(target+file, target+"file"+file_type)
                 st.info('Uploaded file is a single-page pdf, there is no need to select pages for extraction. Please proceed to "Preview Extracted Data" page.', icon="ℹ️")
 
         # If file_type is not pdf    
