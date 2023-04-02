@@ -8,8 +8,8 @@
 
 ## Environment Setup
 To install dependencies, run:
-```pip install -r requirements.txt```
-```python -m spacy download en_core_web_sm```
+1. ```pip install -r requirements.txt```
+2. ```python -m spacy download en_core_web_sm```
 
 ## Database Configuration
 This project uses PostgreSQL (https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) <br>
