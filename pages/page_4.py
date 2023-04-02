@@ -507,7 +507,7 @@ if session_state['upload_file_status'] == True:
         if (totalpages > 0 or is_image == True):
             # Check file type
             if (is_image == False):
-                try_aws_btn = st.button("Try AWS (Switch Page)")
+                try_aws_btn = st.button("Try AWS")
                 if try_aws_btn:
                     switch_page("try aws") 
             

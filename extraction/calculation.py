@@ -266,10 +266,11 @@ def indv_stmt_calculation(statement, company_id, year, numerator, denominator, s
     denominator_dict = {}
     for num in numerator:
         if (num in statement_object):
-            numerator_dict = {num: { "year_count": 1, "value": statement_object[num]}}
+            numerator_dict[num] = { "year_count": 1, "value": statement_object[num]}
+
     for den in denominator:
         if (den in statement_object):
-            denominator_dict = {den: { "year_count": 1, "value": statement_object[den]}}
+            denominator_dict[den] = { "year_count": 1, "value": statement_object[den]}
 
     for i in all_extracted_results:
         result = json.loads(i[3])
