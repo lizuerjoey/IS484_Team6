@@ -562,8 +562,6 @@ if session_state['upload_file_status'] == True:
 
         # if at least 1 dataframe is not empty
         if False in is_df_empty_list:
-            if (currency == " "):
-                st.write("IN")
             if st.button("Extract", key="extract") or session_state["extract_state"]:
                 # save extract button session
                 session_state["extract_state"] = True
