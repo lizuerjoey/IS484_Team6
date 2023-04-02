@@ -33,6 +33,9 @@ if "scroll_pos" not in session_state:
 temp_path = "./temp_files"
 dir = os.listdir(temp_path)
 
+selected_path = "./selected_files"
+dir2 = os.listdir(selected_path)
+
 def remove_space_caps_next_letter(key):
     new_key = "".join(word.capitalize() for word in key.split())
     first_letter = key[0].lower()
@@ -156,16 +159,24 @@ def save_file (ID, uploaded_file, com_name, json):
                     for f in os.listdir(temp_path):
                         if (f != "test.txt"):
                             os.remove(os.path.join(temp_path, f))
+
+                # delete everything except test.txt from selected folder
+                
+                if len(dir2) > 0:
+                    for f in os.listdir(selected_path):
+                        if (f != "test.txt"):
+                            os.remove(os.path.join(selected_path, f))
                 
                 # wait for 3 sec
                 time.sleep(3)
                 # clear session state cache
-                st.session_state["extract_state"] = False
+                session_state["extract_state"] = False
                 session_state["com_name"] = ""
                 session_state["com_id"] = ""
                 session_state["selected_comName"] = ""
                 session_state["selected_comID"] = ""
-                st.session_state['text_option'] = False
+                session_state['text_option'] = False
+                session_state["extract_state_aws"] = False
 
                 # refresh the page
                 st.experimental_rerun()
@@ -771,7 +782,7 @@ def save_json_to_db(dataframe_list, search_col_list_check, currency, fiscal_mont
                                             # if(len(v_list) > 0):
                                             
                                             # sub list wrapper
-                                            display_values += "<ul><li><b><span class='other-highlight'>" + k + "</span></b>: "
+                                            display_values += "<ul><li><b><span style='background: yellow; font-weight: bold'>" + k + "</span></b>: "
 
                                             # sub list
                                             display_values += "<ul>"
