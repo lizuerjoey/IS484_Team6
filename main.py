@@ -114,7 +114,7 @@ else:
         for income_stat in result["income_statement"]:
             if income_stat["year"] not in year:
                 year.append(income_stat["year"])
-        for balance_sht in result["income_statement"]:
+        for balance_sht in result["balance_sheet"]:
             if balance_sht["year"] not in year:
                     year.append(balance_sht["year"])
         for cashflow in result["cash_flow"]:
