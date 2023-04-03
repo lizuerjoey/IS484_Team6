@@ -494,10 +494,16 @@ else:
             current_year_position =  balance_sheet_metric["year"].index(max(balance_sheet_metric["year"]))
             
             with debt_col:
-                debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
+                if balance_sheet_metric["debt"][base_year_position] != 0:
+                    debt_ratio = ((balance_sheet_metric["debt"][current_year_position] - balance_sheet_metric["debt"][base_year_position])/balance_sheet_metric["debt"][base_year_position])*100
+                else:
+                    debt_ratio = 0
                 metrics_component("Debt", balance_sheet_metric["debt"][current_year_position], round(debt_ratio, 2), bs_numForm, True)
             with cash_col:
-                cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
+                if balance_sheet_metric["cash"][base_year_position] != 0:
+                    cash_ratio = ((balance_sheet_metric["cash"][current_year_position] - balance_sheet_metric["cash"][base_year_position])/balance_sheet_metric["cash"][base_year_position])*100
+                else: 
+                    cash_ratio = 0
                 metrics_component("Cash", balance_sheet_metric["cash"][current_year_position], round(cash_ratio, 2), bs_numForm, False)
 
 
