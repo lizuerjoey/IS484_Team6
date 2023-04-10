@@ -146,14 +146,11 @@ def save_file (ID, uploaded_file, com_name, json):
                             os.remove(os.path.join(temp_path, f))
 
                 # delete everything except test.txt from selected folder
-                
                 if len(dir2) > 0:
                     for f in os.listdir(selected_path):
                         if (f != "test.txt"):
                             os.remove(os.path.join(selected_path, f))
-                
-                # wait for 3 sec
-                time.sleep(3)
+
                 # clear session state cache
                 session_state["extract_state"] = False
                 session_state["com_name"] = ""
@@ -163,6 +160,9 @@ def save_file (ID, uploaded_file, com_name, json):
                 session_state['text_option'] = False
                 session_state["extract_state_aws"] = False
 
+                # wait for 3 sec
+                time.sleep(3)
+                
                 # refresh the page
                 st.experimental_rerun()
                 

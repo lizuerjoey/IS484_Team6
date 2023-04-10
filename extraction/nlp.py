@@ -65,7 +65,7 @@ def nlp_extraction(uploaded_file, temp_path, uploaded_file_name, fid, ID, status
             }
 
             # call (nlp) spacy extraction - list of sentences (append to the json['sentences'])
-            updated_data = spacy_extraction(data, input)
+            spacy_extraction(data, input)
 
             # call api to insert 
             nlp_df = insert_extracted_data_nlp(fid,ID,data)

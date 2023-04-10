@@ -31,7 +31,6 @@ def spacy_extraction(data, input):
             elif ent.label == "GPE":
                 if ent.text not in sentences_list[2]:
                     sentences_list[2].append(ent.text)
-        print(sentences_list)
+        # print(sentences_list)
 
     data['sentences'] = sentences_list
-    return data
