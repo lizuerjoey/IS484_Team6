@@ -65,7 +65,8 @@ def get_allFiles():
             cursor.execute(sql)
             results = cursor.fetchall()
             response = {
-                "data": results
+                "data": results,
+                "code": 200
             }
             if (len(results)==0):
                 response["status"] = "No files available"
