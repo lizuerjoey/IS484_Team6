@@ -150,37 +150,6 @@ def get_financial_words_col(financial_sheet):
                     words[sheet][word].extend(eval(synonyms))
     return words[financial_sheet]
 
-    # words = {
-    #     "Income Statement": {
-    #         "revenue": ["total revenue"],
-    #         "cost": ["total cost"],
-    #         "gross profit": ["earnings", "gross income"],
-    #         "gross loss": [],
-    #         "net profit": ["net income", "net earnings"],
-    #         "net loss": [],
-    #         "income tax": [],
-    #         "interest": ["interest expense"],
-    #         "depreciation": ["amortization", "depletion"],
-    #     },
-    #     "Balance Sheet": {
-    #         "total equities": [],
-    #         "total liabilities": [],
-    #         "total current liabilties": [],
-    #         "total non current liabitilies": [],
-    #         "total assets": [],
-    #         "total current assets": [],
-    #         "total non current assets": [],
-    #         "debt": [],
-    #         "cash": [],
-    #     },
-    #     "Cash Flow": {
-    #         "operating net cash flow": [],
-    #         "investing net cash flow": [],
-    #         "financing net cash flow": [],
-    #     },
-    # }
-    # return words[sheet]
-
 def get_financial_words_row(sheet):
     words = {
         "Income Statement": {
@@ -203,17 +172,7 @@ def get_json_format():
         "income_statement": [],
         "balance_sheet": [],
         "cash_flow": [],
-        "other_metrics": [
-            # {
-            #     "year": "",
-            #     "numberFormat": "", 
-            #     "returnOnAsset": 0,
-            #     "netInterestMargin": 0,
-            #     "netInterestIncomeRatio": 0,
-            #     "costIncomeRatio": 0,
-            #     "ebitda": 0
-            # }
-        ]
+        "other_metrics": []
     }
     return format
 
